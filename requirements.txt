@@ -1,2 +1,5 @@
 ###### Required Python Packages #####
 nidaqmx
+numpy
+matplotlib
+scipy
