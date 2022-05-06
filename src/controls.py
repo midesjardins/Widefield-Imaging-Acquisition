@@ -1,6 +1,7 @@
 import nidaqmx
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 
 class Instrument:
@@ -49,11 +50,12 @@ class DAQ:
             time_values = stim.time
             signal = stim.signal
 
-        repeat = 9000/stim.framerate
+        repeat = 900/stim.framerate
         trigger_indexes = np.linspace(0, repeat, 4, dtype = int)[0:3]
         index = -1
         begin_time = time.time()
         for time_increment in time_values[0]:
+            target_time = time.time() + 1/300
             index = (index + 1)  % int(repeat)
             self.instruments['air_pump'].analog_write(signal[index])
 
@@ -77,4 +79,6 @@ class DAQ:
                 self.instruments['blue'].digital_write(True)
                 self.instruments['camera'].capture()
                 self.instruments['blue'].digital_write(False)
-            end_increment = time.time()
+            while time.time() < target_time:
+                pass
+        print(time.time()-begin_time)
