@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from signal_generator import make_signal
+from src.signal_generator import make_signal
 
 class Stimulation:
     def __init__(self, daq, duration, width, pulses=0, jitter=0, frequency=0, delay=0, pulse_type='square', framerate=30):
