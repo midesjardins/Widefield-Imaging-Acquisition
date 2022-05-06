@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 from signal_generator import make_signal
 
 class Stimulation:
-    def __init__(self, duration, width, pulses=0, jitter=0, frequency=0, delay=0, pulse_type='square'):
+    def __init__(self, daq, duration, width, pulses=0, jitter=0, frequency=0, delay=0, pulse_type='square'):
+        self.daq = daq
         self.duration = duration
         self.type = pulse_type
         self.delay = delay
@@ -16,19 +17,10 @@ class Stimulation:
         self.time = np.linspace(0, duration, duration*300)
         self.signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq)
         self.empty_signal = np.zeros(len(self.time_delay))
-    
-    def randomize_signal(self):
+
+    def run(self, last = False):
         self.signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq)
-
-    def run(self, last=False):
-        self.randomize_signal()
-        if last is False:
-            plt.plot(np.concatenate((self.time,self.time_delay + self.duration)), np.concatenate((self.signal, self.empty_signal)))
-        else:
-            plt.plot(self.time, self.signal)
-
-        plt.show()
-        plt.clf()
+        self.daq.launch(self, last)
 
 class Blocks:
     def __init__(self, data, delay=0, iterations=1):
