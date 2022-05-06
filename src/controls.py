@@ -8,32 +8,25 @@ class Instrument:
         self.port = port
         self.daq_name = daq_name
 
+class Camera(Instrument):
     def capture(self):
         '''with nidaqmx.Task() as task:
             task.co_channels.add_co_pulse_chan_time(f"{self.daq_name}/{self.port}")
             task.write(True)
             task.write(False)'''
 
-    def analog_read(self):
-        '''with nidaqmx.Task() as task:
-            task.ai_channels.add_ai_voltage_chan(f"{self.daq_name}/{self.port}")
-            return task.read()'''
-
+class Light(Instrument):
     def analog_write(self, value):
         '''with nidaqmx.Task() as task:
             task.co_channels.add_co_pulse_chan_time(f"{self.daq_name}/{self.port}")
             task.write(value)'''
 
-
+class Stimuli(Instrument):
     def digital_write(self, value):
         '''with nidaqmx.Task() as task:
             task.co_channels.add_co_pulse_chan_time(f"{self.daq_name}/{self.port}")
             task.write(value)'''
 
-    def digital_read(self):
-        '''with nidaqmx.Task() as task:
-            task.co_channels.add_co_pulse_chan_time(f"{self.daq_name}/{self.port}")
-            return task.read()'''
 
 class DAQ:
     def __init__(self, name, instruments):

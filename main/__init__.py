@@ -1,13 +1,13 @@
-from blocks import Blocks, Stimulation
-from controls import DAQ, Instrument
+from src.blocks import Blocks, Stimulation
+from src.controls import DAQ, Light, Camera, Stimuli
 
 instruments = {
-    'infrared': Instrument('port1', 'name'),
-    'red': Instrument('port2', 'name'),
-    'green': Instrument('port3', 'name'),
-    'blue': Instrument('port4', 'name'),
-    'air_pump': Instrument('port5', 'name'),
-    'camera': Instrument('port6', 'name')
+    'infrared': Light('port1', 'name'),
+    'red': Light('port2', 'name'),
+    'green': Light('port3', 'name'),
+    'blue': Light('port4', 'name'),
+    'air_pump': Stimuli('port5', 'name'),
+    'camera': Camera('port6', 'name')
 }
 new_daq = DAQ('acquisition', instruments)
 
