@@ -19,6 +19,6 @@ def random_square(time_values, pulses, width, jitter):
 
 def generate_signal(time, type, width, pulses, jitter, frequency):
     if type == 'square':
-        square_signal(time, frequency, width)
+        return square_signal(time, frequency, width)
     if type == 'random-square':
-        random_square(time, pulses, width, jitter)
+        return random_square(time, pulses, width, jitter)
