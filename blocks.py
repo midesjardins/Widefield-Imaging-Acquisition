@@ -12,8 +12,8 @@ class Stimulation:
         self.width = width
         self.jitter = jitter
         self.freq = frequency
-        self.time_delay = np.linspace(0, delay, delay*1000)
-        self.time = np.linspace(0, duration, duration*1000)
+        self.time_delay = np.linspace(0, delay, delay*300)
+        self.time = np.linspace(0, duration, duration*300)
         self.signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq)
         self.empty_signal = np.zeros(len(self.time_delay))
     
