@@ -48,17 +48,21 @@ class DAQ:
             time = stim.time
             signal = stim.signal
 
+        repeat = 9000/stim.framerate
+        trigger_indexes = np.linspace(0, repeat, 4, dtype = int)[0:3]
         index = -1
         for time_increment in time[0]:
-            index = (index + 1)  % 3
+            index = (index + 1)  % int(repeat)
             self.instruments['air_pump'].analog_write(signal[index])
 
-            if index == 0:
+            if index == trigger_indexes[0]:
+                print('ir')
                 self.instruments['infrared'].digital_write(True)
                 self.instruments['camera'].capture()
                 self.instruments['infrared'].digital_write(False)
 
-            elif index == 1:
+            elif index == trigger_indexes[1]:
+                print('intrinsic')
                 self.instruments['red'].digital_write(True)
                 self.instruments['camera'].capture()
                 self.instruments['red'].digital_write(False)
@@ -66,7 +70,8 @@ class DAQ:
                 self.instruments['camera'].capture()
                 self.instruments['green'].digital_write(False)
 
-            else:
+            elif index == trigger_indexes[2]:
+                print('fluo')
                 self.instruments['blue'].digital_write(True)
                 self.instruments['camera'].capture()
                 self.instruments['blue'].digital_write(False)

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from signal_generator import make_signal
 
 class Stimulation:
-    def __init__(self, daq, duration, width, pulses=0, jitter=0, frequency=0, delay=0, pulse_type='square'):
+    def __init__(self, daq, duration, width, pulses=0, jitter=0, frequency=0, delay=0, pulse_type='square', framerate=30):
         self.daq = daq
         self.duration = duration
         self.type = pulse_type
@@ -13,8 +13,9 @@ class Stimulation:
         self.width = width
         self.jitter = jitter
         self.freq = frequency
-        self.time_delay = np.linspace(0, delay, delay*300)
-        self.time = np.linspace(0, duration, duration*300)
+        self.framerate = framerate
+        self.time_delay = np.linspace(0, delay, delay*3000)
+        self.time = np.linspace(0, duration, duration*3000)
         self.signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq)
         self.empty_signal = np.zeros(len(self.time_delay))
 
