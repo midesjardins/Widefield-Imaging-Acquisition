@@ -55,7 +55,7 @@ class DAQ:
         index = -1
         begin_time = time.time()
         for time_increment in time_values[0]:
-            target_time = time.time() + 1/300
+            target_time = time.time() + 1/3000
             index = (index + 1)  % int(repeat)
             self.instruments['air_pump'].analog_write(signal[index])
 
