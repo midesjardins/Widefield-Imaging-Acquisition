@@ -1,6 +1,5 @@
 from scipy import signal
 import numpy as np
-import matplotlib.pyplot as plt
 
 def square_signal(time_values, frequency, duty_cycle, delay_frames=0):
     pulses = np.array(signal.square(2 * np.pi * frequency * time_values, duty_cycle)).clip(min=0)

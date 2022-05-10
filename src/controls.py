@@ -1,7 +1,6 @@
 import nidaqmx
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 from src.signal_generator import square_signal
 
 
@@ -50,7 +49,11 @@ class DAQ:
         self.light_signals = []
         self.camera_signal = None
         self.ports = instruments['ports']
-        self.signal_ajust = [[0, None, None, None], [0, 4500, None, None], [0, 3000, 6000, None], [0, 2250, 4500, 6750]]
+        self.signal_ajust = [
+            [0, None, None, None], 
+            [0, 4500, None, None], 
+            [0, 3000, 6000, None], 
+            [0, 2250, 4500, 6750]]
 
     def launch(self, stim, last):
         if last is False:
@@ -61,7 +64,7 @@ class DAQ:
             self.stim_signal = stim.stim_signal
 
         for signal_delay in self.signal_ajust[self.number_of_lights-1]:
-            if signal_delay != None:
+            if signal_delay is not None:
                 self.light_signals.append(square_signal(time_values, stim.framerate/3, 0.1, int(signal_delay/(stim.framerate))))
             else:
                 self.light_signals.append(np.zeros(len(time_values)))
@@ -78,15 +81,15 @@ class DAQ:
         with nidaqmx.Task(new_task_name='lights') as l_task:
             with nidaqmx.Task(new_task_name='stimuli') as s_task:
                 with nidaqmx.Task(new_task_name='camera') as c_task:
-                    c_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['camera']}")
+                    #c_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['camera']}")
                     s_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['stimuli']}")
-                    l_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['lights']}")
-                    c_task.timing.cfg_samp_clk_timing(rate=3000)
+                    #l_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['lights']}")
+                    #c_task.timing.cfg_samp_clk_timing(rate=3000)
                     s_task.timing.cfg_samp_clk_timing(rate=3000)
-                    l_task.timing.cfg_samp_clk_timing(rate=3000)
-                    c_task.write(self.camera_signal)
+                    #l_task.timing.cfg_samp_clk_timing(rate=3000)
+                    #c_task.write(self.camera_signal)
                     s_task.write(self.stim_signal)
-                    l_task.write(signal_stack)
-                    c_task.start()
+                    #l_task.write(signal_stack)
+                    #c_task.start()
                     s_task.start()
-                    l_task.start()
+                    #l_task.start()

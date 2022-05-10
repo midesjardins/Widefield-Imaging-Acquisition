@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import matplotlib.pyplot as plt
 from src.signal_generator import make_signal
 
 class Stimulation:
