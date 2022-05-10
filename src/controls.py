@@ -1,4 +1,5 @@
 import nidaqmx
+from nidaqmx.constants import AcquisitionType
 import matplotlib.pyplot as plt
 import numpy as np
 from src.signal_generator import square_signal
@@ -49,6 +50,7 @@ class DAQ:
         self.light_signals = []
         self.camera_signal = None
         self.ports = instruments['ports']
+        self.duration = 0
         self.signal_ajust = [
             [0, None, None, None], 
             [0, 4500, None, None], 
@@ -69,6 +71,7 @@ class DAQ:
             else:
                 self.light_signals.append(np.zeros(len(time_values)))
         self.camera_signal= np.max(np.vstack((self.light_signals)), axis=0)
+        self.duration = stim.duration
         for signal in self.light_signals:
             plt.plot(time_values, signal)
         plt.plot(time_values, self.camera_signal)
@@ -82,14 +85,16 @@ class DAQ:
             with nidaqmx.Task(new_task_name='stimuli') as s_task:
                 with nidaqmx.Task(new_task_name='camera') as c_task:
                     #c_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['camera']}")
-                    s_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['stimuli']}")
+                    s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{self.ports['stimuli']}")
                     #l_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['lights']}")
                     #c_task.timing.cfg_samp_clk_timing(rate=3000)
-                    s_task.timing.cfg_samp_clk_timing(rate=3000)
+                    s_task.timing.cfg_samp_clk_timing(rate=3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal))
                     #l_task.timing.cfg_samp_clk_timing(rate=3000)
                     #c_task.write(self.camera_signal)
                     s_task.write(self.stim_signal)
                     #l_task.write(signal_stack)
                     #c_task.start()
                     s_task.start()
+                    s_task.wait_until_done(timeout=1.5*self.duration)
+                    s_task.stop()
                     #l_task.start()

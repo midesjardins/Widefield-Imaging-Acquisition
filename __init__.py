@@ -18,9 +18,9 @@ instruments2 = {
     'stimuli': [Stimuli('port5', 'name')],
     'camera': Camera('port6', 'name'),
     'ports': {
-        'lights': 'port1/line0:3',
-        'stimuli': 'port2/line1',
-        'camera': 'port3/line1'
+        'lights': 'port0/line0:3',
+        'stimuli': 'ao1',
+        'camera': 'port2'
     }
 }
 
