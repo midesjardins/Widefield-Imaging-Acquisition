@@ -2,6 +2,7 @@ import nidaqmx
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from src.signal_generator import square_signal
 
 
 class Instrument:
@@ -41,16 +42,29 @@ class DAQ:
     def __init__(self, name, instruments):
         self.name = name
         self.instruments = instruments
+        self.number_of_lights = 4
+        self.light_signals = []
+        self.signal_ajust = [[0, None, None, None], [0, 4500, None, None], [0, 3000, 6000, None], [0, 2250, 4500, 6750]]
 
     def launch(self, stim, last):
         if last is False:
-            time_values = stim.time,stim.time_delay + stim.duration
-            signal = np.concatenate((stim.signal, stim.empty_signal))
+            time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
+            stim_signal = np.concatenate((stim.stim_signal, stim.empty_signal))
         else:
             time_values = stim.time
-            signal = stim.signal
+            stim_signal = stim.stim_signal
 
-        repeat = 900/stim.framerate
+        for signal_delay in self.signal_ajust[self.number_of_lights-1]:
+            if signal_delay != None:
+                self.light_signals.append(square_signal(time_values, stim.framerate/3, 0.1, int(signal_delay/(stim.framerate))))
+            else:
+                self.light_signals.append(np.zeros(len(time_values)))
+        for signal in self.light_signals:
+            plt.plot(time_values, signal)
+        plt.plot(time_values, stim_signal)
+        plt.show()
+
+        '''repeat = 900/stim.framerate
         trigger_indexes = np.linspace(0, repeat, 4, dtype = int)[0:3]
         index = -1
         begin_time = time.time()
@@ -81,4 +95,4 @@ class DAQ:
                 self.instruments['blue'].digital_write(False)
             while time.time() < target_time:
                 pass
-        print(time.time()-begin_time)
+        print(time.time()-begin_time)'''

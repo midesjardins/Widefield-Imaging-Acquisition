@@ -1,5 +1,6 @@
 from src.blocks import Blocks, Stimulation
 from src.controls import DAQ, Light, Camera, Stimuli
+from src.signal_generator import square_signal
 
 instruments = {
     'infrared': Light('port1', 'name'),
@@ -11,9 +12,9 @@ instruments = {
 }
 new_daq = DAQ('acquisition', instruments)
 
-a = Stimulation(new_daq, 2, 0.04, 4, 0, delay=0, pulse_type='random-square')
+a = Stimulation(new_daq, 1, 0.004, 4, 0, delay=0, pulse_type='random-square')
 b = Stimulation(new_daq, 1, 4, 8, 1, delay=50, pulse_type='random-square')
 c = Blocks([a], iterations=2)
 d = Blocks([b], iterations=3)
 e = Blocks([c,d], delay=2, iterations=2)
-c.run()
+a.run()

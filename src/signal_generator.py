@@ -1,9 +1,12 @@
 from scipy import signal
 import numpy as np
+import matplotlib.pyplot as plt
 
-def square_signal(time_values, frequency, signal_width):
-    duty_cycle = 1 - signal_width * frequency
-    return np.array(signal.square(2 * np.pi * frequency * time_values, duty_cycle)).clip(min=0)
+def square_signal(time_values, frequency, duty_cycle, delay_frames=0):
+    pulses = np.array(signal.square(2 * np.pi * frequency * time_values, duty_cycle)).clip(min=0)
+    if delay_frames == 0:
+        return pulses
+    return np.concatenate((np.zeros(delay_frames), pulses))[:-delay_frames]
 
 def random_square(time_values, pulses, width, jitter):
     pulse_signal = np.zeros(len(time_values))
@@ -15,8 +18,8 @@ def random_square(time_values, pulses, width, jitter):
         pulse_signal[(time_values>value-width/2) & (time_values<value+width/2)] = 5
     return pulse_signal
 
-def make_signal(time, pulse_type, width, pulses, jitter, frequency):
+def make_signal(time, pulse_type, width, pulses, jitter, frequency, duty):
     if pulse_type == 'square':
-        return square_signal(time, frequency, width)
+        return square_signal(time, frequency, duty)
     if pulse_type == 'random-square':
         return random_square(time, pulses, width, jitter)
