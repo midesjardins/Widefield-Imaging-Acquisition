@@ -5,13 +5,23 @@ from src.signal_generator import square_signal
 instruments1 = {
     'lights': [Light('port1', 'ir'), Light('port2', 'red'), Light('port3', 'green'), Light('port4', 'blue')],
     'stimuli': [Stimuli('port5', 'name')],
-    'camera': Camera('port6', 'name')
+    'camera': Camera('port6', 'name'),
+    'ports': {
+        'lights': 'port1/line0:3',
+        'stimuli': 'port2/line1',
+        'camera': 'port3/line1'
+    }
 }
 
 instruments2 = {
     'lights': [Light('port1', 'ir'), Light('port2', 'red'), Light('port3', 'green')],
     'stimuli': [Stimuli('port5', 'name')],
-    'camera': Camera('port6', 'name')
+    'camera': Camera('port6', 'name'),
+    'ports': {
+        'lights': 'port1/line0:3',
+        'stimuli': 'port2/line1',
+        'camera': 'port3/line1'
+    }
 }
 
 new_daq = DAQ('acquisition', instruments1)
