@@ -2,18 +2,23 @@ from src.blocks import Blocks, Stimulation
 from src.controls import DAQ, Light, Camera, Stimuli
 from src.signal_generator import square_signal
 
-instruments = {
-    'infrared': Light('port1', 'name'),
-    'red': Light('port2', 'name'),
-    'green': Light('port3', 'name'),
-    'blue': Light('port4', 'name'),
-    'air_pump': Stimuli('port5', 'name'),
+instruments1 = {
+    'lights': [Light('port1', 'ir'), Light('port2', 'red'), Light('port3', 'green'), Light('port4', 'blue')],
+    'stimuli': [Stimuli('port5', 'name')],
     'camera': Camera('port6', 'name')
 }
-new_daq = DAQ('acquisition', instruments)
 
-a = Stimulation(new_daq, 1, 0.004, 4, 0, delay=0, pulse_type='random-square')
-b = Stimulation(new_daq, 1, 4, 8, 1, delay=50, pulse_type='random-square')
+instruments2 = {
+    'lights': [Light('port1', 'ir'), Light('port2', 'red'), Light('port3', 'green')],
+    'stimuli': [Stimuli('port5', 'name')],
+    'camera': Camera('port6', 'name')
+}
+
+new_daq = DAQ('acquisition', instruments1)
+other_daq = DAQ('acquisition', instruments2)
+
+a = Stimulation(other_daq, 1, 0.004, 4, 0, delay=1, pulse_type='random-square')
+b = Stimulation(new_daq, 1, 0.01, 12, 0.01, delay=5, pulse_type='random-square')
 c = Blocks([a], iterations=2)
 d = Blocks([b], iterations=3)
 e = Blocks([c,d], delay=2, iterations=2)

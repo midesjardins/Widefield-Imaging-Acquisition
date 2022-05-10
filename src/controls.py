@@ -42,7 +42,7 @@ class DAQ:
     def __init__(self, name, instruments):
         self.name = name
         self.instruments = instruments
-        self.number_of_lights = 4
+        self.number_of_lights = len(self.instruments['lights'])
         self.light_signals = []
         self.signal_ajust = [[0, None, None, None], [0, 4500, None, None], [0, 3000, 6000, None], [0, 2250, 4500, 6750]]
 
@@ -63,6 +63,7 @@ class DAQ:
             plt.plot(time_values, signal)
         plt.plot(time_values, stim_signal)
         plt.show()
+        self.light_signals = []
 
         '''repeat = 900/stim.framerate
         trigger_indexes = np.linspace(0, repeat, 4, dtype = int)[0:3]
