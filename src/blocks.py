@@ -3,7 +3,7 @@ import numpy as np
 from src.signal_generator import make_signal
 
 class Stimulation:
-    def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', framerate=30):
+    def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', framerate=60):
         self.daq = daq
         self.duration = duration
         self.type = pulse_type

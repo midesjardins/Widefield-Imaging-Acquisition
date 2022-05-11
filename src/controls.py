@@ -1,7 +1,10 @@
 import nidaqmx
-from nidaqmx.constants import AcquisitionType
 import matplotlib.pyplot as plt
+from nidaqmx.constants import AcquisitionType
+from nidaqmx.constants import LineGrouping
+from nidaqmx.constants import Edge
 import numpy as np
+import time
 from src.signal_generator import square_signal
 
 
@@ -47,10 +50,10 @@ class DAQ:
         self.camera_task = None
         self.stimuli_tasks = None
         self.stim_signal = None
+        self.duration = None
         self.light_signals = []
         self.camera_signal = None
         self.ports = instruments['ports']
-        self.duration = 0
         self.signal_ajust = [
             [0, None, None, None], 
             [0, 4500, None, None], 
@@ -67,34 +70,43 @@ class DAQ:
 
         for signal_delay in self.signal_ajust[self.number_of_lights-1]:
             if signal_delay is not None:
-                self.light_signals.append(square_signal(time_values, stim.framerate/3, 0.1, int(signal_delay/(stim.framerate))))
+                signal = square_signal(time_values, stim.framerate/3, 0.05, int(signal_delay/(stim.framerate)), digital=True)
+                signal[-1] = False
+                self.light_signals.append(signal)
             else:
-                self.light_signals.append(np.zeros(len(time_values)))
+                self.light_signals.append(np.full(len(time_values), False))
         self.camera_signal= np.max(np.vstack((self.light_signals)), axis=0)
         self.duration = stim.duration
-        for signal in self.light_signals:
-            plt.plot(time_values, signal)
-        plt.plot(time_values, self.camera_signal)
-        plt.show()
         self.write_waveforms()
         self.light_signals = []
 
     def write_waveforms(self):
         signal_stack = np.stack((self.light_signals))
+        print(signal_stack)
         with nidaqmx.Task(new_task_name='lights') as l_task:
             with nidaqmx.Task(new_task_name='stimuli') as s_task:
                 with nidaqmx.Task(new_task_name='camera') as c_task:
                     #c_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['camera']}")
                     s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{self.ports['stimuli']}")
-                    #l_task.co_channels.add_co_pulse_chan_time(f"{self.name}/{self.ports['lights']}")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line0")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line1")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line2")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line3")
                     #c_task.timing.cfg_samp_clk_timing(rate=3000)
-                    s_task.timing.cfg_samp_clk_timing(rate=3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal))
-                    #l_task.timing.cfg_samp_clk_timing(rate=3000)
                     #c_task.write(self.camera_signal)
+                    #s_task.timing.cfg_samp_clk_timing(rate=3000, samps_per_chan=100000)
+                    s_task.timing.cfg_samp_clk_timing(3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal))
+                    l_task.timing.cfg_samp_clk_timing(3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal))
                     s_task.write(self.stim_signal)
+                    l_task.write(signal_stack)
+                    s_task.start()
+                    l_task.start()
+                    s_task.wait_until_done(timeout=1.5*self.duration)
+                    l_task.wait_until_done(timeout=1.5*self.duration)
+                    s_task.stop()
+                    l_task.stop()
+                    #s_task.write(self.stim_signal)
                     #l_task.write(signal_stack)
                     #c_task.start()
-                    s_task.start()
-                    s_task.wait_until_done(timeout=1.5*self.duration)
-                    s_task.stop()
+                    #s_task.write(5)
                     #l_task.start()
