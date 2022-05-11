@@ -3,3 +3,4 @@ nidaqmx
 numpy
 matplotlib
 scipy
+serial
