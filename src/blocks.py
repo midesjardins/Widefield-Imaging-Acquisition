@@ -3,7 +3,7 @@ import numpy as np
 from src.signal_generator import make_signal
 
 class Stimulation:
-    def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', framerate=30):
+    def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', framerate=60):
         self.daq = daq
         self.duration = duration
         self.type = pulse_type
@@ -19,9 +19,9 @@ class Stimulation:
         self.stim_signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq, self.duty)
         self.empty_signal = np.zeros(len(self.time_delay))
 
-    def run(self, last = False):
+    def run(self):
         self.stim_signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq, self.duty)
-        self.daq.launch(self, last)
+        self.daq.launch(self)
 
 class Blocks:
     def __init__(self, data, delay=0, iterations=1):
@@ -29,12 +29,12 @@ class Blocks:
         self.iterations = iterations
         self.delay = delay
 
-    def run(self, last=False):
+    def run(self):
         for iteration in range(self.iterations):
             for item in self.data:
                 if iteration + 1 != self.iterations:
                     item.run()
                 else:
-                    item.run(last=True)
+                    item.run()
             if iteration + 1 != self.iterations:
                 time.sleep(self.delay)
