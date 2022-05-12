@@ -2,6 +2,7 @@ import nidaqmx
 from nidaqmx.constants import AcquisitionType
 import numpy as np
 from src.signal_generator import digital_square
+from pylablib.devices import IMAQ
 
 signal_ajust = [
             [0, None, None, None], 
@@ -14,6 +15,27 @@ class Instrument:
     def __init__(self, port, daq_name):
         self.port = port
         self.daq_name = daq_name
+
+class Camera(Instrument):
+    def __init__(self, port, daq_name):
+        super().__init__(port, daq_name)
+        self.frames = []
+
+    def initialize(self):
+        cam = IMAQ.IMAQCamera(self.port)
+        cam.setup_acquisition(mode="sequence", nframes=100)
+        return cam
+
+    def loop(self, task, cam):
+        cam.start_acquisition()
+        while True:
+            cam.wait_for_frame()
+            self.frames += cam.read_multiple_images()
+            if task.is_task_done():
+                break
+        cam.stop_acquisition()
+
+        
 
 class DAQ:
     def __init__(self, name, lights, stimuli, camera):
@@ -31,6 +53,10 @@ class DAQ:
     def generate_stim_wave(self, stim):
         self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
         self.stim_signal.append(np.concatenate((stim.stim_signal, stim.empty_signal)))
+        if len(self.stim_signal) != 1:
+            self.stim_signal = np.stack((self.stim_signal))
+        else:
+            self.stim_signal = self.stim_signal[0]
     
     def generate_light_wave(self, stim):
         for signal_delay in signal_ajust[len(self.lights)-1]:
@@ -40,6 +66,8 @@ class DAQ:
                 self.light_signals.append(signal)
             else:
                 self.light_signals.append(np.full(len(self.time_values), False))
+        if len(self.light_signals) != 1:
+            self.light_signals = np.stack((self.light_signals))
     
     def generate_camera_wave(self):
         self.camera_signal = np.max(np.vstack((self.light_signals)), axis=0)
@@ -47,19 +75,21 @@ class DAQ:
     def write_waveforms(self):
         with nidaqmx.Task(new_task_name='lights') as l_task:
             with nidaqmx.Task(new_task_name='stimuli') as s_task:
-                with nidaqmx.Task(new_task_name='camera') as c_task:
-                    for stimulus in self.stimuli:
-                        s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
-                    for light in self.lights:
-                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                    self.sample(s_task, l_task)
-                    self.write([s_task, l_task], [np.stack((self.stim_signal)), np.stack((self.light_signals))])
-                    self.start(s_task, l_task)
-                    self.wait(s_task, l_task)
-                    self.stop(s_task, l_task)
+                for stimulus in self.stimuli:
+                    s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
+                for light in self.lights:
+                    l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                self.sample([s_task, l_task])
+                cam = self.camera.initialize()
+                self.write([s_task, l_task], [self.stim_signal, self.light_signals])
+                self.start([s_task, l_task])
+                self.camera.loop(l_task, cam)
+                self.wait([s_task, l_task])
+                self.stop([s_task, l_task])
+                print(len(self.camera.frames))
     
     def reset_daq(self):
-        self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], None, None, None
+        self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], None, None
 
     def start(self, tasks):
         for task in tasks:
