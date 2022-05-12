@@ -21,20 +21,16 @@ class DAQ:
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], None, None
 
-    def launch(self, stim, last):
-        self.generate_stim_wave(stim, last)
+    def launch(self, stim):
+        self.generate_stim_wave(stim)
         self.generate_light_wave(stim)
         self.generate_camera_wave()
         self.write_waveforms()
         self.reset_daq()
 
-    def generate_stim_wave(self, stim, last):
-        if last is False:
-            self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
-            self.stim_signal.append(np.concatenate((stim.stim_signal, stim.empty_signal)))
-        else:
-            self.time_values = stim.time
-            self.stim_signal.append(stim.stim_signal)
+    def generate_stim_wave(self, stim):
+        self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
+        self.stim_signal.append(np.concatenate((stim.stim_signal, stim.empty_signal)))
     
     def generate_light_wave(self, stim):
         for signal_delay in signal_ajust[len(self.lights)-1]:
