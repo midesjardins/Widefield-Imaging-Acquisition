@@ -1,5 +1,5 @@
 from pylablib.devices import IMAQ
-from src.blocks import Blocks, Stimulation
+from src.blocks import Experiment, Block, Stimulation
 from src.controls import DAQ, Instrument, Camera
 from PIL import Image as im
 from matplotlib import pyplot as plt
@@ -13,17 +13,19 @@ camera1 =  Camera('img0', 'name')
 
 other_daq = DAQ('dev1',lights1, stimuli1, camera1)
 
-a = Stimulation(other_daq, 2, 0.2, 10, 0, delay=0, pulse_type='random-square')
+a = Stimulation(other_daq, 10, 0.2, 3, 0, delay=0, pulse_type='random-square')
 b = Stimulation(other_daq, 1, 0.1, 8, 0.01, delay=0, pulse_type='random-square')
-c = Blocks([a], iterations=2)
-d = Blocks([b], iterations=3)
-e = Blocks([c,d], delay=2, iterations=2)
-a.run()
+c = Block([a], iterations=2)
+d = Block([b], iterations=3)
+e = Block([c,d], delay=2, iterations=2)
+f = Experiment(e, 30, 10, "Lola", "data")
+f.start()
 
 
-for frame in camera1.frames:
+"""for i, frame in enumerate(camera1.frames):
+    print(camera1.metadata[i])
     plt.imshow(frame, interpolation='nearest')
-    plt.show()
+    plt.show()"""
 '''
 cam1 = IMAQ.IMAQCamera('img0')
 attributes = cam1.set_grabber_attribute_value("FRAMEWAIT_MSEC")
