@@ -54,16 +54,18 @@ class Block:
                 time.sleep(self.delay)
 
 class Experiment:
-    def __init__(self, blocks, framerate, exposition, mouse_id, directory):
+    def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq):
         self.blocks = blocks
         self.framerate = framerate
         self.exposition = exposition
         self.mouse_id = mouse_id
         self.directory = directory
+        self.daq = daq
     
     def start(self):
         self.save()
         self.blocks.run(self)
+        self.daq.camera.save()
 
     def save(self):
         with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:
