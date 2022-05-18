@@ -4,6 +4,7 @@ from nidaqmx.constants import AcquisitionType
 import numpy as np
 from src.signal_generator import digital_square
 from pylablib.devices import IMAQ
+import re
 
 signal_ajust = [
             [0, None, None, None], 
@@ -16,6 +17,7 @@ class Instrument:
     def __init__(self, port, daq_name):
         self.port = port
         self.daq_name = daq_name
+        self.cam = None
 
 class Camera(Instrument):
     def __init__(self, port, daq_name):
@@ -24,30 +26,37 @@ class Camera(Instrument):
         self.metadata = []
         self.daq = None
 
-    def initialize(self, daq, stim):
+    def initialize(self, daq):
         self.daq = daq
-        cam = IMAQ.IMAQCamera(self.port)
-        cam.setup_acquisition(mode="sequence", nframes=100)
-        # cam.get_frame_timings()
-        # cam.set_frame_period(1/daq.exp.framerate)
-        # cam.set_exposure(0.2)
-        cam.set_roi(0,1024,0,1024)
-        cam.start_acquisition()
-        return cam
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
+            lines = []
+            for i, line in enumerate(file):
+                if i == 2408:
+                    lines.append(f"                                    Current ({self.daq.exp.framerate})")
+                else:
+                    lines.append(line)
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
+            file.write("".join(lines))
+        self.cam = IMAQ.IMAQCamera(self.port)
+        self.cam.setup_acquisition(mode="sequence", nframes=100)
+        self.cam.set_roi(0,1024,0,1024)
+        self.cam.start_acquisition()
 
-    def loop(self, task, cam):
-        cam.read_multiple_images()
+    def loop(self, task):
+        self.cam.read_multiple_images()
         while not task.is_task_done():
-            cam.wait_for_frame()
-            self.frames += cam.read_oldest_image()
-            self.metadata += {"time": time.time(), "daq": self.daq.read_metadata()}
+            self.cam.wait_for_frame()
+            self.frames.append(self.cam.read_oldest_image())
+            self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
+        """for i in range(7):
+            self.frames.append(self.cam.read_oldest_image())"""
     
     def save(self):
-        np.save(f"{self.daq.exp.directory}/data/{time.time()}-data", self.frames)
-        np.save(f"{self.daq.exp.directory}/data/{time.time()}-metadata", self.metadata)
+        np.save(f"{self.daq.exp.directory}/{time.time()}-data", self.frames)
+        np.save(f"{self.daq.exp.directory}/{time.time()}-metadata", self.metadata)
 
-    def stop(self, cam):
-        cam.stop_acquisition()
+    def stop(self):
+        self.cam.stop_acquisition()
 
 
         
@@ -97,21 +106,22 @@ class DAQ:
                 for light in self.lights:
                     l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                 self.sample([s_task, l_task])
-                cam = self.camera.initialize(self)
+                self.camera.initialize(self)
                 self.write([s_task, l_task], [self.stim_signal, self.light_signals])
+                #self.write([s_task, l_task], [self.stim_signal, [[False, False, False, True],[False, False, False, True], [False, False, False, True], [False, False, False, True]]])
                 self.start([s_task, l_task])
-                self.camera.loop(l_task, cam)
+                self.camera.loop(l_task)
                 self.wait([s_task, l_task])
-                self.stop([s_task, l_task, cam])
-                cam.save()
+                self.stop([s_task, l_task, self.camera])
                 print(len(self.camera.frames))
                 print(len(self.camera.metadata))
 
     def read_metadata(self):
         dico = {}
         for task in self.tasks:
-            name = task.name()
-            value = task.read()
+            name = task.name
+            value =time.time()
+            # to be changed
             dico[name] = value
         return dico
     

@@ -13,19 +13,24 @@ camera1 =  Camera('img0', 'name')
 
 other_daq = DAQ('dev1',lights1, stimuli1, camera1)
 
-a = Stimulation(other_daq, 10, 0.2, 3, 0, delay=0, pulse_type='random-square')
+a = Stimulation(other_daq, 1, 0.2, 3, 0, delay=0, pulse_type='random-square')
 b = Stimulation(other_daq, 1, 0.1, 8, 0.01, delay=0, pulse_type='random-square')
-c = Block([a], iterations=2)
+c = Block([a], iterations=10)
 d = Block([b], iterations=3)
 e = Block([c,d], delay=2, iterations=2)
-f = Experiment(e, 30, 10, "Lola", "data")
+f = Experiment(a, 40, 10, "Lola", "data", other_daq)
 f.start()
 
 
-"""for i, frame in enumerate(camera1.frames):
-    print(camera1.metadata[i])
-    plt.imshow(frame, interpolation='nearest')
-    plt.show()"""
+errors = 0
+for i, frame in enumerate(camera1.frames):
+    print(i)
+    try:
+        plt.imshow(frame, interpolation='nearest')
+        plt.show()
+    except Exception:
+        errors +=1
+        print(f"# of Errors: {errors}")
 '''
 cam1 = IMAQ.IMAQCamera('img0')
 attributes = cam1.set_grabber_attribute_value("FRAMEWAIT_MSEC")
