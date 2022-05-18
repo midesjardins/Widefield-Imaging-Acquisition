@@ -25,6 +25,7 @@ class App(QWidget):
         self.grid_layout.setAlignment(Qt.AlignTop)
 
         self.experiment_settings_label = QLabel('Experiment Settings')
+        self.experiment_settings_label.setFont(QFont("Helvetica", 16))
         self.grid_layout.addWidget(self.experiment_settings_label, 0,0)
 
         self.experiment_settings_main_window = QVBoxLayout()
@@ -57,6 +58,7 @@ class App(QWidget):
         self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
 
         self.image_settings_label = QLabel('Image Settings')
+        self.image_settings_label.setFont(QFont("Helvetica", 16))
         self.grid_layout.addWidget(self.image_settings_label, 0,1)
 
         self.image_settings_main_window = QVBoxLayout()
@@ -89,6 +91,7 @@ class App(QWidget):
         self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
         self.live_preview_label = QLabel('Live Preview')
+        self.live_preview_label.setFont(QFont("Helvetica", 16))
         self.grid_layout.addWidget(self.live_preview_label, 0, 2)
 
         self.live_preview_pixmap = QPixmap('mouse.jpg')
@@ -99,6 +102,7 @@ class App(QWidget):
         self.grid_layout.addWidget(self.live_preview_image, 1, 2)
 
         self.stimulation_tree_label = QLabel('Stimulation Tree')
+        self.stimulation_tree_label.setFont(QFont("Helvetica", 16))
         self.grid_layout.addWidget(self.stimulation_tree_label, 2, 0)
 
         self.stimulation_tree_window = QVBoxLayout()
@@ -124,18 +128,65 @@ class App(QWidget):
         self.stimulation_tree_second_window.addWidget(self.add_child_branch_button)
         self.stim_buttons_container.setLayout(self.stimulation_tree_second_window)
         self.stimulation_tree_switch_window.addWidget(self.stim_buttons_container)
-        self.new_branch_button = QPushButton("New Stimulation")
-        self.new_branch_button.clicked.connect(self.first_stimulation)
-        self.stimulation_tree_switch_window.addWidget(self.new_branch_button)
         
-        self.stimulation_tree_window.addLayout(self.stimulation_tree_switch_window)
+        self.new_branch_button = QPushButton("New Stimulation")
+        self.new_branch_button.setIcon(QIcon("gui/icons/square-plus.png"))
+        self.stimulation_tree_third_window = QHBoxLayout()
+        self.stimulation_tree_third_window.addWidget(self.new_branch_button)
+        self.stim_buttons_container2 = QWidget()
+        self.stim_buttons_container2.setLayout(self.stimulation_tree_third_window)
+        self.stimulation_tree_switch_window.addWidget(self.stim_buttons_container2)
+        self.new_branch_button.clicked.connect(self.first_stimulation)
+        self.grid_layout.addLayout(self.stimulation_tree_switch_window, 4, 0)
+        
+        #self.stimulation_tree_window.addLayout(self.stimulation_tree_switch_window)
         self.stimulation_tree_switch_window.setCurrentIndex(1)
         self.grid_layout.addLayout(self.stimulation_tree_window, 3, 0)
 
         self.signal_adjust_label = QLabel('Signal Adjust')
+        self.signal_adjust_label.setFont(QFont("Helvetica", 16))
         self.grid_layout.addWidget(self.signal_adjust_label, 2, 1)
 
+
+        self.signal_adjust_superposed = QStackedLayout()
+        self.stimulation_edit_layout = QVBoxLayout()
+
+        self.stimulation_name_label = QLabel("Stimulation Name")
+        self.stimulation_name_cell = QLineEdit()
+        self.stimulation_name_cell.textEdited.connect(self.change_branch_name)
+        self.stimulation_name_window = QHBoxLayout()
+        self.stimulation_name_window.addWidget(self.stimulation_name_label)
+        self.stimulation_name_window.addWidget(self.stimulation_name_cell)
+        self.stimulation_edit_layout.addLayout(self.stimulation_name_window)
+
+
+
+        self.stimulation_edit_container = QWidget()
+        self.stimulation_edit_container.setLayout(self.stimulation_edit_layout)
+        self.block_edit_layout = QVBoxLayout()
+
+        self.block_name_label = QLabel("Block Name")
+        self.block_name_cell = QLineEdit()
+        self.block_name_cell.textEdited.connect(self.change_branch_name)
+        self.block_name_window = QHBoxLayout()
+        self.block_name_window.addWidget(self.block_name_label)
+        self.block_name_window.addWidget(self.block_name_cell)
+        self.block_edit_layout.addLayout(self.block_name_window)
+
+
+
+        self.block_edit_container = QWidget()
+        self.block_edit_container.setLayout(self.block_edit_layout)
+        self.signal_adjust_superposed.addWidget(self.stimulation_edit_container)
+        self.signal_adjust_superposed.addWidget(self.block_edit_container)
+        self.signal_adjust_superposed.addWidget(QLabel())
+        self.signal_adjust_superposed.setCurrentIndex(2)
+        self.grid_layout.addLayout(self.signal_adjust_superposed, 3, 1)
+
+        
+
         self.signal_preview_label = QLabel('Signal Preview')
+        self.signal_preview_label.setFont(QFont("Helvetica", 16))
         self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
 
         self.buttons_main_window = QHBoxLayout()
@@ -147,6 +198,8 @@ class App(QWidget):
         self.run_button.setIcon(QIcon("gui/icons/player-play.png"))
         self.run_button.clicked.connect(self.run)
         self.buttons_main_window.addWidget(self.run_button)
+        self.test_tree = QTreeWidget()
+        self.grid_layout.addWidget(self.test_tree, 3,2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
 
         self.show()
@@ -171,27 +224,31 @@ class App(QWidget):
         self.directory_cell.setText(folder)
 
     def delete_branch(self):
-        root = self.stimulation_tree.invisibleRootItem()
-        parent = self.stimulation_tree.currentItem().parent()
         try:
+            root = self.stimulation_tree.invisibleRootItem()
+            parent = self.stimulation_tree.currentItem().parent()
             if parent.childCount() == 1:
                 parent.setIcon(0, QIcon("gui/icons/wave-square.png"))
+            (parent or root).removeChild(self.stimulation_tree.currentItem())
+            self.actualize_tree()
         except Exception:
-            pass
-        (parent or root).removeChild(self.stimulation_tree.currentItem())
+            root.removeChild(self.stimulation_tree.currentItem())
+            self.actualize_tree()
+        
     
     def add_brother(self):
         if self.stimulation_tree.currentItem():
             stimulation_tree_item = QTreeWidgetItem()
-            stimulation_tree_item.setText(0, "Test5")
+            stimulation_tree_item.setText(0, "No Name")
+            stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
             stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
-            #stimulation_tree_item.setIcon(0, self.style().standardIcon(getattr(QStyle, "SP_DirIcon")))
             parent = self.stimulation_tree.selectedItems()[0].parent()
             if parent:
                 index = parent.indexOfChild(self.stimulation_tree.selectedItems()[0])
                 parent.insertChild(index+1, stimulation_tree_item)
             else:
                 self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
+            self.stimulation_tree.setCurrentItem(stimulation_tree_item)
         else:
             pass
 
@@ -200,9 +257,11 @@ class App(QWidget):
             self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
             stimulation_tree_item = QTreeWidgetItem()
             stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
-            stimulation_tree_item.setText(0,"Test4")
+            stimulation_tree_item.setText(0,"No Name")
+            stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
             self.stimulation_tree.selectedItems()[0].addChild(stimulation_tree_item)
             self.stimulation_tree.selectedItems()[0].setExpanded(True)
+            self.stimulation_tree.setCurrentItem(stimulation_tree_item)
         else:
             pass
 
@@ -211,14 +270,40 @@ class App(QWidget):
             self.stimulation_tree_switch_window.setCurrentIndex(0)
         else:
             self.stimulation_tree_switch_window.setCurrentIndex(1)
+        try:
+            if self.stimulation_tree.currentItem().childCount() > 0:
+                self.signal_adjust_superposed.setCurrentIndex(1)
+                if self.stimulation_tree.currentItem().text(0) != "No Name":
+                    self.block_name_cell.setText(self.stimulation_tree.currentItem().text(0))
+                else:
+                    self.block_name_cell.setText("")
+            else:
+                self.signal_adjust_superposed.setCurrentIndex(0)
+                if self.stimulation_tree.currentItem().text(0) != "No Name":
+                    self.stimulation_name_cell.setText(self.stimulation_tree.currentItem().text(0))
+                else:
+                    self.stimulation_name_cell.setText("")
+        except Exception:
+            self.signal_adjust_superposed.setCurrentIndex(2)
+
+
 
     def first_stimulation(self):
         stimulation_tree_item = QTreeWidgetItem()
+        stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
         stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
-        stimulation_tree_item.setText(0, "First Item")
+        stimulation_tree_item.setText(0, "No Name")
         self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
         self.stimulation_tree_switch_window.setCurrentIndex(0)
+        self.stimulation_tree.setCurrentItem(stimulation_tree_item)
 
+    def change_branch_name(self):
+        branch = self.stimulation_tree.currentItem()
+        branch.setForeground(0, QBrush(QColor(0, 0, 0)))
+        if branch.childCount() > 0:
+            branch.setText(0, self.block_name_cell.text())
+        else:
+            branch.setText(0, self.stimulation_name_cell.text())
 
 
 if __name__ == '__main__':
