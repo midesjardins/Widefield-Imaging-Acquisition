@@ -25,9 +25,10 @@ class Stimulation:
         if self.type == "square":
             return f"Duration: {self.duration}, Frequency: {self.freq}, Duty: {self.duty}, Delay: {self.delay}"
     def run(self, exp):
+        print(f"stim ran")
         self.exp = exp
         self.stim_signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq, self.duty)
-        self.daq.launch(self, exp)
+        self.daq.launch(self)
 
 class Block:
     def __init__(self, data, delay=0, iterations=1):
@@ -64,8 +65,9 @@ class Experiment:
     
     def start(self):
         self.save()
+        print("experiment saved")
         self.blocks.run(self)
-        self.daq.camera.save()
+        self.daq.camera.save(self.directory)
 
     def save(self):
         with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:

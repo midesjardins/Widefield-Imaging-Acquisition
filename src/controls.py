@@ -2,6 +2,7 @@ import nidaqmx
 import time
 from nidaqmx.constants import AcquisitionType
 import numpy as np
+from pandas.core.indexing import need_slice
 from src.signal_generator import digital_square
 from pylablib.devices import IMAQ
 import re
@@ -28,47 +29,76 @@ class Camera(Instrument):
 
     def initialize(self, daq):
         self.daq = daq
+        indexes_fr_default = []
+        indexes_fr_current = []
+        indexes_et_default = []
+        indexes_et_current = []
+        lines = []
         with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
-            lines = []
-            for i, line in enumerate(file):
-                if i == 2408:
-                    lines.append(f"                                    Current ({self.daq.exp.framerate})")
+            with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt', "w") as new_file:
+                for line in file:
+                    new_file.write(line)
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt') as txt_file:
+            for i, line in enumerate(txt_file):
+                if "Attribute (Frame Rate)" in line:
+                    indexes_fr_default.append(i+11)
+                    indexes_fr_current.append(i+12)
+                if "Attribute (Exposure Time)" in line:
+
+                    indexes_et_default.append(i+11)
+                    indexes_et_current.append(i+12)
+
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt') as txt_edit:
+            for i, line in enumerate(txt_edit):
+                if i in indexes_fr_default:
+                    lines.append(f"                                    Default ({self.daq.framerate})\n")   
+                elif i in indexes_fr_current:
+                    lines.append(f"                                    Current ({self.daq.framerate})\n")
+                elif i in indexes_et_default:
+                    lines.append(f"                                    Default ({self.daq.exposure})\n")   
+                elif i in indexes_et_current:
+                    lines.append(f"                                    Current ({self.daq.exposure})\n")
                 else:
                     lines.append(line)
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
+
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', "w") as file:
             file.write("".join(lines))
+
+        """with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
+            file.write("".join(lines))"""
         self.cam = IMAQ.IMAQCamera(self.port)
-        self.cam.setup_acquisition(mode="sequence", nframes=100)
+        print("cam init")
+        self.cam.setup_acquisition(nframes=20)
         self.cam.set_roi(0,1024,0,1024)
         self.cam.start_acquisition()
+        time.sleep(3)
+        print("acquisition started")
 
     def loop(self, task):
         self.cam.read_multiple_images()
         while not task.is_task_done():
             self.cam.wait_for_frame()
-            self.frames.append(self.cam.read_oldest_image())
-            self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
-        """for i in range(7):
-            self.frames.append(self.cam.read_oldest_image())"""
-    
-    def save(self):
-        np.save(f"{self.daq.exp.directory}/{time.time()}-data", self.frames)
-        np.save(f"{self.daq.exp.directory}/{time.time()}-metadata", self.metadata)
-
-    def stop(self):
+            img_tuple =  self.cam.read_multiple_images(return_info=True)
+            self.frames += img_tuple[0]
+            self.metadata += img_tuple[1]
         self.cam.stop_acquisition()
+            #self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
+    
+    def save(self, directory):
+        np.save(f"{directory}/{time.time()}-data", self.frames)
+        np.save(f"{directory}/{time.time()}-metadata", self.metadata)
 
 
         
 
 class DAQ:
-    def __init__(self, name, lights, stimuli, camera):
+    def __init__(self, name, lights, stimuli, camera, framerate, exposure):
         self.name = name
+        self.framerate, self.exposure = framerate, exposure
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
-        self.tasks, self.light_signals, self.stim_signal, self.camera_signal, self.time_values, self.exp = [], [], [], None, None, None
+        self.tasks, self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], [], None, None
 
-    def launch(self, stim, exp):
-        self.exp = exp
+    def launch(self, stim):
         self.generate_stim_wave(stim)
         self.generate_light_wave(stim)
         self.generate_camera_wave()
@@ -86,35 +116,36 @@ class DAQ:
     def generate_light_wave(self, stim):
         for signal_delay in signal_ajust[len(self.lights)-1]:
             if signal_delay:
-                signal = digital_square(self.time_values, self.exp.framerate/3, 0.05, int(signal_delay/(self.exp.framerate)))
+                signal = digital_square(self.time_values, self.framerate/3, 0.05, int(signal_delay/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
             else:
                 self.light_signals.append(np.full(len(self.time_values), False))
         if len(self.light_signals) != 1:
-            self.light_signals = np.stack((self.light_signals))
+            self.stack_light_signals = np.stack((self.light_signals))
     
     def generate_camera_wave(self):
-        self.camera_signal = np.max(np.vstack((self.light_signals)), axis=0)
+        self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)
+        self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self, stim):
         with nidaqmx.Task(new_task_name='lights') as l_task:
             with nidaqmx.Task(new_task_name='stimuli') as s_task:
-                self.tasks = [l_task, s_task]
-                for stimulus in self.stimuli:
-                    s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
-                for light in self.lights:
-                    l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                self.sample([s_task, l_task])
-                self.camera.initialize(self)
-                self.write([s_task, l_task], [self.stim_signal, self.light_signals])
-                #self.write([s_task, l_task], [self.stim_signal, [[False, False, False, True],[False, False, False, True], [False, False, False, True], [False, False, False, True]]])
-                self.start([s_task, l_task])
-                self.camera.loop(l_task)
-                self.wait([s_task, l_task])
-                self.stop([s_task, l_task, self.camera])
-                print(len(self.camera.frames))
-                print(len(self.camera.metadata))
+                with nidaqmx.Task(new_task_name="trigger") as t_task:
+                    self.tasks = [l_task, s_task]
+                    for stimulus in self.stimuli:
+                        s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
+                    self.sample([s_task, l_task])
+                    self.camera.initialize(self)
+                    self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                    self.start([s_task, l_task])
+                    self.camera.loop(l_task)
+                    self.wait([s_task, l_task])
+                    self.stop([s_task, l_task])
+                    print(len(self.camera.frames))
 
     def read_metadata(self):
         dico = {}
