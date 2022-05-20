@@ -31,7 +31,8 @@ class Stimulation:
         self.daq.launch(self)
 
 class Block:
-    def __init__(self, data, delay=0, iterations=1):
+    def __init__(self, name, data, delay=0, iterations=1):
+        self.name = name
         self.data = data
         self.iterations = iterations
         self.delay = delay

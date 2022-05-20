@@ -11,9 +11,9 @@ other_daq = DAQ('dev1',lights1, stimuli1, camera1, 114, 100000)
 
 a = Stimulation(other_daq, 1, 0.2, 4, 0, delay=0, pulse_type='random-square')
 b = Stimulation(other_daq, 1, 0.1, 8, 0.01, delay=0, pulse_type='random-square')
-c = Block([a], iterations=10)
-d = Block([b], iterations=3)
-e = Block([c,d], delay=2, iterations=2)
+c = Block("c", [a], iterations=10)
+d = Block("d", [b], iterations=3)
+e = Block("e", [c,d], delay=2, iterations=2)
 f = Experiment(a, 40, 10, "Lola", "data", other_daq)
 f.start()
 

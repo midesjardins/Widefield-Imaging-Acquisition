@@ -42,15 +42,18 @@ class App(QWidget):
         self.experiment_settings_main_window.addLayout(self.mouse_id_window)
 
         self.directory_window = QHBoxLayout()
-        self.directory_label = QLabel('Directory')
-        self.directory_window.addWidget(self.directory_label)
+        self.directory_save_files_checkbox = QCheckBox()
+        self.directory_save_files_checkbox.setText("Save")
+        self.directory_save_files_checkbox.stateChanged.connect(self.enable_directory)
+        self.directory_window.addWidget(self.directory_save_files_checkbox)
+        self.directory_choose_button = QPushButton("Select Directory")
+        self.directory_choose_button.setIcon(QIcon("gui/icons/folder-plus.png"))
+        self.directory_choose_button.setDisabled(True)
+        self.directory_choose_button.clicked.connect(self.choose_directory)
+        self.directory_window.addWidget(self.directory_choose_button)
         self.directory_cell = QLineEdit("")
         self.directory_cell.setReadOnly(True)
         self.directory_window.addWidget(self.directory_cell)
-        self.directory_choose_button = QPushButton("Choose")
-        self.directory_choose_button.setIcon(QIcon("gui/icons/folder-plus.png"))
-        self.directory_choose_button.clicked.connect(self.choose_directory)
-        self.directory_window.addWidget(self.directory_choose_button)
         self.experiment_settings_main_window.addLayout(self.directory_window)
 
         self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
@@ -157,6 +160,67 @@ class App(QWidget):
         self.stimulation_name_window.addWidget(self.stimulation_name_cell)
         self.stimulation_edit_layout.addLayout(self.stimulation_name_window)
 
+        self.stimulation_type_label = QLabel("Stimulation Type")
+        self.stimulation_type_cell = QComboBox()
+        self.stimulation_type_cell.addItem("First")
+        self.stimulation_type_cell.addItem("Second")
+        self.stimulation_type_cell.addItem("Third")
+        self.stimulation_type_cell.currentIndexChanged.connect(self.change_stimulation_type)
+        self.stimulation_type_window = QHBoxLayout()
+        self.stimulation_type_window.addWidget(self.stimulation_type_label)
+        self.stimulation_type_window.addWidget(self.stimulation_type_cell)
+        self.stimulation_edit_layout.addLayout(self.stimulation_type_window)
+
+        self.different_signals_window = QStackedLayout()
+
+        self.first_signal_type_window = QVBoxLayout()
+        self.first_signal_type_container = QWidget()
+        self.first_signal_type_container.setLayout(self.first_signal_type_window)
+        self.stimulation_edit_layout.addLayout(self.different_signals_window)
+
+        self.first_signal_time_window = QHBoxLayout()
+        self.first_signal_type_pulses_label = QLabel("Pulses")
+        self.first_signal_time_window.addWidget(self.first_signal_type_pulses_label)
+        self.first_signal_type_pulses_cell = QLineEdit()
+        self.first_signal_type_pulses_cell.textEdited.connect(self.change_frequency)
+        self.first_signal_time_window.addWidget(self.first_signal_type_pulses_cell)
+        self.first_signal_type_duration_label = QLabel("Duration (s)")
+        self.first_signal_time_window.addWidget(self.first_signal_type_duration_label)
+        self.first_signal_type_duration_cell = QLineEdit()
+        self.first_signal_type_duration_cell.textEdited.connect(self.change_frequency)
+        self.first_signal_time_window.addWidget(self.first_signal_type_duration_cell)
+        self.first_signal_type_frequency_label = QLabel("Frequency (Hz)")
+        self.first_signal_time_window.addWidget(self.first_signal_type_frequency_label)
+        self.first_signal_type_frequency_cell = QLineEdit()
+        self.first_signal_type_frequency_cell.setDisabled(True)
+        self.first_signal_time_window.addWidget(self.first_signal_type_frequency_cell)
+        self.first_signal_type_window.addLayout(self.first_signal_time_window)
+
+#-------------------
+
+        self.second_signal_type_window = QVBoxLayout()
+        self.second_signal_type_container = QWidget()
+        self.second_signal_type_container.setLayout(self.second_signal_type_window)
+        self.stimulation_edit_layout.addLayout(self.different_signals_window)
+
+        self.second_signal_type_name = QLabel("signal2")
+        self.second_signal_type_window.addWidget(self.second_signal_type_name)
+
+#-------------------
+
+        self.third_signal_type_window = QVBoxLayout()
+        self.third_signal_type_container = QWidget()
+        self.third_signal_type_container.setLayout(self.third_signal_type_window)
+        self.stimulation_edit_layout.addLayout(self.different_signals_window)
+
+        self.third_signal_type_name = QLabel("signal3")
+        self.third_signal_type_window.addWidget(self.third_signal_type_name)
+
+        self.different_signals_window.addWidget(self.first_signal_type_container)
+        self.different_signals_window.addWidget(self.second_signal_type_container)
+        self.different_signals_window.addWidget(self.third_signal_type_container)
+
+
 
 
         self.stimulation_edit_container = QWidget()
@@ -170,6 +234,20 @@ class App(QWidget):
         self.block_name_window.addWidget(self.block_name_label)
         self.block_name_window.addWidget(self.block_name_cell)
         self.block_edit_layout.addLayout(self.block_name_window)
+
+        self.block_iterations_label = QLabel("Iterations")
+        self.block_iterations_cell = QLineEdit()
+        self.block_parameters_window = QHBoxLayout()
+        self.block_parameters_window.addWidget(self.block_iterations_label)
+        self.block_parameters_window.addWidget(self.block_iterations_cell)
+        self.block_delay_label = QLabel("Delay")
+        self.block_delay_cell = QLineEdit()
+        self.block_delay_window = QHBoxLayout()
+        self.block_parameters_window.addWidget(self.block_delay_label)
+        self.block_parameters_window.addWidget(self.block_delay_cell)
+        self.block_edit_layout.addLayout(self.block_parameters_window)
+
+    
 
 
 
@@ -294,6 +372,10 @@ class App(QWidget):
         self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
         self.stimulation_tree_switch_window.setCurrentIndex(0)
         self.stimulation_tree.setCurrentItem(stimulation_tree_item)
+        self.add_metadata(self.stimulation_tree.currentItem())
+
+    def add_metadata(self, tree_item):
+        pass
 
     def change_branch_name(self):
         branch = self.stimulation_tree.currentItem()
@@ -302,6 +384,24 @@ class App(QWidget):
             branch.setText(0, self.block_name_cell.text())
         else:
             branch.setText(0, self.stimulation_name_cell.text())
+
+    def enable_directory(self):
+        if self.directory_save_files_checkbox.isChecked():
+            self.directory_choose_button.setDisabled(False)
+            self.directory_cell.setDisabled(False)
+        else:
+            self.directory_choose_button.setDisabled(True)
+            self.directory_cell.setDisabled(True)
+    
+    def change_stimulation_type(self):
+        self.different_signals_window.setCurrentIndex(self.stimulation_type_cell.currentIndex())
+    
+    def change_frequency(self):
+        try:
+            self.first_signal_type_frequency_cell.setText(str(round(int(self.first_signal_type_pulses_cell.text())/int(self.first_signal_type_duration_cell.text()), 3)))
+        except Exception:
+            pass
+
 
 
 if __name__ == '__main__':
