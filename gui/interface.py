@@ -3,34 +3,31 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.widgets import RectangleSelector
+from matplotlib.animation import FuncAnimation
+from roipoly import RoiPoly
+import time
 import matplotlib.pyplot as plt
 import random
 import numpy as np
-import importlib.util       
- 
+import importlib.util   
+from threading import *
+#import pyqtgraph as pg  
+
+#pg.setConfigOption('background', 'w')
+#pg.setConfigOption('foreground', 'k')
 
 spec = importlib.util.spec_from_file_location(
   "signal_generator", "/Users/maxence/chul/Widefield-Imaging-Acquisition/src/signal_generator.py")   
 signal_generator = importlib.util.module_from_spec(spec)       
 spec.loader.exec_module(signal_generator)
 
+
 class PlotWindow(QDialog):
     def __init__(self, parent=None):
         super(PlotWindow, self).__init__(parent)
-
-        # a figure instance to plot on
         self.figure = plt.figure()
-
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
-
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-
-        # Just some button connected to `plot` method
-
-        # set the layout
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
@@ -55,6 +52,9 @@ class App(QWidget):
         self.width = 640
         self.height = 480
         self.initUI()
+
+    def closeEvent(self, *args, **kwargs):
+        self.video_running = False
     
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -135,18 +135,57 @@ class App(QWidget):
         self.image_settings_second_window.addWidget(self.fluorescence_button)
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         
+        self.roi_buttons = QStackedLayout()
+
+        self.roi_layout1 = QHBoxLayout()
+        self.reset_roi_button = QPushButton()
+        self.reset_roi_button.setText("Reset ROI")
+        self.reset_roi_button.clicked.connect(self.reset_roi)
+        self.roi_layout1.addWidget(self.reset_roi_button)
+
+        self.set_roi_button = QPushButton()
+        self.set_roi_button.setText("Set ROI")
+        self.set_roi_button.clicked.connect(self.set_roi)
+        self.roi_layout1.addWidget(self.set_roi_button)
+        
+        self.roi_layout2 = QHBoxLayout()
+        self.cancel_roi_button = QPushButton()
+        self.cancel_roi_button.setText("Cancel")
+        self.cancel_roi_button.clicked.connect(self.cancel_roi)
+        self.roi_layout2.addWidget(self.cancel_roi_button)
+
+
+        self.save_roi_button = QPushButton()
+        self.save_roi_button.setText("Save ROI")
+        self.save_roi_button.clicked.connect(self.save_roi)
+        self.roi_layout2.addWidget(self.save_roi_button)
+
+        self.roi_buttons.addWidget(QWidget().setLayout(self.roi_layout1))
+        self.roi_buttons.addWidget(QWidget().setLayout(self.roi_layout2))
+
+        self.image_settings_main_window.addLayout(self.roi_buttons)
+
         self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
         self.live_preview_label = QLabel('Live Preview')
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
-        self.grid_layout.addWidget(self.live_preview_label, 0, 2)
+        self.numpy = np.random.rand(1024, 1024)
+        self.image_view = PlotWindow()
+        self.plot_image = plt.imshow(self.numpy, interpolation="none")
+        #self.plot_image.axes.get_xaxis().set_visible(False)
+        #self.plot_image.axes.get_yaxis().set_visible(False)
+        #plt.close(self.plot_image)
+        #plt.show()
+        #self.image_view.ui.histogram.hide()
+        #self.image_view.ui.roiBtn.hide()
+        #self.image_view.ui.menuBtn.hide()
+        #self.image_view.setFixedHeight(350)
+        #self.image_view.setFixedWidth(350)
+        #self.image_view.setImage(self.numpy)
+        #self.image_view.autoRange()
 
-        self.live_preview_pixmap = QPixmap('mouse.jpg')
-        self.live_preview_image = QLabel(self)
-        self.live_preview_image.setPixmap(self.live_preview_pixmap)
-        self.live_preview_image.resize(self.live_preview_pixmap.width(),
-                          self.live_preview_pixmap.height())
-        self.grid_layout.addWidget(self.live_preview_image, 1, 2)
+        self.grid_layout.addWidget(self.live_preview_label, 0, 2)
+        self.grid_layout.addWidget(self.image_view, 1, 2)
 
         self.stimulation_tree_label = QLabel('Stimulation Tree')
         self.stimulation_tree_label.setFont(QFont("IBM Plex Sans", 17))
@@ -394,17 +433,20 @@ class App(QWidget):
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton('Stop')
         self.stop_button.setIcon(QIcon("gui/icons/player-stop.png"))
-        self.stop_button.clicked.connect(self.stop)
+        self.stop_button.clicked.connect(self.open_live_preview_thread)
         self.buttons_main_window.addWidget(self.stop_button)
         self.run_button = QPushButton('Run')
         self.run_button.setIcon(QIcon("gui/icons/player-play.png"))
         self.run_button.clicked.connect(self.run)
         self.buttons_main_window.addWidget(self.run_button)
         self.plot_window = PlotWindow()
+        #self.plot_window.setFixedHeight(350)
+        #self.plot_window.setFixedWidth(350)
         self.grid_layout.addWidget(self.plot_window, 3,2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
 
         self.show()
+
 
     def run(self):
         lights = []
@@ -672,13 +714,59 @@ class App(QWidget):
             new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
             new_y_values = np.take(self.plot_y_values, sampling_indexes, 0)
             self.plot_window.plot(new_x_values, new_y_values)
+
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
         except Exception as err:
             print(err)
 
+    def open_live_preview_thread(self):
+        self.live_preview_thread =Thread(target=self.start_live)
+        self.live_preview_thread.start()
 
+    def start_live(self):
+        plt.ion()
+        self.video_running = True
+        while self.video_running is True:
+            self.plot_image.set_array(np.random.rand(1024,1024))
+            time.sleep(0.05)
+
+    def stop_live(self):
+        self.video_running = False
+    
+    def set_roi(self):
+        self.roi_buttons.setCurrentIndex(1)
+        def onselect_function(eclick, erelease):
+            print(self.rect_selector.extents)
+            self.roi_extent = self.rect_selector.extents
+
+        self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
+                                       drawtype='box', useblit=True,
+                                       button=[1, 3],  # don't use middle button
+                                       minspanx=5, minspany=5,
+                                       spancoords='pixels',
+                                       interactive=True)
+
+    def reset_roi(self):
+        plt.xlim(0, 1024)
+        plt.ylim(0,1024)
+
+    def cancel_roi(self):
+        self.roi_buttons.setCurrentIndex(0)
+        self.rect_selector.clear()
+        self.rect_selector = None
+
+    def save_roi(self):
+        self.roi_buttons.setCurrentIndex(0)
+        plt.ion()
+        plt.xlim(self.roi_extent[0], self.roi_extent[1])
+        plt.ylim(self.roi_extent[2], self.roi_extent[3])
+        self.rect_selector.clear()
+        self.rect_selector = None
+
+
+    
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
