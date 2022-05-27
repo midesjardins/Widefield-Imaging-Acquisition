@@ -12,16 +12,19 @@ import random
 import numpy as np
 import importlib.util   
 from threading import *
+import sys
+import __main__
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from src.blocks import Stimulation, Block, Experiment
+from src.controls import DAQ, Instrument, Camera
+from src.signal_generator import make_signal, random_square
+
+#from src.controls import DAQ, Instrument, Camera
 #import pyqtgraph as pg  
 
 #pg.setConfigOption('background', 'w')
 #pg.setConfigOption('foreground', 'k')
-
-spec = importlib.util.spec_from_file_location(
-  "signal_generator", "/Users/maxence/chul/Widefield-Imaging-Acquisition/src/signal_generator.py")   
-signal_generator = importlib.util.module_from_spec(spec)       
-spec.loader.exec_module(signal_generator)
-
 
 class PlotWindow(QDialog):
     def __init__(self, parent=None):
@@ -33,7 +36,7 @@ class PlotWindow(QDialog):
         self.setLayout(layout)
 
     def get_data(self, time_values, pulses, jitter, width=0.2):
-        y_values = signal_generator.random_square(time_values, pulses, width, jitter)
+        y_values = random_square(time_values, pulses, width, jitter)
         return y_values
 
     def plot(self, x, y):
@@ -101,6 +104,8 @@ class App(QWidget):
         self.directory_cell.setReadOnly(True)
         self.directory_window.addWidget(self.directory_cell)
         self.experiment_settings_main_window.addLayout(self.directory_window)
+
+        self.experiment_settings_main_window.addStretch()
 
         self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
 
@@ -190,6 +195,7 @@ class App(QWidget):
         self.live_preview_buttons.addWidget(self.activate_live_preview_button)
         self.live_preview_buttons.addWidget(self.deactivate_live_preview_button)
         self.image_settings_main_window.addLayout(self.live_preview_buttons)
+        self.image_settings_main_window.addStretch()
         
 
 
@@ -453,10 +459,12 @@ class App(QWidget):
         self.stop_button = QPushButton('Stop')
         self.stop_button.setIcon(QIcon("gui/icons/player-stop.png"))
         self.stop_button.clicked.connect(self.stop)
+        self.stop_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.stop_button)
         self.run_button = QPushButton('Run')
         self.run_button.setIcon(QIcon("gui/icons/player-play.png"))
         self.run_button.clicked.connect(self.run)
+        self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
         self.plot_window = PlotWindow()
         #self.plot_window.setFixedHeight(350)
@@ -468,6 +476,41 @@ class App(QWidget):
 
 
     def run(self):
+        self.deactivate_buttons()
+        self.generate_daq()
+        self.create_blocks()
+
+    def generate_daq(self):
+        self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
+        self.stimuli = [Instrument('ao1', 'air-pump')]
+        self.camera =  Camera('img0', 'name')
+        self.daq = DAQ('dev1',self.lights, self.stimuli, self.camera, 114, 100000)
+
+
+    def create_blocks(self, item=None):
+        try: 
+            if not item:
+                item = self.stimulation_tree.currentItem()
+            if item.childCount() > 0:
+                children = []
+                for index in range(item.childCount()):
+                    child = item.child(index)
+                    children.append(self.create_blocks(item=child))
+                print(children)
+                return children
+
+                #create block with above child
+            else:
+                new_stim = Stimulation(self.daq, 1, name=item.text(0))
+                print(new_stim.name)
+                return new_stim
+        except Exception as err:
+            print(err)
+
+    def deactivate_buttons(self):
+        self.stop_button.setEnabled(True)
+        self.run_button.setEnabled(False)
+
         self.experiment_name_cell.setEnabled(False)
         self.mouse_id_cell.setEnabled(False)
         self.directory_save_files_checkbox.setEnabled(False)
@@ -485,9 +528,44 @@ class App(QWidget):
         self.red_button.setEnabled(False)
         self.speckle_button.setEnabled(False)
         self.green_button.setEnabled(False)
-        pass
+        self.fluorescence_button.setEnabled(False)
+
+        self.stimulation_name_label.setEnabled(False)
+        self.stimulation_name_cell.setEnabled(False)
+        self.stimulation_type_label.setEnabled(False)
+        self.stimulation_type_cell.setEnabled(False)
+        self.first_signal_first_canal_check.setEnabled(False)
+        self.first_signal_second_canal_check.setEnabled(False)
+        self.first_signal_type_duration_label.setEnabled(False)
+        self.first_signal_type_duration_cell.setEnabled(False)
+        self.first_signal_type_pulses_label.setEnabled(False)
+        self.first_signal_type_pulses_cell.setEnabled(False)
+        self.first_signal_type_width_label.setEnabled(False)
+        self.first_signal_type_width_cell.setEnabled(False)
+        self.first_signal_type_jitter_label.setEnabled(False)
+        self.first_signal_type_jitter_cell.setEnabled(False)
+        self.second_signal_type_frequency_label.setEnabled(False)
+        self.second_signal_type_frequency_cell.setEnabled(False)
+        self.second_signal_type_duty_label.setEnabled(False)
+        self.second_signal_type_duty_cell.setEnabled(False)
+        self.block_iterations_label.setEnabled(False)
+        self.block_iterations_cell.setEnabled(False)
+        self.block_delay_label.setEnabled(False)
+        self.block_delay_cell.setEnabled(False)
+        self.block_jitter_label.setEnabled(False)
+        self.block_jitter_cell.setEnabled(False)
+        self.block_name_label.setEnabled(False)
+        self.block_name_cell.setEnabled(False)
+        self.activate_live_preview_button.setEnabled(False)
+        self.deactivate_live_preview_button.setEnabled(False)
 
     def stop(self):
+        self.activate_buttons()
+    
+    
+    def activate_buttons(self):
+        self.stop_button.setEnabled(False)
+        self.run_button.setEnabled(True)
         self.experiment_name_cell.setEnabled(True)
         self.mouse_id_cell.setEnabled(True)
         self.directory_save_files_checkbox.setEnabled(True)
@@ -506,6 +584,36 @@ class App(QWidget):
         self.red_button.setEnabled(True)
         self.speckle_button.setEnabled(True)
         self.green_button.setEnabled(True)
+        self.fluorescence_button.setEnabled(True)
+
+        self.stimulation_name_label.setEnabled(True)
+        self.stimulation_name_cell.setEnabled(True)
+        self.stimulation_type_label.setEnabled(True)
+        self.stimulation_type_cell.setEnabled(True)
+        self.first_signal_first_canal_check.setEnabled(True)
+        self.first_signal_second_canal_check.setEnabled(True)
+        self.first_signal_type_duration_label.setEnabled(True)
+        self.first_signal_type_duration_cell.setEnabled(True)
+        self.first_signal_type_pulses_label.setEnabled(True)
+        self.first_signal_type_pulses_cell.setEnabled(True)
+        self.first_signal_type_width_label.setEnabled(True)
+        self.first_signal_type_width_cell.setEnabled(True)
+        self.first_signal_type_jitter_label.setEnabled(True)
+        self.first_signal_type_jitter_cell.setEnabled(True)
+        self.second_signal_type_frequency_label.setEnabled(True)
+        self.second_signal_type_frequency_cell.setEnabled(True)
+        self.second_signal_type_duty_label.setEnabled(True)
+        self.second_signal_type_duty_cell.setEnabled(True)
+        self.block_iterations_label.setEnabled(True)
+        self.block_iterations_cell.setEnabled(True)
+        self.block_delay_label.setEnabled(True)
+        self.block_delay_cell.setEnabled(True)
+        self.block_jitter_label.setEnabled(True)
+        self.block_jitter_cell.setEnabled(True)
+        self.block_name_label.setEnabled(True)
+        self.block_name_cell.setEnabled(True)
+        self.activate_live_preview_button.setEnabled(True)
+        self.deactivate_live_preview_button.setEnabled(True)
 
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -525,9 +633,11 @@ class App(QWidget):
             parent = self.stimulation_tree.currentItem().parent()
             if parent.childCount() == 1:
                 parent.setIcon(0, QIcon("gui/icons/wave-square.png"))
-            (parent or root).removeChild(self.stimulation_tree.currentItem())
+            parent.removeChild(self.stimulation_tree.currentItem())
         except Exception:
             root.removeChild(self.stimulation_tree.currentItem())
+            if root.childCount() == 0:
+                self.run_button.setEnabled(False)
         
     
     def add_brother(self):
@@ -565,6 +675,7 @@ class App(QWidget):
             pass
 
     def first_stimulation(self):
+        self.run_button.setEnabled(True)
         stimulation_tree_item = QTreeWidgetItem()
         stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
         stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
@@ -737,7 +848,7 @@ class App(QWidget):
                     frequency = 0
                     duty = 0
                 time_values = np.linspace(0, duration, int(round(duration))*300)
-                data  = signal_generator.make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
+                data  = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
                 if sign_type == "square":
                     data *= 5
                 time_values += self.elapsed_time
@@ -782,10 +893,12 @@ class App(QWidget):
         self.video_running = False
     
     def set_roi(self):
+        self.save_roi_button.setEnabled(False)
         self.roi_buttons.setCurrentIndex(1)
         def onselect_function(eclick, erelease):
             print(self.rect_selector.extents)
             self.roi_extent = self.rect_selector.extents
+            self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
                                        drawtype='box', useblit=True,

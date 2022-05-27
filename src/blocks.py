@@ -1,9 +1,13 @@
 import time
+import importlib
 import numpy as np
-from src.signal_generator import make_signal
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from .signal_generator import make_signal 
 
 class Stimulation:
-    def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square'):
+    def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', name=""):
         self.daq = daq
         self.duration = duration
         self.type = pulse_type
@@ -13,6 +17,7 @@ class Stimulation:
         self.duty = duty
         self.jitter = jitter
         self.freq = frequency
+        self.name = name
         self.time_delay = np.linspace(0, delay, delay*3000)
         self.time = np.linspace(0, duration, duration*3000)
         self.stim_signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq, self.duty)
