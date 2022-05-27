@@ -478,9 +478,9 @@ class App(QWidget):
     def run(self):
         self.deactivate_buttons()
         self.generate_daq()
-        master_block = self.create_blocks()
-        print("This is the master block \n"+ str(master_block))
-
+        self.master_block = self.create_blocks()
+        self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq)
+        self.experiment.start()
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
         self.stimuli = [Instrument('ao1', 'air-pump')]
