@@ -478,7 +478,8 @@ class App(QWidget):
     def run(self):
         self.deactivate_buttons()
         self.generate_daq()
-        self.create_blocks()
+        master_block = self.create_blocks()
+        print("This is the master block \n"+ str(master_block))
 
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
@@ -496,16 +497,33 @@ class App(QWidget):
                 for index in range(item.childCount()):
                     child = item.child(index)
                     children.append(self.create_blocks(item=child))
+                new_block = Block(item.text(0), children, delay=int(item.text(2)), iterations=int(item.text(1)))
                 print(children)
-                return children
+                print(new_block.name)
+                return new_block
 
                 #create block with above child
             else:
-                new_stim = Stimulation(self.daq, 1, name=item.text(0))
+                try:
+                    pulses = int(item.text(5))
+                    jitter = float(item.text(7))
+                    width = float(item.text(8))
+                except Exception:
+                    pulses, jitter, width = 0, 0, 0
+                try:
+                    frequency = float(item.text(9))
+                    duty = float(item.text(10))/100
+                except Exception:
+                    frequency, duty = 0, 0
+                new_stim = Stimulation(
+                    self.daq, int(item.text(6)), width=width, 
+                    pulses=pulses, jitter=jitter, frequency=frequency,
+                    duty=duty, delay=0, pulse_type=item.text(4), name=item.text(0))
                 print(new_stim.name)
                 return new_stim
         except Exception as err:
             print(err)
+            pass
 
     def deactivate_buttons(self):
         self.stop_button.setEnabled(True)
@@ -750,7 +768,6 @@ class App(QWidget):
         try:
             self.stimulation_type_cell.setCurrentIndex(dico[self.stimulation_tree.currentItem().text(4)])
         except Exception as err:
-            print(err)
             self.stimulation_type_cell.setCurrentIndex(0)
 
     def signal_to_tree(self):
@@ -838,15 +855,12 @@ class App(QWidget):
                     jitter = float(item.text(7))
                     width = float(item.text(8))
                 except Exception:
-                    pulses = 0
-                    jitter = 0
-                    width = 0
+                    pulses, jitter, width = 0, 0, 0
                 try:
                     frequency = float(item.text(9))
                     duty = float(item.text(10))/100
                 except Exception:
-                    frequency = 0
-                    duty = 0
+                    frequency, duty = 0, 0
                 time_values = np.linspace(0, duration, int(round(duration))*300)
                 data  = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
                 if sign_type == "square":
@@ -856,7 +870,6 @@ class App(QWidget):
                 self.plot_y_values = np.concatenate((self.plot_y_values, data))
                 self.elapsed_time += duration
         except Exception as err:
-            print(err)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
@@ -874,7 +887,7 @@ class App(QWidget):
             self.plot_y_values = []
             self.elapsed_time = 0
         except Exception as err:
-            print(err)
+            pass
 
     def open_live_preview_thread(self):
         self.live_preview_thread =Thread(target=self.start_live)
@@ -896,7 +909,6 @@ class App(QWidget):
         self.save_roi_button.setEnabled(False)
         self.roi_buttons.setCurrentIndex(1)
         def onselect_function(eclick, erelease):
-            print(self.rect_selector.extents)
             self.roi_extent = self.rect_selector.extents
             self.save_roi_button.setEnabled(True)
 

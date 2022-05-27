@@ -24,11 +24,13 @@ class Stimulation:
         self.empty_signal = np.zeros(len(self.time_delay))
         self.exp = None
 
-    def __str__(self):
+    def __str__(self, indent=""):
         if self.type == "random-square":
-            return f"Duration: {self.duration}, Pulses: {self.pulses}, Width: {self.width}, Jitter: {self.jitter}, Delay: {self.delay}"
+            return indent+f"{self.name} --- Duration: {self.duration}, Pulses: {self.pulses}, Width: {self.width}, Jitter: {self.jitter}, Delay: {self.delay}"
         if self.type == "square":
-            return f"Duration: {self.duration}, Frequency: {self.freq}, Duty: {self.duty}, Delay: {self.delay}"
+            return indent+f"{self.name} --- Duration: {self.duration}, Frequency: {self.freq}, Duty: {self.duty}, Delay: {self.delay}"
+        else:
+            return f"there appears to be a weird type, which goes like this {self.type}"
     def run(self, exp):
         print(f"stim ran")
         self.exp = exp
@@ -43,13 +45,12 @@ class Block:
         self.delay = delay
         self.exp = None
 
-    def __str__(self):
+    def __str__(self, indent=""):
         stim_list = []
         for iteration in range(self.iterations):
+            stim_list.append(indent + self.name + f" ({iteration+1}/{self.iterations})")
             for item in self.data:
-                stim_list.append(item.__str__())
-            if iteration + 1 != self.iterations:
-                time.sleep(self.delay)
+                stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
 
     def run(self, exp):
