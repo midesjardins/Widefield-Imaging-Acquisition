@@ -71,7 +71,6 @@ class Camera(Instrument):
         self.cam.setup_acquisition(nframes=20)
         self.cam.set_roi(0,1024,0,1024)
         self.cam.start_acquisition()
-        time.sleep(3)
         print("acquisition started")
 
     def loop(self, task):
@@ -92,8 +91,9 @@ class Camera(Instrument):
         
 
 class DAQ:
-    def __init__(self, name, lights, stimuli, camera, framerate, exposure):
+    def __init__(self, name, lights, stimuli, camera, framerate, exposure, window):
         self.name = name
+        self.window = window
         self.framerate, self.exposure = framerate, exposure
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], [], None, None

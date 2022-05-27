@@ -5,7 +5,6 @@ from PyQt5.QtGui import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
 from matplotlib.animation import FuncAnimation
-from roipoly import RoiPoly
 import time
 import matplotlib.pyplot as plt
 import random
@@ -205,7 +204,7 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, interpolation="none")
+        self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -471,7 +470,7 @@ class App(QWidget):
         #self.plot_window.setFixedWidth(350)
         self.grid_layout.addWidget(self.plot_window, 3,2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
-
+        self.generate_daq()
         self.show()
 
 
@@ -480,12 +479,12 @@ class App(QWidget):
         self.generate_daq()
         self.master_block = self.create_blocks()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq)
-        self.experiment.start()
+        self.open_start_experiment_thread()
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
         self.stimuli = [Instrument('ao1', 'air-pump')]
         self.camera =  Camera('img0', 'name')
-        self.daq = DAQ('dev1',self.lights, self.stimuli, self.camera, 114, 100000)
+        self.daq = DAQ('dev1',self.lights, self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self)
 
 
     def create_blocks(self, item=None):
@@ -889,17 +888,37 @@ class App(QWidget):
         except Exception as err:
             pass
 
+    def open_start_experiment_thread(self):
+        self.start_experiment_thread =Thread(target=self.run_stimulation)
+        self.start_experiment_thread.start()
+
+    def run_stimulation(self):
+        self.experiment.start()
+
     def open_live_preview_thread(self):
         self.live_preview_thread =Thread(target=self.start_live)
         self.live_preview_thread.start()
 
     def start_live(self):
         self.live_preview_buttons.setCurrentIndex(1)
+        #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
+        #self.plot_image.axes.get_xaxis().set_visible(False)
+        #self.plot_image.axes.axes.get_yaxis().set_visible(False)
         plt.ion()
         self.video_running = True
         while self.video_running is True:
-            self.plot_image.set_array(np.random.rand(1024,1024))
-            time.sleep(0.5)
+            try:
+                self.plot_image.set_array(self.camera.frames[-1])
+                time.sleep(1)
+            except Exception as err:
+                print(err)
+
+    def update_preview(self, np_array):
+        self.live_preview_buttons.setCurrentIndex(1)
+        plt.ion()
+        self.plot_image.set_array(np_array)
+
+
 
     def stop_live(self):
         self.live_preview_buttons.setCurrentIndex(0)
