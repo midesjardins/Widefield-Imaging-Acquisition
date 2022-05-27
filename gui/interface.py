@@ -140,30 +140,58 @@ class App(QWidget):
         self.roi_layout1 = QHBoxLayout()
         self.reset_roi_button = QPushButton()
         self.reset_roi_button.setText("Reset ROI")
+        self.reset_roi_button.setIcon(QIcon("gui/icons/zoom-out-area.png"))
+        self.reset_roi_button.setEnabled(False)
         self.reset_roi_button.clicked.connect(self.reset_roi)
         self.roi_layout1.addWidget(self.reset_roi_button)
 
         self.set_roi_button = QPushButton()
         self.set_roi_button.setText("Set ROI")
+        self.set_roi_button.setIcon(QIcon("gui/icons/zoom-in-area.png"))
         self.set_roi_button.clicked.connect(self.set_roi)
         self.roi_layout1.addWidget(self.set_roi_button)
+        self.roi_layout1_container = QWidget()
+        self.roi_layout1_container.setLayout(self.roi_layout1)
         
         self.roi_layout2 = QHBoxLayout()
         self.cancel_roi_button = QPushButton()
         self.cancel_roi_button.setText("Cancel")
+        self.cancel_roi_button.setIcon(QIcon("gui/icons/zoom-cancel.png"))
         self.cancel_roi_button.clicked.connect(self.cancel_roi)
         self.roi_layout2.addWidget(self.cancel_roi_button)
 
 
         self.save_roi_button = QPushButton()
         self.save_roi_button.setText("Save ROI")
+        self.save_roi_button.setIcon(QIcon("gui/icons/zoom-check.png"))
         self.save_roi_button.clicked.connect(self.save_roi)
         self.roi_layout2.addWidget(self.save_roi_button)
+        self.roi_layout2_container = QWidget()
+        self.roi_layout2_container.setLayout(self.roi_layout2)
 
-        self.roi_buttons.addWidget(QWidget().setLayout(self.roi_layout1))
-        self.roi_buttons.addWidget(QWidget().setLayout(self.roi_layout2))
+        self.roi_buttons.addWidget(self.roi_layout1_container)
+        self.roi_buttons.addWidget(self.roi_layout2_container)
 
         self.image_settings_main_window.addLayout(self.roi_buttons)
+
+        self.activate_live_preview_button = QPushButton()
+        self.activate_live_preview_button.setText("Start Live Preview")
+        self.activate_live_preview_button.setIcon(QIcon("gui/icons/video"))
+        self.activate_live_preview_button.clicked.connect(self.open_live_preview_thread)
+
+        self.deactivate_live_preview_button = QPushButton()
+        self.deactivate_live_preview_button.setText("Stop Live Preview")
+        self.deactivate_live_preview_button.setIcon(QIcon("gui/icons/video-off"))
+        self.deactivate_live_preview_button.clicked.connect(self.stop_live)
+
+        self.live_preview_buttons = QStackedLayout()
+
+
+        self.live_preview_buttons.addWidget(self.activate_live_preview_button)
+        self.live_preview_buttons.addWidget(self.deactivate_live_preview_button)
+        self.image_settings_main_window.addLayout(self.live_preview_buttons)
+        
+
 
         self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
@@ -172,17 +200,8 @@ class App(QWidget):
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
         self.plot_image = plt.imshow(self.numpy, interpolation="none")
-        #self.plot_image.axes.get_xaxis().set_visible(False)
-        #self.plot_image.axes.get_yaxis().set_visible(False)
-        #plt.close(self.plot_image)
-        #plt.show()
-        #self.image_view.ui.histogram.hide()
-        #self.image_view.ui.roiBtn.hide()
-        #self.image_view.ui.menuBtn.hide()
-        #self.image_view.setFixedHeight(350)
-        #self.image_view.setFixedWidth(350)
-        #self.image_view.setImage(self.numpy)
-        #self.image_view.autoRange()
+        self.plot_image.axes.get_xaxis().set_visible(False)
+        self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
         self.grid_layout.addWidget(self.live_preview_label, 0, 2)
         self.grid_layout.addWidget(self.image_view, 1, 2)
@@ -433,7 +452,7 @@ class App(QWidget):
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton('Stop')
         self.stop_button.setIcon(QIcon("gui/icons/player-stop.png"))
-        self.stop_button.clicked.connect(self.open_live_preview_thread)
+        self.stop_button.clicked.connect(self.stop)
         self.buttons_main_window.addWidget(self.stop_button)
         self.run_button = QPushButton('Run')
         self.run_button.setIcon(QIcon("gui/icons/player-play.png"))
@@ -449,19 +468,44 @@ class App(QWidget):
 
 
     def run(self):
-        lights = []
-        if self.speckle_button.isChecked():
-            lights.append('ir')
-        if self.red_button.isChecked():
-            lights.append('red')
-        if self.green_button.isChecked():
-            lights.append('green')
-        if self.fluorescence_button.isChecked():
-            lights.append('blue')
-        print('\n'.join(lights))
+        self.experiment_name_cell.setEnabled(False)
+        self.mouse_id_cell.setEnabled(False)
+        self.directory_save_files_checkbox.setEnabled(False)
+        self.directory_choose_button.setEnabled(False)
+        self.set_roi_button.setEnabled(False)
+        self.experiment_name.setEnabled(False)
+        self.mouse_id_label.setEnabled(False)
+        self.framerate_label.setEnabled(False)
+        self.framerate_cell.setEnabled(False)
+        self.exposure_cell.setEnabled(False)
+        self.exposure_label.setEnabled(False)
+        self.add_brother_branch_button.setEnabled(False)
+        self.add_child_branch_button.setEnabled(False)
+        self.delete_branch_button.setEnabled(False)
+        self.red_button.setEnabled(False)
+        self.speckle_button.setEnabled(False)
+        self.green_button.setEnabled(False)
+        pass
 
     def stop(self):
-        pass
+        self.experiment_name_cell.setEnabled(True)
+        self.mouse_id_cell.setEnabled(True)
+        self.directory_save_files_checkbox.setEnabled(True)
+        if self.directory_save_files_checkbox.isChecked():
+            self.directory_choose_button.setEnabled(True)
+        self.set_roi_button.setEnabled(True)
+        self.experiment_name.setEnabled(True)
+        self.mouse_id_label.setEnabled(True)
+        self.framerate_label.setEnabled(True)
+        self.framerate_cell.setEnabled(True)
+        self.exposure_cell.setEnabled(True)
+        self.exposure_label.setEnabled(True)
+        self.add_brother_branch_button.setEnabled(True)
+        self.add_child_branch_button.setEnabled(True)
+        self.delete_branch_button.setEnabled(True)
+        self.red_button.setEnabled(True)
+        self.speckle_button.setEnabled(True)
+        self.green_button.setEnabled(True)
 
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -726,13 +770,15 @@ class App(QWidget):
         self.live_preview_thread.start()
 
     def start_live(self):
+        self.live_preview_buttons.setCurrentIndex(1)
         plt.ion()
         self.video_running = True
         while self.video_running is True:
             self.plot_image.set_array(np.random.rand(1024,1024))
-            time.sleep(0.05)
+            time.sleep(0.5)
 
     def stop_live(self):
+        self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
     
     def set_roi(self):
@@ -751,6 +797,7 @@ class App(QWidget):
     def reset_roi(self):
         plt.xlim(0, 1024)
         plt.ylim(0,1024)
+        self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):
         self.roi_buttons.setCurrentIndex(0)
@@ -764,6 +811,7 @@ class App(QWidget):
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
         self.rect_selector.clear()
         self.rect_selector = None
+        self.reset_roi_button.setEnabled(True)
 
 
     
