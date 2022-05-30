@@ -959,6 +959,7 @@ class App(QWidget):
 
 
     def stop_live(self):
+        self.camera.CameraStopped = True
         self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
     

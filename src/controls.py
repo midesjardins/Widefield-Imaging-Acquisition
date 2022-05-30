@@ -26,6 +26,7 @@ class Camera(Instrument):
         self.frames = []
         self.metadata = []
         self.daq = None
+        self.CameraStopped = True
 
     def initialize(self, daq):
         self.daq = daq
@@ -73,7 +74,9 @@ class Camera(Instrument):
         self.cam.start_acquisition()
         print("acquisition started")
 
-    def loop(self, task):
+    def loop(self, task=None):
+        if task == None:
+            task = self.CameraStopped
         self.cam.read_multiple_images()
         while not task.is_task_done():
             self.cam.wait_for_frame()
