@@ -869,15 +869,18 @@ class App(QWidget):
             self.run_button.setEnabled(True)
             item = self.stimulation_tree.invisibleRootItem()
         for child_index in range(item.childCount()):
-            if item.text(1) != "" and item.text(2) != "" and item.text(3) != "" and item != self.stimulation_tree.invisibleRootItem()   :
+            if item.text(1) != "" and item.text(2) != "" and item.text(3) != "" and item != self.stimulation_tree.invisibleRootItem():
                 #item.setBackground(13, QBrush(QColor(60,179,113)))
                 item.setIcon(13, QIcon("gui/icons/circle-check.png"))
+            elif item != self.stimulation_tree.invisibleRootItem():
+                item.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
+                self.run_button.setEnabled(False)
             self.actualize_colors(item.child(child_index))
         if item.icon(13).pixmap(100).toImage() == QIcon("gui/icons/alert-triangle.png").pixmap(100).toImage():
             self.run_button.setEnabled(False)
             try:
                 #item.parent().setBackground(14, QBrush(QColor(205,92,92)))
-                item.parent.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
+                item.parent().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
             except Exception as err:
                 pass
 
