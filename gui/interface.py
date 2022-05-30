@@ -66,6 +66,7 @@ class App(QWidget):
         self.plot_x_values = []
         self.plot_y_values = []
         self.elapsed_time = 0
+        self.files_saved = False
         
         self.grid_layout = QGridLayout()
         self.setLayout(self.grid_layout)
@@ -480,7 +481,7 @@ class App(QWidget):
         self.generate_daq()
         self.master_block = self.create_blocks()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq)
-        self.experiment.start()
+        self.experiment.start(save=self.files_saved)
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
         self.stimuli = [Instrument('ao1', 'air-pump')]
@@ -521,8 +522,7 @@ class App(QWidget):
                     duty=duty, delay=0, pulse_type=item.text(4), name=item.text(0))
                 print(new_stim.name)
                 return new_stim
-        except Exception as err:
-            print(err)
+        except Exception:
             pass
 
     def deactivate_buttons(self):
@@ -639,9 +639,11 @@ class App(QWidget):
 
     def enable_directory(self):
         if self.directory_save_files_checkbox.isChecked():
+            self.files_saved = True
             self.directory_choose_button.setDisabled(False)
             self.directory_cell.setDisabled(False)
         else:
+            self.files_saved = False
             self.directory_choose_button.setDisabled(True)
             self.directory_cell.setDisabled(True)
 
@@ -656,12 +658,14 @@ class App(QWidget):
             root.removeChild(self.stimulation_tree.currentItem())
             if root.childCount() == 0:
                 self.run_button.setEnabled(False)
+        self.actualize_tree()
         
     
     def add_brother(self):
         if self.stimulation_tree.currentItem():
             stimulation_tree_item = QTreeWidgetItem()
             stimulation_tree_item.setText(0, "No Name")
+            stimulation_tree_item.setBackground(0, QBrush(QColor(205,92,92)))
             stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
             stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
             parent = self.stimulation_tree.selectedItems()[0].parent()
@@ -680,7 +684,9 @@ class App(QWidget):
         if self.stimulation_tree.currentItem():
             self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
             self.stimulation_tree.currentItem().setText(1, "1")
+            self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(205,92,92)))
             stimulation_tree_item = QTreeWidgetItem()
+            stimulation_tree_item.setBackground(0, QBrush(QColor(205,92,92)))
             stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
             stimulation_tree_item.setText(0,"No Name")
             stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
@@ -695,7 +701,8 @@ class App(QWidget):
     def first_stimulation(self):
         self.run_button.setEnabled(True)
         stimulation_tree_item = QTreeWidgetItem()
-        stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
+        stimulation_tree_item.setBackground(0, QBrush(QColor(205,92,92)))
+        stimulation_tree_item.setForeground(0, QBrush(QColor(205,211,211)))
         stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
         stimulation_tree_item.setText(0, "No Name")
         self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
@@ -722,6 +729,7 @@ class App(QWidget):
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
+        self.actualize_colors()
         self.plot()
         self.draw()
 
@@ -767,7 +775,7 @@ class App(QWidget):
         }
         try:
             self.stimulation_type_cell.setCurrentIndex(dico[self.stimulation_tree.currentItem().text(4)])
-        except Exception as err:
+        except Exception:
             self.stimulation_type_cell.setCurrentIndex(0)
 
     def signal_to_tree(self):
@@ -777,6 +785,19 @@ class App(QWidget):
         self.stimulation_tree.currentItem().setText(8, self.first_signal_type_width_cell.text())
         self.stimulation_tree.currentItem().setText(9, self.second_signal_type_frequency_cell.text())
         self.stimulation_tree.currentItem().setText(10, self.second_signal_type_duty_cell.text())
+
+        if self.stimulation_type_cell.currentText() == "square":
+            if self.first_signal_type_duration_cell.text() != "" and self.second_signal_type_frequency_cell.text() != "" and self.second_signal_type_duty_cell.text() != "":
+                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(60,179,113)))
+            else:
+                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(205,92,92)))
+
+        elif self.stimulation_type_cell.currentText() == "random-square":
+            if self.first_signal_type_duration_cell.text() !="" and self.first_signal_type_pulses_cell.text() != "" and self.first_signal_type_jitter_cell.text() != "" and self.first_signal_type_width_cell.text() != "":
+                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(60,179,113)))
+            else:
+                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(205,92,92)))
+        self.actualize_colors()
         self.plot()
         self.draw()
 
@@ -801,6 +822,7 @@ class App(QWidget):
         self.stimulation_tree.currentItem().setText(1, self.block_iterations_cell.text())
         self.stimulation_tree.currentItem().setText(2, self.block_delay_cell.text())
         self.stimulation_tree.currentItem().setText(3, self.block_jitter_cell.text())
+        self.actualize_colors()
         self.plot()
         self.draw()
 
@@ -822,6 +844,21 @@ class App(QWidget):
                 self.stimulation_tree.currentItem().setText(11, str(self.first_signal_first_canal_check.isChecked()))
                 self.stimulation_tree.currentItem().setText(12, str(self.first_signal_second_canal_check.isChecked()))
             self.actualize_tree()
+
+    def actualize_colors(self, item=None):
+        if item == None:
+            self.run_button.setEnabled(True)
+            item = self.stimulation_tree.invisibleRootItem()
+        for child_index in range(item.childCount()):
+            if item.text(1) != "" and item.text(2) != "" and item.text(3) != "" and item != self.stimulation_tree.invisibleRootItem()   :
+                item.setBackground(0, QBrush(QColor(60,179,113)))
+            self.actualize_colors(item.child(child_index))
+        if item.background(0) == QBrush(QColor(205,92,92)):
+            self.run_button.setEnabled(False)
+            try:
+                item.parent().setBackground(0, QBrush(QColor(205,92,92)))
+            except Exception:
+                pass
 
     def boolean(self, string):
         if string == "True":
@@ -869,7 +906,7 @@ class App(QWidget):
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                 self.plot_y_values = np.concatenate((self.plot_y_values, data))
                 self.elapsed_time += duration
-        except Exception as err:
+        except Exception:
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
@@ -886,7 +923,7 @@ class App(QWidget):
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
-        except Exception as err:
+        except Exception:
             pass
 
     def open_live_preview_thread(self):

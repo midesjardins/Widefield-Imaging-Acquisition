@@ -1,5 +1,4 @@
 import time
-import importlib
 import numpy as np
 import sys
 import os
@@ -58,7 +57,6 @@ class Block:
         for iteration in range(self.iterations):
             for item in self.data:
                 item.run(self.exp)
-            if iteration + 1 != self.iterations:
                 time.sleep(self.delay)
 
 class Experiment:
@@ -70,11 +68,12 @@ class Experiment:
         self.directory = directory
         self.daq = daq
     
-    def start(self):
-        self.save()
+    def start(self, save):
         print("experiment saved")
         self.blocks.run(self)
-        self.daq.camera.save(self.directory)
+        if save is True:
+            self.save()
+            self.daq.camera.save(self.directory)
 
     def save(self):
         with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:
