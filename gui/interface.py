@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtGui import *
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
@@ -66,6 +66,8 @@ class App(QWidget):
         self.plot_y_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        self.onlyInt = QIntValidator()
+        self.onlyFloat = QDoubleValidator()
         
         self.grid_layout = QGridLayout()
         self.setLayout(self.grid_layout)
@@ -119,6 +121,7 @@ class App(QWidget):
         self.framerate_label = QLabel('Framerate')
         self.framerate_window.addWidget(self.framerate_label)
         self.framerate_cell = QLineEdit('30')
+        self.framerate_cell.setValidator(self.onlyInt)
         self.framerate_window.addWidget(self.framerate_cell)
         self.image_settings_main_window.addLayout(self.framerate_window)
 
@@ -126,6 +129,7 @@ class App(QWidget):
         self.exposure_label = QLabel('Exposure')
         self.exposure_window.addWidget(self.exposure_label)
         self.exposure_cell = QLineEdit('10')
+        self.exposure_cell.setValidator(self.onlyInt)
         self.exposure_window.addWidget(self.exposure_cell)
         self.image_settings_main_window.addLayout(self.exposure_window)
 
@@ -218,10 +222,12 @@ class App(QWidget):
 
         self.stimulation_tree_window = QVBoxLayout()
         self.stimulation_tree = QTreeWidget()
-        self.stimulation_tree.setHeaderLabels(["Name", "Iterations", "Delay", "Jitter", "Type", "Pulses", "Duration", "Jitter", "Width", "Frequency", "Duty", "Canal 1", "Canal 2"])
-        for i in range(9):
-            #self.stimulation_tree.header().hideSection(i+1)
+        self.stimulation_tree.setHeaderLabels(["Name", "Iterations", "Delay", "Jitter", "Type", "Pulses", "Duration", "Jitter", "Width", "Frequency", "Duty", "Canal 1", "Canal 2", "Valid"])
+        for i in range(12):
+            self.stimulation_tree.header().hideSection(i+1)
             pass
+        self.stimulation_tree.setHeaderHidden(True)
+        self.stimulation_tree.setColumnWidth(0, 330)
         self.stimulation_tree.currentItemChanged.connect(self.actualize_tree)
         self.stimulation_tree_window.addWidget(self.stimulation_tree)
 
@@ -296,6 +302,7 @@ class App(QWidget):
         self.first_signal_type_duration_label = QLabel("Duration (s)")
         self.first_signal_duration_window.addWidget(self.first_signal_type_duration_label)
         self.first_signal_type_duration_cell = QLineEdit()
+        self.first_signal_type_duration_cell.setValidator(self.onlyFloat)
         self.first_signal_type_duration_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_duration_window.addWidget(self.first_signal_type_duration_cell)
 
@@ -327,6 +334,7 @@ class App(QWidget):
         self.first_signal_type_pulses_label = QLabel("Pulses")
         self.first_signal_pulses_window.addWidget(self.first_signal_type_pulses_label)
         self.first_signal_type_pulses_cell = QLineEdit()
+        self.first_signal_type_pulses_cell.setValidator(self.onlyInt)
         self.first_signal_type_pulses_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_pulses_window.addWidget(self.first_signal_type_pulses_cell)
         
@@ -335,6 +343,7 @@ class App(QWidget):
         self.first_signal_type_jitter_label = QLabel("Jitter (s)")
         self.first_signal_jitter_window.addWidget(self.first_signal_type_jitter_label)
         self.first_signal_type_jitter_cell = QLineEdit()
+        self.first_signal_type_jitter_cell.setValidator(self.onlyFloat)
         self.first_signal_type_jitter_cell.setText("0")
         self.first_signal_type_jitter_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_jitter_window.addWidget(self.first_signal_type_jitter_cell)
@@ -343,6 +352,7 @@ class App(QWidget):
         self.first_signal_type_width_label = QLabel("Width (s)")
         self.first_signal_width_window.addWidget(self.first_signal_type_width_label)
         self.first_signal_type_width_cell = QLineEdit()
+        self.first_signal_type_width_cell.setValidator(self.onlyFloat)
         self.first_signal_type_width_cell.setText("0")
         self.first_signal_type_width_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_width_window.addWidget(self.first_signal_type_width_cell)
@@ -365,6 +375,7 @@ class App(QWidget):
         self.second_signal_type_frequency_label = QLabel("Frequency (Hz)")
         self.second_signal_frequency_window.addWidget(self.second_signal_type_frequency_label)
         self.second_signal_type_frequency_cell = QLineEdit()
+        self.second_signal_type_frequency_cell.setValidator(self.onlyFloat)
         self.second_signal_type_frequency_cell.textEdited.connect(self.signal_to_tree)
         self.second_signal_frequency_window.addWidget(self.second_signal_type_frequency_cell)
 
@@ -372,6 +383,7 @@ class App(QWidget):
         self.second_signal_type_duty_label = QLabel("Duty (%)")
         self.second_signal_duty_window.addWidget(self.second_signal_type_duty_label)
         self.second_signal_type_duty_cell = QLineEdit()
+        self.second_signal_type_duty_cell.setValidator(self.onlyFloat)
         self.second_signal_type_duty_cell.textEdited.connect(self.signal_to_tree)
         self.second_signal_duty_window.addWidget(self.second_signal_type_duty_cell)
 
@@ -414,6 +426,7 @@ class App(QWidget):
         self.block_iterations_window = QHBoxLayout()
         self.block_iterations_label = QLabel("Iterations")
         self.block_iterations_cell = QLineEdit()
+        self.block_iterations_cell.setValidator(self.onlyInt)
         self.block_iterations_cell.textEdited.connect(self.block_to_tree)
         self.block_iterations_window.addWidget(self.block_iterations_label)
         self.block_iterations_window.addWidget(self.block_iterations_cell)
@@ -422,6 +435,7 @@ class App(QWidget):
         self.block_delay_window = QHBoxLayout()
         self.block_delay_label = QLabel("Delay")
         self.block_delay_cell = QLineEdit()
+        self.block_delay_cell.setValidator(self.onlyFloat)
         self.block_delay_cell.textEdited.connect(self.block_to_tree)
         self.block_delay_window = QHBoxLayout()
         self.block_delay_window.addWidget(self.block_delay_label)
@@ -431,6 +445,7 @@ class App(QWidget):
         self.block_jitter_window = QHBoxLayout()
         self.block_jitter_label = QLabel("Jitter")
         self.block_jitter_cell = QLineEdit()
+        self.block_jitter_cell.setValidator(self.onlyFloat)
         self.block_jitter_cell.textEdited.connect(self.block_to_tree)
         self.block_jitter_window = QHBoxLayout()
         self.block_jitter_window.addWidget(self.block_jitter_label)
@@ -498,8 +513,6 @@ class App(QWidget):
                     child = item.child(index)
                     children.append(self.create_blocks(item=child))
                 new_block = Block(item.text(0), children, delay=int(item.text(2)), iterations=int(item.text(1)))
-                print(children)
-                print(new_block.name)
                 return new_block
 
                 #create block with above child
@@ -519,7 +532,6 @@ class App(QWidget):
                     self.daq, int(item.text(6)), width=width, 
                     pulses=pulses, jitter=jitter, frequency=frequency,
                     duty=duty, delay=0, pulse_type=item.text(4), name=item.text(0))
-                print(new_stim.name)
                 return new_stim
         except Exception:
             pass
@@ -664,7 +676,8 @@ class App(QWidget):
         if self.stimulation_tree.currentItem():
             stimulation_tree_item = QTreeWidgetItem()
             stimulation_tree_item.setText(0, "No Name")
-            stimulation_tree_item.setBackground(0, QBrush(QColor(205,92,92)))
+            #stimulation_tree_item.setBackground(13, QBrush(QColor(205,92,92)))
+            stimulation_tree_item.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
             stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
             stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
             parent = self.stimulation_tree.selectedItems()[0].parent()
@@ -683,9 +696,11 @@ class App(QWidget):
         if self.stimulation_tree.currentItem():
             self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
             self.stimulation_tree.currentItem().setText(1, "1")
-            self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(205,92,92)))
+            #self.stimulation_tree.currentItem().setBackground(13, QBrush(QColor(205,92,92)))
+            self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
             stimulation_tree_item = QTreeWidgetItem()
-            stimulation_tree_item.setBackground(0, QBrush(QColor(205,92,92)))
+            #stimulation_tree_item.setBackground(13, QBrush(QColor(205,92,92)))
+            stimulation_tree_item.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
             stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
             stimulation_tree_item.setText(0,"No Name")
             stimulation_tree_item.setForeground(0, QBrush(QColor(211,211,211)))
@@ -700,7 +715,8 @@ class App(QWidget):
     def first_stimulation(self):
         self.run_button.setEnabled(True)
         stimulation_tree_item = QTreeWidgetItem()
-        stimulation_tree_item.setBackground(0, QBrush(QColor(205,92,92)))
+        #stimulation_tree_item.setBackground(13, QBrush(QColor(205,92,92)))
+        stimulation_tree_item.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
         stimulation_tree_item.setForeground(0, QBrush(QColor(205,211,211)))
         stimulation_tree_item.setIcon(0, QIcon("gui/icons/wave-square.png"))
         stimulation_tree_item.setText(0, "No Name")
@@ -787,15 +803,19 @@ class App(QWidget):
 
         if self.stimulation_type_cell.currentText() == "square":
             if self.first_signal_type_duration_cell.text() != "" and self.second_signal_type_frequency_cell.text() != "" and self.second_signal_type_duty_cell.text() != "":
-                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(60,179,113)))
+                #self.stimulation_tree.currentItem().setBackground(13, QBrush(QColor(60,179,113)))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/circle-check.png"))
             else:
-                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(205,92,92)))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
+                #self.stimulation_tree.currentItem().setBackground(13, QBrush(QColor(205,92,92)))
 
         elif self.stimulation_type_cell.currentText() == "random-square":
             if self.first_signal_type_duration_cell.text() !="" and self.first_signal_type_pulses_cell.text() != "" and self.first_signal_type_jitter_cell.text() != "" and self.first_signal_type_width_cell.text() != "":
-                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(60,179,113)))
+                #self.stimulation_tree.currentItem().setBackground(13, QBrush(QColor(60,179,113)))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/circle-check.png"))
             else:
-                self.stimulation_tree.currentItem().setBackground(0, QBrush(QColor(205,92,92)))
+                #self.stimulation_tree.currentItem().setBackground(13, QBrush(QColor(205,92,92)))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
         self.actualize_colors()
         self.plot()
         self.draw()
@@ -850,13 +870,15 @@ class App(QWidget):
             item = self.stimulation_tree.invisibleRootItem()
         for child_index in range(item.childCount()):
             if item.text(1) != "" and item.text(2) != "" and item.text(3) != "" and item != self.stimulation_tree.invisibleRootItem()   :
-                item.setBackground(0, QBrush(QColor(60,179,113)))
+                #item.setBackground(13, QBrush(QColor(60,179,113)))
+                item.setIcon(13, QIcon("gui/icons/circle-check.png"))
             self.actualize_colors(item.child(child_index))
-        if item.background(0) == QBrush(QColor(205,92,92)):
+        if item.icon(13).pixmap(100).toImage() == QIcon("gui/icons/alert-triangle.png").pixmap(100).toImage():
             self.run_button.setEnabled(False)
             try:
-                item.parent().setBackground(0, QBrush(QColor(205,92,92)))
-            except Exception:
+                #item.parent().setBackground(14, QBrush(QColor(205,92,92)))
+                item.parent.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
+            except Exception as err:
                 pass
 
     def boolean(self, string):
@@ -939,7 +961,6 @@ class App(QWidget):
     def start_live(self):
         plt.ion()
         self.live_preview_buttons.setCurrentIndex(1)
-        self.initiate_live()
         #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
         #self.plot_image.axes.get_xaxis().set_visible(False)
         #self.plot_image.axes.axes.get_yaxis().set_visible(False)
@@ -948,9 +969,8 @@ class App(QWidget):
             try:
                 self.plot_image.set_array(self.camera.frames[-1])
                 time.sleep(1)
-            except Exception as err:
-                print(err)
-
+            except Exception:
+                pass
     def update_preview(self, np_array):
         self.live_preview_buttons.setCurrentIndex(1)
         plt.ion()
@@ -964,6 +984,8 @@ class App(QWidget):
         self.video_running = False
     
     def set_roi(self):
+        self.deactivate_buttons()
+        self.stop_button.setEnabled(False)
         self.save_roi_button.setEnabled(False)
         self.roi_buttons.setCurrentIndex(1)
         def onselect_function(eclick, erelease):
@@ -983,11 +1005,13 @@ class App(QWidget):
         self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):
+        self.activate_buttons()
         self.roi_buttons.setCurrentIndex(0)
         self.rect_selector.clear()
         self.rect_selector = None
 
     def save_roi(self):
+        self.activate_buttons()
         self.roi_buttons.setCurrentIndex(0)
         plt.ion()
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
