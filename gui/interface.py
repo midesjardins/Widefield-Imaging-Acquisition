@@ -205,9 +205,9 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
-        self.plot_image.axes.get_xaxis().set_visible(False)
-        self.plot_image.axes.axes.get_yaxis().set_visible(False)
+        #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
+        #self.plot_image.axes.get_xaxis().set_visible(False)
+        #self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
         self.grid_layout.addWidget(self.live_preview_label, 0, 2)
         self.grid_layout.addWidget(self.image_view, 1, 2)
@@ -479,8 +479,7 @@ class App(QWidget):
         self.deactivate_buttons()
         self.generate_daq()
         self.master_block = self.create_blocks()
-        self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq)
-        #self.experiment.start(save=self.files_saved)
+        self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq) 
         self.open_start_experiment_thread()
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
@@ -931,18 +930,28 @@ class App(QWidget):
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
-        self.experiment.start()
+        self.experiment.start(save=self.files_saved)
 
     def open_live_preview_thread(self):
         self.live_preview_thread =Thread(target=self.start_live)
         self.live_preview_thread.start()
 
-    def start_live(self):
+
+    def initiate_live(self):
+        if len(self.camera.frames) == 0:
+            self.camera.initialize(self.daq)
+            self.camera.CameraStopped = False
+            self.camera.loop()
+        self.plot_image = plt.imshow(self.camera.frames[-1], interpolation="nearest")
+        self.plot_image.axes.get_xaxis().set_visible(False)
+        self.plot_image.axes.axes.get_yaxis().set_visible(False)
+        plt.ion()
         self.live_preview_buttons.setCurrentIndex(1)
+    def start_live(self):
+        self.initiate_live()
         #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
         #self.plot_image.axes.get_xaxis().set_visible(False)
         #self.plot_image.axes.axes.get_yaxis().set_visible(False)
-        plt.ion()
         self.video_running = True
         while self.video_running is True:
             try:
@@ -959,6 +968,7 @@ class App(QWidget):
 
 
     def stop_live(self):
+        self.camera.CameraStopped = True
         self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
     
