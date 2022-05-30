@@ -34,7 +34,7 @@ class Camera(Instrument):
         indexes_et_default = []
         indexes_et_current = []
         lines = []
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
+        """with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
             with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt', "w") as new_file:
                 for line in file:
                     new_file.write(line)
@@ -64,7 +64,7 @@ class Camera(Instrument):
         with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', "w") as file:
             file.write("".join(lines))
 
-        """with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
             file.write("".join(lines))"""
         self.cam = IMAQ.IMAQCamera(self.port)
         print("cam init")
