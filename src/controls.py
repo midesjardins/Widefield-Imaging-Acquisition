@@ -70,6 +70,7 @@ class Camera(Instrument):
         self.cam = IMAQ.IMAQCamera(self.port)
         print("cam init")
         self.cam.setup_acquisition(nframes=20)
+        #self.cam.configure_trigger_in(trig_type="ext",trig_action="buffer")
         self.cam.set_roi(0,1024,0,1024)
         self.cam.start_acquisition()
         print("acquisition started")
@@ -79,7 +80,7 @@ class Camera(Instrument):
             task = self.CameraStopped
         self.cam.read_multiple_images()
         while not task.is_task_done():
-            self.cam.wait_for_frame()
+            self.cam.wait_for_frame(timeout=20)
             img_tuple =  self.cam.read_multiple_images(return_info=True)
             self.frames += img_tuple[0]
             self.metadata += img_tuple[1]

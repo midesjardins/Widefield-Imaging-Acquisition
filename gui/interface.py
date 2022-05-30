@@ -971,9 +971,9 @@ class App(QWidget):
         while self.video_running is True:
             try:
                 self.plot_image.set_array(self.camera.frames[-1])
-                time.sleep(1)
+                time.sleep(0.04)
             except Exception:
-                pass
+                time.sleep(0.1)
     def update_preview(self, np_array):
         self.live_preview_buttons.setCurrentIndex(1)
         plt.ion()
