@@ -938,6 +938,10 @@ class App(QWidget):
 
 
     def initiate_live(self):
+        if len(self.camera.frames) == 0:
+            self.camera.initialize(self.daq)
+            self.camera.CameraStopped = False
+            self.camera.loop()
         self.plot_image = plt.imshow(self.camera.frames[-1], interpolation="nearest")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
@@ -964,6 +968,7 @@ class App(QWidget):
 
 
     def stop_live(self):
+        self.camera.CameraStopped = True
         self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
     
