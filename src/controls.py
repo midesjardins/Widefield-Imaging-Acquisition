@@ -26,6 +26,7 @@ class Camera(Instrument):
         self.frames = []
         self.metadata = []
         self.daq = None
+        self.CameraStopped = True
 
     def initialize(self, daq):
         self.daq = daq
@@ -34,7 +35,7 @@ class Camera(Instrument):
         indexes_et_default = []
         indexes_et_current = []
         lines = []
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
+        """with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
             with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt', "w") as new_file:
                 for line in file:
                     new_file.write(line)
@@ -64,7 +65,7 @@ class Camera(Instrument):
         with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', "w") as file:
             file.write("".join(lines))
 
-        """with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
+        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
             file.write("".join(lines))"""
         self.cam = IMAQ.IMAQCamera(self.port)
         print("cam init")
@@ -73,7 +74,9 @@ class Camera(Instrument):
         self.cam.start_acquisition()
         print("acquisition started")
 
-    def loop(self, task):
+    def loop(self, task=None):
+        if task == None:
+            task = self.CameraStopped
         self.cam.read_multiple_images()
         while not task.is_task_done():
             self.cam.wait_for_frame()
