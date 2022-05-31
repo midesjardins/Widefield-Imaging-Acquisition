@@ -590,6 +590,7 @@ class App(QWidget):
 
     def stop(self):
         self.activate_buttons()
+        self.stop_live()
     
     
     def activate_buttons(self):
@@ -952,6 +953,13 @@ class App(QWidget):
 
     def open_start_experiment_thread(self):
         #self.experiment.start(save=self.files_saved)
+        try:
+            if self.live_preview_thread.is_alive():
+                pass
+            else:
+                self.open_live_preview_thread()
+        except Exception:
+            self.open_live_preview_thread()
         self.start_experiment_thread =Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
@@ -963,6 +971,8 @@ class App(QWidget):
         self.live_preview_thread.start()
 
     def start_live(self):
+        self.camera.initialize(self.daq)
+        self.camera.loop()
         plt.ion()
         self.live_preview_buttons.setCurrentIndex(1)
         #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
@@ -973,8 +983,10 @@ class App(QWidget):
             try:
                 self.plot_image.set_array(self.camera.frames[-1])
                 time.sleep(0.04)
-            except Exception:
+            except Exception as err:
+                print(err)
                 time.sleep(0.1)
+        return None
     def update_preview(self, np_array):
         self.live_preview_buttons.setCurrentIndex(1)
         plt.ion()
@@ -986,6 +998,7 @@ class App(QWidget):
         self.camera.CameraStopped = True
         self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
+        self.camera.CameraStopped = True
     
     def set_roi(self):
         self.deactivate_buttons()
