@@ -491,6 +491,16 @@ class App(QWidget):
 
 
     def run(self):
+        self.master_block = self.create_blocks()
+        self.plot(item=self.stimulation_tree.invisibleRootItem())
+        self.draw()
+        #self.preview_root_stim()
+        #plt.clf()
+        #print(self.root_time_data)
+        #plt.plot(self.root_time_data, self.root_stim_data)
+        #plt.savefig("test.pdf")
+        #plt.show()
+        x = input()
         self.deactivate_buttons()
         self.generate_daq()
         self.master_block = self.create_blocks()
@@ -540,6 +550,24 @@ class App(QWidget):
         except Exception as err:
             print(err)
             pass
+
+    def preview_root_stim(self, item=None):
+        if item == None:
+            item = self.master_block
+            self.root_time_data = []
+            self.root_stim_data = []
+            self.root_elapsed_time = 0
+        if type(item) == Block:
+            for iteration in range(item.iterations):
+                for element in item.data:
+                    self.preview_root_stim(item=element)
+        else:
+            time_values = item.time + self.root_elapsed_time
+            self.root_elapsed_time += item.duration
+            self.root_time_data = np.concatenate((self.root_time_data, time_values))
+            self.root_stim_data = np.concatenate((self.root_stim_data, item.stim_signal))
+        return None
+        
 
     def deactivate_buttons(self):
         self.stop_button.setEnabled(True)
@@ -905,12 +933,19 @@ class App(QWidget):
             if not item:
                 item = self.stimulation_tree.currentItem()
             if item.childCount() > 0:
-                for iteration in range(int(item.text(1))):
+                if item == self.stimulation_tree.invisibleRootItem():
+                    jitter = 0
+                    delay = 0
+                    iterations_number = 1
+                else:
+                    jitter = float(self.block_jitter_cell.text())
+                    delay = round(float(self.block_delay_cell.text()) + random.random()*jitter, 3)
+                    iterations_number = int(item.text(1))
+
+                for iteration in range(iterations_number):
                     for index in range(item.childCount()):
                         child = item.child(index)
                         self.plot(child)
-                        jitter = float(self.block_jitter_cell.text())
-                        delay = round(float(self.block_delay_cell.text()) + random.random()*jitter, 3)
                         time_values = np.linspace(0, delay, int(round(delay))*300)
                         data  = np.zeros(len(time_values))
                         time_values += self.elapsed_time
@@ -939,7 +974,8 @@ class App(QWidget):
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                 self.plot_y_values = np.concatenate((self.plot_y_values, data))
                 self.elapsed_time += duration
-        except Exception:
+        except Exception as err:
+            print(err)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0

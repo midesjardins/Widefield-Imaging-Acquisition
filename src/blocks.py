@@ -33,7 +33,6 @@ class Stimulation:
     def run(self, exp):
         print(f"stim ran")
         self.exp = exp
-        self.stim_signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq, self.duty)
         self.daq.launch(self)
 
 class Block:
