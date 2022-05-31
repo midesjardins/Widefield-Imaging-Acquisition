@@ -113,6 +113,7 @@ class DAQ:
 
         self.write_waveforms(stim)
         self.reset_daq()
+    
 
     def generate_stim_wave(self, stim):
         self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
@@ -121,6 +122,7 @@ class DAQ:
             self.stim_signal = np.stack((self.stim_signal))
         else:
             self.stim_signal = self.stim_signal[0]
+        return (self.time_values, self.stim_signal)
     
     def generate_light_wave(self, stim):
         for signal_delay in signal_ajust[len(self.lights)-1]:

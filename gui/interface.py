@@ -224,9 +224,9 @@ class App(QWidget):
         self.stimulation_tree = QTreeWidget()
         self.stimulation_tree.setHeaderLabels(["Name", "Iterations", "Delay", "Jitter", "Type", "Pulses", "Duration", "Jitter", "Width", "Frequency", "Duty", "Canal 1", "Canal 2", "Valid"])
         for i in range(12):
-            self.stimulation_tree.header().hideSection(i+1)
+            #self.stimulation_tree.header().hideSection(i+1)
             pass
-        self.stimulation_tree.setHeaderHidden(True)
+        #self.stimulation_tree.setHeaderHidden(True)
         self.stimulation_tree.setColumnWidth(0, 330)
         self.stimulation_tree.currentItemChanged.connect(self.actualize_tree)
         self.stimulation_tree_window.addWidget(self.stimulation_tree)
@@ -286,8 +286,8 @@ class App(QWidget):
 
         self.stimulation_type_label = QLabel("Stimulation Type")
         self.stimulation_type_cell = QComboBox()
-        self.stimulation_type_cell.addItem("random-square")
         self.stimulation_type_cell.addItem("square")
+        self.stimulation_type_cell.addItem("random-square")
         self.stimulation_type_cell.addItem("Third")
         self.stimulation_type_cell.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window = QHBoxLayout()
@@ -400,8 +400,8 @@ class App(QWidget):
         self.third_signal_type_name = QLabel("signal3")
         self.third_signal_type_window.addWidget(self.third_signal_type_name)
 
-        self.different_signals_window.addWidget(self.first_signal_type_container)
         self.different_signals_window.addWidget(self.second_signal_type_container)
+        self.different_signals_window.addWidget(self.first_signal_type_container)
         self.different_signals_window.addWidget(self.third_signal_type_container)
 
 
@@ -505,14 +505,18 @@ class App(QWidget):
 
     def create_blocks(self, item=None):
         try: 
-            if not item:
-                item = self.stimulation_tree.currentItem()
+            if item == None:
+                item = self.stimulation_tree.invisibleRootItem()
+            print(item.childCount())
             if item.childCount() > 0:
                 children = []
                 for index in range(item.childCount()):
                     child = item.child(index)
                     children.append(self.create_blocks(item=child))
-                new_block = Block(item.text(0), children, delay=int(item.text(2)), iterations=int(item.text(1)))
+                if item != self.stimulation_tree.invisibleRootItem():
+                    new_block = Block(item.text(0), children, delay=int(item.text(2)), iterations=int(item.text(1)))
+                else:
+                    new_block = Block("root", children)
                 return new_block
 
                 #create block with above child
@@ -533,7 +537,8 @@ class App(QWidget):
                     pulses=pulses, jitter=jitter, frequency=frequency,
                     duty=duty, delay=0, pulse_type=item.text(4), name=item.text(0))
                 return new_stim
-        except Exception:
+        except Exception as err:
+            print(err)
             pass
 
     def deactivate_buttons(self):
@@ -785,8 +790,8 @@ class App(QWidget):
 
     def tree_to_type(self):
         dico = {
-            "random-square": 0,
-            "square": 1,
+            "random-square": 1,
+            "square": 0,
             "Third": 2
         }
         try:
@@ -823,6 +828,9 @@ class App(QWidget):
 
     def tree_to_signal(self):
         try:
+            self.second_signal_type_duty_cell.setText(self.stimulation_tree.currentItem().text(10))
+            self.second_signal_type_frequency_cell.setText(self.stimulation_tree.currentItem().text(9))
+
             self.first_signal_type_pulses_cell.setText(self.stimulation_tree.currentItem().text(5))
             self.first_signal_type_duration_cell.setText(self.stimulation_tree.currentItem().text(6))
             self.first_signal_type_jitter_cell.setText(self.stimulation_tree.currentItem().text(7))
@@ -957,9 +965,11 @@ class App(QWidget):
             if self.live_preview_thread.is_alive():
                 pass
             else:
-                self.open_live_preview_thread()
+                #self.open_live_preview_thread()
+                pass
         except Exception:
-            self.open_live_preview_thread()
+            #self.open_live_preview_thread()
+            pass
         self.start_experiment_thread =Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
