@@ -6,6 +6,7 @@ from pandas.core.indexing import need_slice
 from src.signal_generator import digital_square
 from pylablib.devices import IMAQ
 import re
+import matplotlib.pyplot as plt
 
 signal_ajust = [
             [0, None, None, None], 
@@ -106,6 +107,10 @@ class DAQ:
         self.generate_stim_wave(stim)
         self.generate_light_wave(stim)
         self.generate_camera_wave()
+        #plt.clf()
+        #plt.plot(self.camera_signal)
+        #plt.savefig("test.pdf")
+
         self.write_waveforms(stim)
         self.reset_daq()
 
@@ -120,7 +125,7 @@ class DAQ:
     def generate_light_wave(self, stim):
         for signal_delay in signal_ajust[len(self.lights)-1]:
             if signal_delay:
-                signal = digital_square(self.time_values, self.framerate/3, 0.05, int(signal_delay/(self.framerate)))
+                signal = digital_square(self.time_values, self.framerate/3, 0.15, int(signal_delay/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
             else:

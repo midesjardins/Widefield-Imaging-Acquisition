@@ -951,6 +951,7 @@ class App(QWidget):
             pass
 
     def open_start_experiment_thread(self):
+        #self.experiment.start(save=self.files_saved)
         self.start_experiment_thread =Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
