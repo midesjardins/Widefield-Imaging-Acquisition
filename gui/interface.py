@@ -220,7 +220,7 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, vmin=0, vmax=100)
+        self.plot_image = plt.imshow(self.numpy, vmin=0, vmax=1000)
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -999,6 +999,7 @@ class App(QWidget):
             pass
 
     def open_start_experiment_thread(self):
+<<<<<<< Updated upstream
         self.open_live_preview_thread()
 =======
         #self.experiment.start(save=self.files_saved)
