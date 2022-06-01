@@ -1,8 +1,9 @@
-CameraFile (5.70) {
+CameraFile (18.50) {
    Type (Digital)
    Manufacturer (Dalsa)
    Model (1M60)
    CreationDate (20040625170044)
+   Protocol (IMAQ)
    InterfaceInfo (1428) {
       AcquisitionWindow (0, 0, 1024, 1024)
       BinaryThreshold (128, 255)
@@ -26,7 +27,7 @@ CameraFile (5.70) {
       DataFPGAControl (0)
       Enables {
          Mode (0x2)
-         HEnable (0x0)
+         HEnable (0)
          VEnable (0x0)
       }
       Interlaced (No)
@@ -53,6 +54,13 @@ CameraFile (5.70) {
          Trigger1 (TTL)
          Trigger2 (TTL)
          Trigger3 (TTL)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
       }
       Tap (0) {
          Position (HalfLeft)
@@ -89,7 +97,7 @@ CameraFile (5.70) {
       DataFPGAControl (0)
       Enables {
          Mode (0x2)
-         HEnable (0x0)
+         HEnable (0)
          VEnable (0x0)
       }
       Interlaced (No)
@@ -123,6 +131,13 @@ CameraFile (5.70) {
          CCSourceLine1 (None, 1)
          CCSourceLine2 (None, 2)
          CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
       }
       Tap (0) {
          Position (HalfLeft)
@@ -170,6 +185,13 @@ CameraFile (5.70) {
          CCSourceLine1 (None, 1)
          CCSourceLine2 (None, 2)
          CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
       }
       TestImageType (None)
       TestImageFrameBlanking (100)
@@ -231,6 +253,13 @@ CameraFile (5.70) {
          CCSourceLine2 (None, 2)
          CCSourceLine3 (None, 3)
       }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
+      }
       TestImageType (None)
       TestImageFrameBlanking (100)
       TestImageLineBlanking (100)
@@ -256,10 +285,11 @@ CameraFile (5.70) {
    InterfaceInfo (1427) {
       AcquisitionWindow (0, 0, 1024, 1024)
       BinaryThreshold (128, 255)
-      BitDepth (8)
-      BitsPerComponent (8)
+      BitDepth (12)
+      BitsPerComponent (12)
       NumComponents (1)
       NumPhantomComponents (0)
+      Unsigned16BitImage (No)
       FrameTimeout (1000)
       LUT (Normal)
       LUTTransform (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
@@ -289,11 +319,223 @@ CameraFile (5.70) {
          Trigger3 (TTL)
       }
       ControlLinesSource {
+         UseDefaultSource (No)
+         CCSourceLine0 (External, 0)
+         CCSourceLine1 (None, 1)
+         CCSourceLine2 (None, 2)
+         CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
+      }
+      TestImageType (None)
+      TestImageFrameBlanking (100)
+      TestImageLineBlanking (100)
+      NumCameraTaps (2)
+      NumCameraXZones (2)
+      NumCameraTapsPerXZone (1)
+      NumCameraYZones (1)
+      NumCameraTapsPerYZone (1)
+      TimeSlots (1)
+      InterleaveYZones (No)
+      XZonePixelExtractor (Left)
+      YZonePixelExtractor (Top)
+      NeedYChip (No)
+      NeedZChip (No)
+      LVALHighTrue (Yes)
+      FVALHighTrue (Yes)
+      DVALHighTrue (Yes)
+      DVALMode (0)
+      AcquisitionBitstream (CL_TCxTx_Base-Class02.dat)
+      Tap (0) {
+         Position (Normal)
+         Start (Left, Top)
+      }
+   }
+   InterfaceInfo (1433) {
+      AcquisitionWindow (0, 0, 1024, 1024)
+      BinaryThreshold (128, 255)
+      BitDepth (8)
+      BitsPerComponent (8)
+      NumComponents (1)
+      NumPhantomComponents (0)
+      FrameTimeout (1000)
+      LUT (Normal)
+      LUTTransform (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+      MaxImageSize (1024, 1024)
+      ScanType (Area)
+      Scaling (1)
+      DetectPCLK (Yes)
+      FastRearm (No)
+      SynchronizeEnables (No)
+      ConfigDelay (0)
+      Interlaced (No)
+      Serial {
+         Baud (9600)
+         SerialDisabled (No)
+         Databits (8)
+         Parity (N)
+         DTR (High)
+         RTS (High)
+         Stopbits (1)
+         TermChars ()
+      }
+      SignalLevels {
+         PGOutput (RS422)
+      }
+      ControlLinesSource {
          UseDefaultSource (Yes)
          CCSourceLine0 (None, 0)
          CCSourceLine1 (None, 1)
          CCSourceLine2 (None, 2)
          CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
+      }
+      TestImageType (None)
+      TestImageFrameBlanking (100)
+      TestImageLineBlanking (100)
+      NumCameraTaps (2)
+      NumCameraXZones (2)
+      NumCameraTapsPerXZone (1)
+      NumCameraYZones (1)
+      NumCameraTapsPerYZone (1)
+      BitMapping (Standard)
+      XZonePixelExtractor (Left)
+      YZonePixelExtractor (Top)
+      NeedYChip (No)
+      NeedZChip (No)
+      LVALHighTrue (Yes)
+      FVALHighTrue (Yes)
+      DVALHighTrue (Yes)
+      DVALMode (0)
+      AcquisitionBitstream (Class07.dat)
+      Tap (0) {
+         Position (Normal)
+         Start (Left, Top)
+      }
+   }
+   InterfaceInfo (1435) {
+      AcquisitionWindow (0, 0, 1024, 1024)
+      BinaryThreshold (128, 255)
+      BitDepth (8)
+      BitsPerComponent (8)
+      NumComponents (1)
+      NumPhantomComponents (0)
+      FrameTimeout (1000)
+      LUT (Normal)
+      LUTTransform (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+      MaxImageSize (1024, 1024)
+      ScanType (Area)
+      Scaling (1)
+      DetectPCLK (Yes)
+      FastRearm (No)
+      SynchronizeEnables (No)
+      ConfigDelay (0)
+      Interlaced (No)
+      Serial {
+         Baud (9600)
+         SerialDisabled (No)
+         Databits (8)
+         Parity (N)
+         DTR (High)
+         RTS (High)
+         Stopbits (1)
+         TermChars ()
+      }
+      SignalLevels {
+         PGOutput (RS422)
+      }
+      ControlLinesSource {
+         UseDefaultSource (Yes)
+         CCSourceLine0 (None, 0)
+         CCSourceLine1 (None, 1)
+         CCSourceLine2 (None, 2)
+         CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
+      }
+      TestImageType (None)
+      TestImageFrameBlanking (100)
+      TestImageLineBlanking (100)
+      NumCameraTaps (2)
+      NumCameraXZones (2)
+      NumCameraTapsPerXZone (1)
+      NumCameraYZones (1)
+      NumCameraTapsPerYZone (1)
+      BitMapping (Standard)
+      XZonePixelExtractor (Left)
+      YZonePixelExtractor (Top)
+      NeedYChip (No)
+      NeedZChip (No)
+      LVALHighTrue (Yes)
+      FVALHighTrue (Yes)
+      DVALHighTrue (Yes)
+      DVALMode (0)
+      AcquisitionBitstream (Class08.dat)
+      Tap (0) {
+         Position (Normal)
+         Start (Left, Top)
+      }
+   }
+   InterfaceInfo (1436) {
+      AcquisitionWindow (0, 0, 1024, 1024)
+      BinaryThreshold (128, 255)
+      BitDepth (8)
+      BitsPerComponent (8)
+      NumComponents (1)
+      NumPhantomComponents (0)
+      FrameTimeout (1000)
+      LUT (Normal)
+      LUTTransform (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+      MaxImageSize (1024, 1024)
+      ScanType (Area)
+      Scaling (1)
+      DetectPCLK (Yes)
+      FastRearm (No)
+      SynchronizeEnables (No)
+      ConfigDelay (0)
+      Interlaced (No)
+      Serial {
+         Baud (9600)
+         SerialDisabled (No)
+         Databits (8)
+         Parity (N)
+         DTR (High)
+         RTS (High)
+         Stopbits (1)
+         TermChars ()
+      }
+      SignalLevels {
+         PGOutput (RS422)
+      }
+      ControlLinesSource {
+         UseDefaultSource (Yes)
+         CCSourceLine0 (None, 0)
+         CCSourceLine1 (None, 1)
+         CCSourceLine2 (None, 2)
+         CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
       }
       TestImageType (None)
       TestImageFrameBlanking (100)
@@ -311,7 +553,74 @@ CameraFile (5.70) {
       FVALHighTrue (Yes)
       DVALHighTrue (Yes)
       DVALMode (0)
-      AcquisitionBitstream (CL_TCxTx_Base-Class02.dat)
+      AcquisitionBitstream (Class09.dat)
+      Tap (0) {
+         Position (Normal)
+         Start (Left, Top)
+      }
+   }
+   InterfaceInfo (1437) {
+      AcquisitionWindow (0, 0, 1024, 1024)
+      BinaryThreshold (128, 255)
+      BitDepth (8)
+      BitsPerComponent (8)
+      NumComponents (1)
+      NumPhantomComponents (0)
+      FrameTimeout (1000)
+      LUT (Normal)
+      LUTTransform (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+      MaxImageSize (1024, 1024)
+      ScanType (Area)
+      Scaling (1)
+      DetectPCLK (Yes)
+      FastRearm (No)
+      SynchronizeEnables (No)
+      ConfigDelay (0)
+      Interlaced (No)
+      Serial {
+         Baud (9600)
+         SerialDisabled (No)
+         Databits (8)
+         Parity (N)
+         DTR (High)
+         RTS (High)
+         Stopbits (1)
+         TermChars ()
+      }
+      SignalLevels {
+         PGOutput (RS422)
+      }
+      ControlLinesSource {
+         UseDefaultSource (Yes)
+         CCSourceLine0 (None, 0)
+         CCSourceLine1 (None, 1)
+         CCSourceLine2 (None, 2)
+         CCSourceLine3 (None, 3)
+      }
+      Bayer {
+         Pattern (None)
+         Algorithm (Bilinear)
+         RedGain (1.000000)
+         GreenGain (1.000000)
+         BlueGain (1.000000)
+      }
+      TestImageType (None)
+      TestImageFrameBlanking (100)
+      TestImageLineBlanking (100)
+      NumCameraTaps (2)
+      NumCameraXZones (2)
+      NumCameraTapsPerXZone (1)
+      NumCameraYZones (1)
+      NumCameraTapsPerYZone (1)
+      BitMapping (Standard)
+      XZonePixelExtractor (Left)
+      YZonePixelExtractor (Top)
+      NeedYChip (No)
+      NeedZChip (No)
+      LVALHighTrue (Yes)
+      FVALHighTrue (Yes)
+      DVALHighTrue (Yes)
+      DVALMode (0)
       Tap (0) {
          Position (Normal)
          Start (Left, Top)
@@ -438,6 +747,84 @@ CameraFile (5.70) {
                            Start (Left, Top)
                         }
                      }
+                     Action (Interface, 1433) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class07.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1435) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class08.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1436) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class09.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1437) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
                   }
                   Name (10 bit) {
                      Action (Serial) {
@@ -515,6 +902,84 @@ CameraFile (5.70) {
                         NeedYChip (No)
                         NeedZChip (No)
                         AcquisitionBitstream (CL_TCxTx_Base-Class02.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1433) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class07.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1435) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class08.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1436) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class09.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1437) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
                         Tap (0) {
                            Position (Normal)
                            Start (Left, Top)
@@ -602,6 +1067,84 @@ CameraFile (5.70) {
                            Start (Left, Top)
                         }
                      }
+                     Action (Interface, 1433) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class07.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1435) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class08.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1436) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class09.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1437) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (1)
+                        NumCameraXZones (1)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
                   }
                   Default (12 bit)
                   Current (12 bit)
@@ -636,6 +1179,18 @@ CameraFile (5.70) {
                                  MaxImageSize (1024, 1024)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (1024, 1024)
                               }
                               Attribute (Frame Rate) {
@@ -680,6 +1235,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (512, 512)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (512, 512)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -722,6 +1289,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (256, 256)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (256, 256)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -762,6 +1341,18 @@ CameraFile (5.70) {
                                  MaxImageSize (128, 128)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (128, 128)
                               }
                               Attribute (Frame Rate) {
@@ -819,6 +1410,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (1024, 1024)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (1024, 1024)
+                              }
                               Attribute (Exposure Time) {
                                  Value (Integer) {
                                     Min (800)
@@ -860,6 +1463,18 @@ CameraFile (5.70) {
                                  MaxImageSize (512, 512)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (512, 512)
                               }
                               Attribute (Exposure Time) {
@@ -905,6 +1520,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (256, 256)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (256, 256)
+                              }
                               Attribute (Exposure Time) {
                                  Value (Integer) {
                                     Min (800)
@@ -946,6 +1573,18 @@ CameraFile (5.70) {
                                  MaxImageSize (128, 128)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (128, 128)
                               }
                               Attribute (Exposure Time) {
@@ -1004,6 +1643,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (1024, 1024)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (1024, 1024)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -1044,6 +1695,18 @@ CameraFile (5.70) {
                                  MaxImageSize (512, 512)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (512, 512)
                               }
                               Attribute (Frame Rate) {
@@ -1088,6 +1751,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (256, 256)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (256, 256)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -1130,6 +1805,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (128, 128)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (128, 128)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -1157,7 +1844,7 @@ CameraFile (5.70) {
                      }
                   }
                   Default (7)
-                  Current (7)
+                  Current (4)
                }
             }
             Attribute (Advanced Features) {
@@ -1315,6 +2002,84 @@ CameraFile (5.70) {
                            Start (Left, Top)
                         }
                      }
+                     Action (Interface, 1433) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class07.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1435) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class08.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1436) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class09.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1437) {
+                        BitDepth (12)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
                   }
                   Name (10 bit) {
                      Action (Serial) {
@@ -1400,6 +2165,84 @@ CameraFile (5.70) {
                         NeedYChip (No)
                         NeedZChip (No)
                         AcquisitionBitstream (CL_TCxTx_Base-Class02.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1433) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class07.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1435) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class08.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1436) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class09.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1437) {
+                        BitDepth (10)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
                         Tap (0) {
                            Position (Normal)
                            Start (Left, Top)
@@ -1495,6 +2338,84 @@ CameraFile (5.70) {
                            Start (Left, Top)
                         }
                      }
+                     Action (Interface, 1433) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class07.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1435) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class08.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1436) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        AcquisitionBitstream (Class09.dat)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
+                     Action (Interface, 1437) {
+                        BitDepth (8)
+                        Interlaced (No)
+                        TestImageType (None)
+                        NumCameraTaps (2)
+                        NumCameraXZones (2)
+                        NumCameraTapsPerXZone (1)
+                        NumCameraYZones (1)
+                        NumCameraTapsPerYZone (1)
+                        BitMapping (Standard)
+                        XZonePixelExtractor (Left)
+                        YZonePixelExtractor (Top)
+                        NeedYChip (No)
+                        NeedZChip (No)
+                        Tap (0) {
+                           Position (Normal)
+                           Start (Left, Top)
+                        }
+                     }
                   }
                   Default (12 bit)
                   Current (12 bit)
@@ -1529,6 +2450,18 @@ CameraFile (5.70) {
                                  MaxImageSize (1024, 1024)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (1024, 1024)
                               }
                               Attribute (Frame Rate) {
@@ -1573,6 +2506,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (512, 512)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (512, 512)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -1615,6 +2560,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (256, 256)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (256, 256)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -1655,6 +2612,18 @@ CameraFile (5.70) {
                                  MaxImageSize (128, 128)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (128, 128)
                               }
                               Attribute (Frame Rate) {
@@ -1712,6 +2681,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (1024, 1024)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (1024, 1024)
+                              }
                               Attribute (Exposure Time) {
                                  Value (Integer) {
                                     Min (800)
@@ -1753,6 +2734,18 @@ CameraFile (5.70) {
                                  MaxImageSize (512, 512)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (512, 512)
                               }
                               Attribute (Exposure Time) {
@@ -1798,6 +2791,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (256, 256)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (256, 256)
+                              }
                               Attribute (Exposure Time) {
                                  Value (Integer) {
                                     Min (800)
@@ -1839,6 +2844,18 @@ CameraFile (5.70) {
                                  MaxImageSize (128, 128)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (128, 128)
                               }
                               Attribute (Exposure Time) {
@@ -1897,6 +2914,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (1024, 1024)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (1024, 1024)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (1024, 1024)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -1937,6 +2966,18 @@ CameraFile (5.70) {
                                  MaxImageSize (512, 512)
                               }
                               Action (Interface, 1427) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (512, 512)
+                              }
+                              Action (Interface, 1437) {
                                  MaxImageSize (512, 512)
                               }
                               Attribute (Frame Rate) {
@@ -1981,6 +3022,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (256, 256)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (256, 256)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (256, 256)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -2023,6 +3076,18 @@ CameraFile (5.70) {
                               Action (Interface, 1427) {
                                  MaxImageSize (128, 128)
                               }
+                              Action (Interface, 1433) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1435) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1436) {
+                                 MaxImageSize (128, 128)
+                              }
+                              Action (Interface, 1437) {
+                                 MaxImageSize (128, 128)
+                              }
                               Attribute (Frame Rate) {
                                  Value (Integer) {
                                     Min (1)
@@ -2050,7 +3115,7 @@ CameraFile (5.70) {
                      }
                   }
                   Default (7)
-                  Current (7)
+                  Current (4)
                }
             }
             Attribute (Advanced Features) {
@@ -2152,7 +3217,7 @@ CameraFile (5.70) {
             }
          }
          Default (Single Tap)
-         Current (Single Tap)
+         Current (Dual Tap)
       }
    }
 }

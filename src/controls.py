@@ -9,7 +9,7 @@ import re
 import os
 import matplotlib.pyplot as plt
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 
 signal_ajust = [
             [0, None, None, None], 
@@ -76,8 +76,9 @@ class Camera(Instrument):
         self.cam.setup_acquisition(nframes=20)
         #self.cam.configure_trigger_in(trig_type="ext",trig_action="buffer")
         self.cam.set_roi(0,1024,0,1024)
+        #self.cam.setup_serial_params(write_term="\r", datatype="str")
         self.cam.start_acquisition()
-        self.cam.setup_serial_params(write_term="\r", datatype="str")
+        #self.cam.setup_serial_params(write_term="\r", datatype="str")
         self.cam.serial_write("sem 4")
         while True:
             try:
@@ -85,8 +86,8 @@ class Camera(Instrument):
             except Exception:
                 break
         current_time = time.time()
-        while time.time()-current_time <  3:
-            print(time.time()-current_time)
+        #while time.time()-current_time <  3:
+         #   print(time.time()-current_time)
         print("acquisition started")
 
     def loop(self, task=None):
@@ -100,6 +101,7 @@ class Camera(Instrument):
             self.cam.stop_acquisition()
         
         else:
+            current_time = time.time()
             self.cam.read_multiple_images()
             while not task.is_task_done():
                 self.cam.wait_for_frame(timeout=200)
@@ -107,6 +109,9 @@ class Camera(Instrument):
                 img_tuple =  self.cam.read_multiple_images(return_info=True)
                 self.frames += img_tuple[0]
                 self.metadata += img_tuple[1]
+            elapsed_time = time.time() - current_time
+            framerate = len(self.frames)/elapsed_time
+            print(f"the framerate is {framerate}")
             self.cam.stop_acquisition()
             #self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
     
@@ -176,9 +181,9 @@ class DAQ:
                             l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                         l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
                         self.sample([s_task, l_task])
-                        self.camera.initialize(self)
                         self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                         self.start([s_task, l_task])
+                        self.camera.initialize(self)
                         self.camera.loop(l_task)
                         self.wait([s_task, l_task])
                         self.stop([s_task, l_task])
