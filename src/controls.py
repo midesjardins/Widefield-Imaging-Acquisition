@@ -6,7 +6,10 @@ from pandas.core.indexing import need_slice
 from src.signal_generator import digital_square
 from pylablib.devices import IMAQ
 import re
+import os
 import matplotlib.pyplot as plt
+
+WIDEFIELD_COMPUTER = False
 
 signal_ajust = [
             [0, None, None, None], 
@@ -19,6 +22,7 @@ class Instrument:
     def __init__(self, port, daq_name):
         self.port = port
         self.daq_name = daq_name
+        self.stim_number = 0
         self.cam = None
 
 class Camera(Instrument):
@@ -26,7 +30,6 @@ class Camera(Instrument):
         super().__init__(port, daq_name)
         self.frames = []
         self.metadata = []
-        self.daq = None
         self.CameraStopped = True
 
     def initialize(self, daq):
@@ -89,8 +92,10 @@ class Camera(Instrument):
             #self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
     
     def save(self, directory):
-        np.save(f"{directory}/{time.time()}-data", self.frames)
-        np.save(f"{directory}/{time.time()}-metadata", self.metadata)
+        save_time = time.time()
+        np.save(f"{directory}/{save_time}-data", self.frames)
+        np.save(f"{directory}/{save_time}-metadata", self.metadata)
+        self.stim_number += 1
 
 
         
@@ -104,6 +109,7 @@ class DAQ:
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], [], None, None
 
     def launch(self, stim):
+        self.stim = stim
         self.generate_stim_wave(stim)
         self.generate_light_wave(stim)
         self.generate_camera_wave()
@@ -140,23 +146,28 @@ class DAQ:
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self, stim):
-        with nidaqmx.Task(new_task_name='lights') as l_task:
-            with nidaqmx.Task(new_task_name='stimuli') as s_task:
-                with nidaqmx.Task(new_task_name="trigger") as t_task:
-                    self.tasks = [l_task, s_task]
-                    for stimulus in self.stimuli:
-                        s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
-                    for light in self.lights:
-                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
-                    self.sample([s_task, l_task])
-                    self.camera.initialize(self)
-                    self.write([s_task, l_task], [self.stim_signal, self.all_signals])
-                    self.start([s_task, l_task])
-                    self.camera.loop(l_task)
-                    self.wait([s_task, l_task])
-                    self.stop([s_task, l_task])
-                    print(len(self.camera.frames))
+        if WIDEFIELD_COMPUTER == True: 
+            with nidaqmx.Task(new_task_name='lights') as l_task:
+                with nidaqmx.Task(new_task_name='stimuli') as s_task:
+                    with nidaqmx.Task(new_task_name="trigger") as t_task:
+                        self.tasks = [l_task, s_task]
+                        for stimulus in self.stimuli:
+                            s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
+                        for light in self.lights:
+                            l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                        l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
+                        self.sample([s_task, l_task])
+                        self.camera.initialize(self)
+                        self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                        self.start([s_task, l_task])
+                        self.camera.loop(l_task)
+                        self.wait([s_task, l_task])
+                        self.stop([s_task, l_task])
+                        print(len(self.camera.frames))
+
+        else:
+            self.camera.daq = self
+            time.sleep(3)
 
     def read_metadata(self):
         dico = {}

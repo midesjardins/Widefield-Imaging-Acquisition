@@ -116,6 +116,8 @@ class App(QWidget):
         self.grid_layout.addWidget(self.image_settings_label, 0,1)
 
         self.image_settings_main_window = QVBoxLayout()
+        self.image_settings_main_window.setAlignment(Qt.AlignLeft)
+        self.image_settings_main_window.setAlignment(Qt.AlignTop)
 
         self.framerate_window = QHBoxLayout()
         self.framerate_label = QLabel('Framerate')
@@ -144,9 +146,14 @@ class App(QWidget):
         self.image_settings_second_window.addWidget(self.fluorescence_button)
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         
+        
+        
         self.roi_buttons = QStackedLayout()
 
         self.roi_layout1 = QHBoxLayout()
+        self.roi_layout1.setAlignment(Qt.AlignLeft)
+        self.roi_layout1.setAlignment(Qt.AlignTop)
+        self.roi_layout1.setContentsMargins(0,0,0,0)
         self.reset_roi_button = QPushButton()
         self.reset_roi_button.setText("Reset ROI")
         self.reset_roi_button.setIcon(QIcon("gui/icons/zoom-out-area.png"))
@@ -163,6 +170,9 @@ class App(QWidget):
         self.roi_layout1_container.setLayout(self.roi_layout1)
         
         self.roi_layout2 = QHBoxLayout()
+        self.roi_layout2.setAlignment(Qt.AlignLeft)
+        self.roi_layout2.setAlignment(Qt.AlignTop)
+        self.roi_layout2.setContentsMargins(0,0,0,0)
         self.cancel_roi_button = QPushButton()
         self.cancel_roi_button.setText("Cancel")
         self.cancel_roi_button.setIcon(QIcon("gui/icons/zoom-cancel.png"))
@@ -182,6 +192,7 @@ class App(QWidget):
         self.roi_buttons.addWidget(self.roi_layout2_container)
 
         self.image_settings_main_window.addLayout(self.roi_buttons)
+        self.image_settings_main_window.addStretch()
 
         self.activate_live_preview_button = QPushButton()
         self.activate_live_preview_button.setText("Start Live Preview")
@@ -193,12 +204,12 @@ class App(QWidget):
         self.deactivate_live_preview_button.setIcon(QIcon("gui/icons/video-off"))
         self.deactivate_live_preview_button.clicked.connect(self.stop_live)
 
-        self.live_preview_buttons = QStackedLayout()
+        #self.live_preview_buttons = QStackedLayout()
 
 
-        self.live_preview_buttons.addWidget(self.activate_live_preview_button)
-        self.live_preview_buttons.addWidget(self.deactivate_live_preview_button)
-        self.image_settings_main_window.addLayout(self.live_preview_buttons)
+        #self.live_preview_buttons.addWidget(self.activate_live_preview_button)
+        #self.live_preview_buttons.addWidget(self.deactivate_live_preview_button)
+        #self.image_settings_main_window.addLayout(self.live_preview_buttons)
         self.image_settings_main_window.addStretch()
         
 
@@ -494,18 +505,12 @@ class App(QWidget):
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
         self.draw()
-        #self.preview_root_stim()
-        #plt.clf()
-        #print(self.root_time_data)
-        #plt.plot(self.root_time_data, self.root_stim_data)
-        #plt.savefig("test.pdf")
-        #plt.show()
-        x = input()
         self.deactivate_buttons()
         self.generate_daq()
         self.master_block = self.create_blocks()
-        self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq) 
+        self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text()) 
         self.open_start_experiment_thread()
+    
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
         self.stimuli = [Instrument('ao1', 'air-pump')]
@@ -550,23 +555,6 @@ class App(QWidget):
         except Exception as err:
             print(err)
             pass
-
-    def preview_root_stim(self, item=None):
-        if item == None:
-            item = self.master_block
-            self.root_time_data = []
-            self.root_stim_data = []
-            self.root_elapsed_time = 0
-        if type(item) == Block:
-            for iteration in range(item.iterations):
-                for element in item.data:
-                    self.preview_root_stim(item=element)
-        else:
-            time_values = item.time + self.root_elapsed_time
-            self.root_elapsed_time += item.duration
-            self.root_time_data = np.concatenate((self.root_time_data, time_values))
-            self.root_stim_data = np.concatenate((self.root_stim_data, item.stim_signal))
-        return None
         
 
     def deactivate_buttons(self):
@@ -620,11 +608,21 @@ class App(QWidget):
         self.block_name_cell.setEnabled(False)
         self.activate_live_preview_button.setEnabled(False)
         self.deactivate_live_preview_button.setEnabled(False)
+        self.stimulation_tree.clearSelection()
+        self.stimulation_tree.setEnabled(False)
 
-    def stop(self):
+    def stop(self, save=True):
         self.activate_buttons()
         self.stop_live()
+        if save != True and self.directory_save_files_checkbox.isChecked() == True:
+            self.stop_stimulation_dialog()
     
+    def stop_stimulation_dialog(self):
+        button = QMessageBox.question(self, "Save Files", "Do you want to save the current files?")
+        if button == QMessageBox.Yes:
+            print("Yes!")
+        else:
+            print("No!")
     
     def activate_buttons(self):
         self.stop_button.setEnabled(False)
@@ -677,6 +675,7 @@ class App(QWidget):
         self.block_name_cell.setEnabled(True)
         self.activate_live_preview_button.setEnabled(True)
         self.deactivate_live_preview_button.setEnabled(True)
+        self.stimulation_tree.setEnabled(True)
 
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
@@ -996,31 +995,23 @@ class App(QWidget):
             pass
 
     def open_start_experiment_thread(self):
-        #self.experiment.start(save=self.files_saved)
-        try:
-            if self.live_preview_thread.is_alive():
-                pass
-            else:
-                #self.open_live_preview_thread()
-                pass
-        except Exception:
-            #self.open_live_preview_thread()
-            pass
+        self.open_live_preview_thread()
         self.start_experiment_thread =Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
         self.experiment.start(save=self.files_saved)
+        self.stop(save=True)
 
     def open_live_preview_thread(self):
         self.live_preview_thread =Thread(target=self.start_live)
         self.live_preview_thread.start()
 
     def start_live(self):
-        self.camera.initialize(self.daq)
-        self.camera.loop()
+        #self.camera.initialize(self.daq)
+        #self.camera.loop()
         plt.ion()
-        self.live_preview_buttons.setCurrentIndex(1)
+        #self.live_preview_buttons.setCurrentIndex(1)
         #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
         #self.plot_image.axes.get_xaxis().set_visible(False)
         #self.plot_image.axes.axes.get_yaxis().set_visible(False)
@@ -1030,11 +1021,10 @@ class App(QWidget):
                 self.plot_image.set_array(self.camera.frames[-1])
                 time.sleep(0.04)
             except Exception as err:
-                print(err)
-                time.sleep(0.1)
+                time.sleep(0.04)
         return None
     def update_preview(self, np_array):
-        self.live_preview_buttons.setCurrentIndex(1)
+        #self.live_preview_buttons.setCurrentIndex(1)
         plt.ion()
         self.plot_image.set_array(np_array)
 
@@ -1042,7 +1032,7 @@ class App(QWidget):
 
     def stop_live(self):
         self.camera.CameraStopped = True
-        self.live_preview_buttons.setCurrentIndex(0)
+        #self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
         self.camera.CameraStopped = True
     

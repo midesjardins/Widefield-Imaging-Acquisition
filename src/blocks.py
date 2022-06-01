@@ -59,18 +59,20 @@ class Block:
                 time.sleep(self.delay)
 
 class Experiment:
-    def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq):
+    def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name"):
+        self.name = name
         self.blocks = blocks
         self.framerate = framerate
         self.exposition = exposition
         self.mouse_id = mouse_id
-        self.directory = directory
+        self.directory = directory + f"/{name}"
         self.daq = daq
     
     def start(self, save):
         print("experiment saved")
         self.blocks.run(self)
         if save is True:
+            os.mkdir(self.directory)
             self.save()
             self.daq.camera.save(self.directory)
 
