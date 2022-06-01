@@ -34,86 +34,23 @@ class Camera(Instrument):
 
     def initialize(self, daq):
         self.daq = daq
-        indexes_fr_default = []
-        indexes_fr_current = []
-        indexes_et_default = []
-        indexes_et_current = []
-        lines = []
-        """with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd') as file:
-            with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt', "w") as new_file:
-                for line in file:
-                    new_file.write(line)
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt') as txt_file:
-            for i, line in enumerate(txt_file):
-                if "Attribute (Frame Rate)" in line:
-                    indexes_fr_default.append(i+11)
-                    indexes_fr_current.append(i+12)
-                if "Attribute (Exposure Time)" in line:
-
-                    indexes_et_default.append(i+11)
-                    indexes_et_current.append(i+12)
-
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.txt') as txt_edit:
-            for i, line in enumerate(txt_edit):
-                if i in indexes_fr_default:
-                    lines.append(f"                                    Default ({self.daq.framerate})\n")   
-                elif i in indexes_fr_current:
-                    lines.append(f"                                    Current ({self.daq.framerate})\n")
-                elif i in indexes_et_default:
-                    lines.append(f"                                    Default ({self.daq.exposure})\n")   
-                elif i in indexes_et_current:
-                    lines.append(f"                                    Current ({self.daq.exposure})\n")
-                else:
-                    lines.append(line)
-
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', "w") as file:
-            file.write("".join(lines))
-
-        with open('C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd', 'w') as file:
-            file.write("".join(lines))"""
         self.cam = IMAQ.IMAQCamera(self.port)
-        print("cam init")
         self.cam.setup_acquisition(nframes=20)
-        #self.cam.configure_trigger_in(trig_type="ext",trig_action="buffer")
-        self.cam.set_roi(0,1024,0,1024)
-        #self.cam.setup_serial_params(write_term="\r", datatype="str")
         self.cam.start_acquisition()
-        #self.cam.setup_serial_params(write_term="\r", datatype="str")
-        self.cam.serial_write("sem 4")
-        while True:
-            try:
-                self.cam.serial_read(1)
-            except Exception:
-                break
-        current_time = time.time()
-        #while time.time()-current_time <  3:
-         #   print(time.time()-current_time)
-        print("acquisition started")
 
     def loop(self, task=None):
-        if task == None:
-            self.cam.read_multiple_images()
-            while not self.CameraStopped:
-                self.cam.wait_for_frame(timeout=200)
-                img_tuple =  self.cam.read_multiple_images(return_info=True)
-                self.frames += img_tuple[0]
-                self.metadata += img_tuple[1]
-            self.cam.stop_acquisition()
-        
-        else:
-            current_time = time.time()
-            self.cam.read_multiple_images()
-            while not task.is_task_done():
-                self.cam.wait_for_frame(timeout=200)
-                print(len(self.frames))
-                img_tuple =  self.cam.read_multiple_images(return_info=True)
-                self.frames += img_tuple[0]
-                self.metadata += img_tuple[1]
-            elapsed_time = time.time() - current_time
-            framerate = len(self.frames)/elapsed_time
-            print(f"the framerate is {framerate}")
-            self.cam.stop_acquisition()
-            #self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
+        current_time = time.time()
+        self.cam.read_multiple_images()
+        while not task.is_task_done():
+            self.cam.wait_for_frame(timeout=200)
+            print(len(self.frames))
+            img_tuple =  self.cam.read_multiple_images(return_info=True)
+            self.frames += img_tuple[0]
+            self.metadata += img_tuple[1]
+        elapsed_time = time.time() - current_time
+        framerate = len(self.frames)/elapsed_time
+        print(f"the framerate is {framerate}")
+        self.cam.stop_acquisition()
     
     def save(self, directory):
         save_time = time.time()
@@ -181,9 +118,9 @@ class DAQ:
                             l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                         l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
                         self.sample([s_task, l_task])
+                        self.camera.initialize(self)
                         self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                         self.start([s_task, l_task])
-                        self.camera.initialize(self)
                         self.camera.loop(l_task)
                         self.wait([s_task, l_task])
                         self.stop([s_task, l_task])
