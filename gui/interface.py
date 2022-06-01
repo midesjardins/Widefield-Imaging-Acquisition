@@ -510,7 +510,11 @@ class App(QWidget):
         self.master_block = self.create_blocks()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text()), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text()) 
         self.open_start_experiment_thread()
+<<<<<<< Updated upstream
     
+=======
+
+>>>>>>> Stashed changes
     def generate_daq(self):
         self.lights =  [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
         self.stimuli = [Instrument('ao1', 'air-pump')]
@@ -996,6 +1000,16 @@ class App(QWidget):
 
     def open_start_experiment_thread(self):
         self.open_live_preview_thread()
+=======
+        #self.experiment.start(save=self.files_saved)
+        try:
+            if self.live_preview_thread.is_alive():
+                pass
+            else:
+                self.open_live_preview_thread()
+        except Exception:
+            self.open_live_preview_thread()
+>>>>>>> Stashed changes
         self.start_experiment_thread =Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 

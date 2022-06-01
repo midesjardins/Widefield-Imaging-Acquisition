@@ -77,18 +77,37 @@ class Camera(Instrument):
         #self.cam.configure_trigger_in(trig_type="ext",trig_action="buffer")
         self.cam.set_roi(0,1024,0,1024)
         self.cam.start_acquisition()
+        self.cam.setup_serial_params(write_term="\r", datatype="str")
+        self.cam.serial_write("sem 4")
+        while True:
+            try:
+                self.cam.serial_read(1)
+            except Exception:
+                break
+        current_time = time.time()
+        while time.time()-current_time <  3:
+            print(time.time()-current_time)
         print("acquisition started")
 
     def loop(self, task=None):
         if task == None:
-            task = self.CameraStopped
-        self.cam.read_multiple_images()
-        while not task.is_task_done():
-            self.cam.wait_for_frame(timeout=20)
-            img_tuple =  self.cam.read_multiple_images(return_info=True)
-            self.frames += img_tuple[0]
-            self.metadata += img_tuple[1]
-        self.cam.stop_acquisition()
+            self.cam.read_multiple_images()
+            while not self.CameraStopped:
+                self.cam.wait_for_frame(timeout=200)
+                img_tuple =  self.cam.read_multiple_images(return_info=True)
+                self.frames += img_tuple[0]
+                self.metadata += img_tuple[1]
+            self.cam.stop_acquisition()
+        
+        else:
+            self.cam.read_multiple_images()
+            while not task.is_task_done():
+                self.cam.wait_for_frame(timeout=200)
+                print(len(self.frames))
+                img_tuple =  self.cam.read_multiple_images(return_info=True)
+                self.frames += img_tuple[0]
+                self.metadata += img_tuple[1]
+            self.cam.stop_acquisition()
             #self.metadata.append({"time": time.time(), "daq": self.daq.read_metadata()})
     
     def save(self, directory):
