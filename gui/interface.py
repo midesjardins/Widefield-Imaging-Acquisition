@@ -158,7 +158,8 @@ class App(QWidget):
         self.set_roi_button = QPushButton()
         self.set_roi_button.setText("Set ROI")
         self.set_roi_button.setIcon(QIcon("gui/icons/zoom-in-area.png"))
-        self.set_roi_button.clicked.connect(self.set_roi)
+        self.set_roi_button.clicked.connect(self.debugging_graph_lights)
+        # TODO Change for real ROI function
         self.roi_layout1.addWidget(self.set_roi_button)
         self.roi_layout1_container = QWidget()
         self.roi_layout1_container.setLayout(self.roi_layout1)
@@ -520,10 +521,18 @@ class App(QWidget):
         self.draw()
         self.deactivate_buttons()
         self.generate_daq()
-        self.master_block = self.create_blocks()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.open_start_experiment_thread()
+
+    def debugging_graph_lights(self):
+        for new_signal in self.daq.light_signals:
+            print(self.daq.time_values)
+            print(len(self.daq.time_values))
+            print(new_signal)
+            print(len(new_signal))
+            plt.plot(self.daq.time_values, new_signal)
+        plt.show()
 
     def generate_daq(self):
         self.lights = [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'),
@@ -531,11 +540,11 @@ class App(QWidget):
         self.stimuli = [Instrument('ao1', 'air-pump')]
         self.camera = Camera('img0', 'name')
         self.daq = DAQ('dev1', self.lights, self.stimuli, self.camera, int(
-            self.framerate_cell.text()), int(self.exposure_cell.text()), self)
+            self.framerate_cell.text()), int(self.exposure_cell.text())/1000, self)
 
     def create_blocks(self, item=None):
         try:
-            if item is not None:
+            if item is None:
                 item = self.stimulation_tree.invisibleRootItem()
             if item.childCount() > 0:
                 children = []

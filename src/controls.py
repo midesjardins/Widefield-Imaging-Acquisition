@@ -1,15 +1,16 @@
 import nidaqmx
 import time
+import sys
+import os
 from nidaqmx.constants import AcquisitionType
 import numpy as np
-from pandas.core.indexing import need_slice
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from src.blocks import Stimulation
 from src.signal_generator import digital_square
 from pylablib.devices import IMAQ
-import re
-import os
 import matplotlib.pyplot as plt
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 
 signal_ajust = [
             [0, None, None, None], 
@@ -91,8 +92,24 @@ class DAQ:
             self.stim_signal = self.stim_signal[0]
         return (self.time_values, self.stim_signal)
     
-    def generate_light_wave(self, stim):
-        for signal_delay in signal_ajust[len(self.lights)-1]:
+    def generate_light_wave(self, stim=None):
+        for potential_light_index in range(4):
+            if potential_light_index < len(self.lights):
+                signal = digital_square(self.time_values, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
+                signal[-1] = False
+                self.light_signals.append(signal)
+            else:
+                self.light_signals.append(np.full(len(self.time_values), False))
+        if len(self.light_signals) > 1:
+            self.stack_light_signals = np.stack((self.light_signals))
+
+    def plot_lights(self):
+        for light_signal in self.light_signals:
+            plt.plot(self.time_values, light_signal)
+        plt.show()
+
+
+        """for signal_delay in signal_ajust[len(self.lights)-1]:
             if signal_delay:
                 signal = digital_square(self.time_values, self.framerate/3, 0.15, int(signal_delay/(self.framerate)))
                 signal[-1] = False
@@ -100,7 +117,7 @@ class DAQ:
             else:
                 self.light_signals.append(np.full(len(self.time_values), False))
         if len(self.light_signals) != 1:
-            self.stack_light_signals = np.stack((self.light_signals))
+            self.stack_light_signals = np.stack((self.light_signals))"""
     
     def generate_camera_wave(self):
         self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)
@@ -127,7 +144,6 @@ class DAQ:
                         print(len(self.camera.frames))
 
         else:
-            self.camera.daq = self
             time.sleep(3)
 
     def read_metadata(self):
@@ -162,3 +178,15 @@ class DAQ:
         for task in tasks:
             task.stop()
     
+
+LIGHTS = [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'),
+                       Instrument('port0/line2', 'green')]
+STIMULI = [Instrument('ao1', 'air-pump')]
+
+
+"""CAMERA = Camera('img0', 'name')
+DAQ1 = DAQ('dev1', LIGHTS, STIMULI, CAMERA, 3, 0.01, None)
+STIMULATION = Stimulation(DAQ1,10,frequency=1,duty=0.1)
+DAQ1.generate_stim_wave(STIMULATION)
+DAQ1.generate_light_wave()
+DAQ1.plot_lights()"""
