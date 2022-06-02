@@ -525,18 +525,15 @@ class App(QWidget):
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.open_start_experiment_thread()
 
-    def debugging_graph_lights(self):
-        for new_signal in self.daq.light_signals:
-            print(self.daq.time_values)
-            print(len(self.daq.time_values))
-            print(new_signal)
-            print(len(new_signal))
-            plt.plot(self.daq.time_values, new_signal)
-        plt.show()
-
     def generate_daq(self):
-        self.lights = [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'),
-                       Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
+        if self.speckle_button.isChecked():
+            self.lights.append(Instrument('port0/line3', 'ir'))
+        if self.red_button.isChecked():
+            self.lights.append( Instrument('port0/line0', 'red'))
+        if self.green_button.isChecked():
+            self.lights.append(Instrument('port0/line2', 'green'))
+        if self.fluorescence_button.isChecked():
+            self.lights.append(Instrument('port0/line1', 'blue'))
         self.stimuli = [Instrument('ao1', 'air-pump')]
         self.camera = Camera('img0', 'name')
         self.daq = DAQ('dev1', self.lights, self.stimuli, self.camera, int(
