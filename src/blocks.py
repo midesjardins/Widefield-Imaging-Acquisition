@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from .signal_generator import make_signal 
+from .signal_generator import make_signal
 
 class Stimulation:
     def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', name=""):
@@ -67,7 +67,7 @@ class Experiment:
         self.mouse_id = mouse_id
         self.directory = directory + f"/{name}"
         self.daq = daq
-    
+
     def start(self, save):
         print("experiment saved")
         self.blocks.run(self)
