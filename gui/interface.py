@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
@@ -29,10 +29,17 @@ class PlotWindow(QDialog):
         y_values = random_square(time_values, pulses, width, jitter)
         return y_values
 
-    def plot(self, x, y):
+    def plot(self, x, y, root):
         self.figure.clear()
         ax = self.figure.add_subplot(111)
         ax.plot(x, y)
+        if root:
+            self.vertical_line = ax.axvline(0, ls='-', color='r', lw=1, zorder=10)
+        else:
+            try:
+                self.vertical_line.remove()
+            except Exception:
+                pass
         self.canvas.draw()
 
 
@@ -468,12 +475,14 @@ class App(QWidget):
         self.deactivate_buttons()
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
+        print(self.plot_x_values, self.plot_y_values)
         self.root_time, self.root_signal = self.plot_x_values, self.plot_y_values
-        self.draw()
+        self.draw(root=True)
+        self.open_signal_preview_thread()
+        self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
     def open_start_experiment_thread(self):
-        self.open_live_preview_thread()
         self.start_experiment_thread = Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
@@ -483,6 +492,22 @@ class App(QWidget):
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.experiment.start(self.root_time, self.root_signal, save=self.files_saved)
         self.stop(save=True)
+        
+    def open_signal_preview_thread(self):
+        self.signal_preview_thread = Thread(target=self.preview_signal)
+        self.signal_preview_thread.start()
+
+    def preview_signal(self):
+        plt.ion()
+        while not self.daq.signal_is_running:
+            pass
+        while self.daq.signal_is_running:
+            try:
+                self.plot_window.vertical_line.set_xdata([self.daq.current_signal_time,self.daq.current_signal_time])
+                time.sleep(0.5)
+            except Exception:
+                time.sleep(0.01)
+                pass
 
     def generate_daq(self):
         self.lights = []
@@ -514,7 +539,6 @@ class App(QWidget):
                 sign_type, duration, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item) 
                 return Stimulation(self.daq, duration, width=width, pulses=pulses, jitter=jitter, frequency=frequency, duty=duty, delay=0, pulse_type=sign_type, name=item.text(0))
         except Exception as err:
-            print(err)
             pass
 
     def get_tree_item_attributes(self, item):
@@ -804,20 +828,20 @@ class App(QWidget):
                 if item == self.stimulation_tree.invisibleRootItem():
                     jitter, delay, iterations_number = 0, 0, 1
                 else:
-                    jitter = float(item.text(7))
-                    delay = round(float(self.block_delay_cell.text()) + random.random()*jitter, 3)
+                    jitter = float(self.block_jitter_cell.text())
                     iterations_number = int(item.text(1))
 
                 for iteration in range(iterations_number):
                     for index in range(item.childCount()):
                         child = item.child(index)
                         self.plot(child)
-                        time_values = np.linspace(0, delay, int(round(delay))*3000)
-                        data = np.zeros(len(time_values))
-                        time_values += self.elapsed_time
-                        self.elapsed_time += delay
-                        self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
-                        self.plot_y_values = np.concatenate((self.plot_y_values, data))
+                    delay = round(float(self.block_delay_cell.text()) + random.random()*jitter, 3)
+                    time_values = np.linspace(0, delay, int(round(delay))*3000)
+                    data = np.zeros(len(time_values))
+                    time_values += self.elapsed_time
+                    self.elapsed_time += delay
+                    self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
+                    self.plot_y_values = np.concatenate((self.plot_y_values, data))
             else:
                 sign_type, duration, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item)
                 time_values = np.linspace(0, duration, int(round(duration))*3000)
@@ -834,14 +858,14 @@ class App(QWidget):
             self.plot_y_values = []
             self.elapsed_time = 0
 
-    def draw(self):
+    def draw(self, root=False):
         new_x_values = []
         new_y_values = []
         try:
-            sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, 3000, dtype=int)
+            sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
             new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
             new_y_values = np.take(self.plot_y_values, sampling_indexes, 0)
-            self.plot_window.plot(new_x_values, new_y_values)
+            self.plot_window.plot(new_x_values, new_y_values, root)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0

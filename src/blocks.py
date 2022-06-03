@@ -5,11 +5,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal
 
-class Root:
-    def __int__(self, x_values, y_values):
-        self.time = x_values
-        self.stim_signal = y_values
-
 class Stimulation:
     def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', name=""):
         self.daq = daq
@@ -50,7 +45,7 @@ class Block:
     def __str__(self, indent=""):
         stim_list = []
         for iteration in range(self.iterations):
-            stim_list.append(indent + self.name + f" ({iteration+1}/{self.iterations})")
+            stim_list.append(indent + self.name + f" ({iteration+1}/{self.iterations}) --- Delay: {self.delay}, Jitter: {self.jitter}")
             for item in self.data:
                 stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
@@ -74,8 +69,7 @@ class Experiment:
 
     def start(self, x_values, y_values, save):
         #self.blocks.run(self)
-        self.time = x_values
-        self.stim_sginal = y_values
+        self.time, self.stim_signal = x_values, y_values
         self.daq.launch(self)
         if save is True:
             os.mkdir(self.directory)

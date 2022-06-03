@@ -10,6 +10,8 @@ from src.signal_generator import digital_square
 from pylablib.devices import IMAQ
 import matplotlib.pyplot as plt
 
+WIDEFIELD_COMPUTER = False
+
 class Instrument:
     def __init__(self, port, daq_name):
         self.port = port
@@ -19,8 +21,7 @@ class Instrument:
 class Camera(Instrument):
     def __init__(self, port, daq_name):
         super().__init__(port, daq_name)
-        self.frames = []
-        self.metadata = []
+        self.frames, self.metadata = [], []
 
     def initialize(self, daq):
         self.daq = daq
@@ -50,6 +51,7 @@ class DAQ:
         self.name = name
         self.window = window
         self.framerate, self.exposure = framerate, exposure
+        self.signal_is_running = False
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal = [], [], [], None
 
@@ -66,6 +68,7 @@ class DAQ:
         #self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
         #self.time_values = self.stim.time
         #self.stim_signal.append(np.concatenate((stim.stim_signal, stim.empty_signal)))
+        print(self.stim.stim_signal)
         if len(self.stim.stim_signal) != 1:
             self.stim_signal = np.stack((self.stim.stim_signal))
         else:
@@ -87,7 +90,7 @@ class DAQ:
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
-        try:
+        if WIDEFIELD_COMPUTER:
             with nidaqmx.Task(new_task_name='lights') as l_task:
                 with nidaqmx.Task(new_task_name='stimuli') as s_task:
                     self.tasks = [l_task, s_task]
@@ -104,8 +107,13 @@ class DAQ:
                     self.wait([s_task, l_task])
                     self.stop([s_task, l_task])
 
-        except Exception:
-            time.sleep(3)
+        else:
+            start_time = time.time()
+            self.signal_is_running = True
+            while time.time()-start_time < self.stim.time[-1]:
+                self.current_signal_time = round(time.time() - start_time, 2)
+                time.sleep(0.01)
+            self.signal_is_running = False
 
     def plot_lights(self):
         for light_signal in self.light_signals:
