@@ -67,6 +67,10 @@ class App(QWidget):
         self.files_saved = False
         self.onlyInt = QIntValidator()
         self.onlyFloat = QDoubleValidator()
+        self.onlyFramerate = QIntValidator()
+        self.onlyFramerate.setRange(1, 57)
+        self.onlyExposure = QIntValidator()
+        self.onlyExposure.setRange(1,900)
 
         self.grid_layout = QGridLayout()
         self.setLayout(self.grid_layout)
@@ -122,7 +126,7 @@ class App(QWidget):
         self.framerate_label = QLabel('Framerate')
         self.framerate_window.addWidget(self.framerate_label)
         self.framerate_cell = QLineEdit('30')
-        self.framerate_cell.setValidator(self.onlyInt)
+        self.framerate_cell.setValidator(self.onlyFramerate)
         self.framerate_cell.textChanged.connect(self.verify_exposure)
         self.framerate_window.addWidget(self.framerate_cell)
         self.image_settings_main_window.addLayout(self.framerate_window)
@@ -131,12 +135,12 @@ class App(QWidget):
         self.exposure_label = QLabel('Exposure (ms)')
         self.exposure_window.addWidget(self.exposure_label)
         self.exposure_cell = QLineEdit('10')
-        self.exposure_cell.setValidator(self.onlyInt)
+        self.exposure_cell.setValidator(self.onlyExposure)
         self.exposure_cell.textChanged.connect(self.verify_exposure)
         self.exposure_window.addWidget(self.exposure_cell)
         self.image_settings_main_window.addLayout(self.exposure_window)
 
-        self.exposure_warning_label = QLabel("Invalid Exposure / Frame Rate Combination")
+        self.exposure_warning_label = QLabel("Invalid Exposure / Frame Rate")
         self.image_settings_main_window.addWidget(self.exposure_warning_label)
         self.exposure_warning_label.setStyleSheet("color: red")
         self.exposure_warning_label.setHidden(True)
@@ -475,7 +479,6 @@ class App(QWidget):
         self.deactivate_buttons()
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
-        print(self.plot_x_values, self.plot_y_values)
         self.root_time, self.root_signal = self.plot_x_values, self.plot_y_values
         self.draw(root=True)
         self.open_signal_preview_thread()
@@ -490,7 +493,8 @@ class App(QWidget):
         self.generate_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
-        self.experiment.start(self.root_time, self.root_signal, save=self.files_saved)
+        self.experiment.start(self.root_time, self.root_signal)
+        self.experiment.save(self.files_saved, self.roi_extent)
         self.stop(save=True)
         
     def open_signal_preview_thread(self):
@@ -853,7 +857,6 @@ class App(QWidget):
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                 self.plot_y_values = np.concatenate((self.plot_y_values, data))
         except Exception as err:
-            print(err)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
@@ -897,6 +900,7 @@ class App(QWidget):
 
         def onselect_function(eclick, erelease):
             self.roi_extent = self.rect_selector.extents
+            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
@@ -909,6 +913,7 @@ class App(QWidget):
     def reset_roi(self):
         plt.xlim(0, 1024)
         plt.ylim(0, 1024)
+        self.roi_extent = None
         self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):

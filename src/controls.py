@@ -7,6 +7,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.blocks import Stimulation
 from src.signal_generator import digital_square
+from src.data_handling import shrink_array
 from pylablib.devices import IMAQ
 import matplotlib.pyplot as plt
 
@@ -38,7 +39,9 @@ class Camera(Instrument):
             self.metadata += img_tuple[1]
         self.cam.stop_acquisition()
     
-    def save(self, directory):
+    def save(self, directory, extents):
+        if extents:
+            self.frames = shrink_array(self.frames, extents)
         save_time = time.time()
         np.save(f"{directory}/{save_time}-data", self.frames)
         np.save(f"{directory}/{save_time}-metadata", self.metadata)
@@ -68,7 +71,6 @@ class DAQ:
         #self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
         #self.time_values = self.stim.time
         #self.stim_signal.append(np.concatenate((stim.stim_signal, stim.empty_signal)))
-        print(self.stim.stim_signal)
         if len(self.stim.stim_signal) != 1:
             self.stim_signal = np.stack((self.stim.stim_signal))
         else:

@@ -71,11 +71,11 @@ class Experiment:
         #self.blocks.run(self)
         self.time, self.stim_signal = x_values, y_values
         self.daq.launch(self)
-        if save is True:
-            os.mkdir(self.directory)
-            self.save()
-            self.daq.camera.save(self.directory)
 
-    def save(self):
+    def save(self, save, extents=None):
         with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:
             file.write(f"Blocks\n{self.blocks}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
+        if save is True:
+            os.mkdir(self.directory)
+            self.save_metadata()
+            self.daq.camera.save(self.directory, extents)
