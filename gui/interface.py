@@ -119,16 +119,23 @@ class App(QWidget):
         self.framerate_window.addWidget(self.framerate_label)
         self.framerate_cell = QLineEdit('30')
         self.framerate_cell.setValidator(self.onlyInt)
+        self.framerate_cell.textChanged.connect(self.verify_exposure)
         self.framerate_window.addWidget(self.framerate_cell)
         self.image_settings_main_window.addLayout(self.framerate_window)
 
         self.exposure_window = QHBoxLayout()
-        self.exposure_label = QLabel('Exposure')
+        self.exposure_label = QLabel('Exposure (ms)')
         self.exposure_window.addWidget(self.exposure_label)
         self.exposure_cell = QLineEdit('10')
         self.exposure_cell.setValidator(self.onlyInt)
+        self.exposure_cell.textChanged.connect(self.verify_exposure)
         self.exposure_window.addWidget(self.exposure_cell)
         self.image_settings_main_window.addLayout(self.exposure_window)
+
+        self.exposure_warning_label = QLabel("Invalid Exposure / Frame Rate Combination")
+        self.image_settings_main_window.addWidget(self.exposure_warning_label)
+        self.exposure_warning_label.setStyleSheet("color: red")
+        self.exposure_warning_label.setHidden(True)
 
         self.image_settings_second_window = QHBoxLayout()
         self.speckle_button = QCheckBox('Infrared')
@@ -158,8 +165,7 @@ class App(QWidget):
         self.set_roi_button = QPushButton()
         self.set_roi_button.setText("Set ROI")
         self.set_roi_button.setIcon(QIcon("gui/icons/zoom-in-area.png"))
-        self.set_roi_button.clicked.connect(self.debugging_graph_lights)
-        # TODO Change for real ROI function
+        self.set_roi_button.clicked.connect(self.set_roi)
         self.roi_layout1.addWidget(self.set_roi_button)
         self.roi_layout1_container = QWidget()
         self.roi_layout1_container.setLayout(self.roi_layout1)
@@ -516,16 +522,26 @@ class App(QWidget):
         self.show()
 
     def run(self):
+        self.deactivate_buttons()
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
         self.draw()
-        self.deactivate_buttons()
+        self.open_start_experiment_thread()
+
+    def open_start_experiment_thread(self):
+        self.open_live_preview_thread()
+        self.start_experiment_thread = Thread(target=self.run_stimulation)
+        self.start_experiment_thread.start()
+
+    def run_stimulation(self):
         self.generate_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
-        self.open_start_experiment_thread()
+        self.experiment.start(save=self.files_saved)
+        self.stop(save=True)
 
     def generate_daq(self):
+        self.lights = []
         if self.speckle_button.isChecked():
             self.lights.append(Instrument('port0/line3', 'ir'))
         if self.red_button.isChecked():
@@ -576,6 +592,20 @@ class App(QWidget):
         except Exception as err:
             print(err)
             pass
+
+    def stop(self, save=True):
+        self.activate_buttons()
+        self.stop_live()
+        if save is not True and self.directory_save_files_checkbox.isChecked() is True:
+            self.stop_stimulation_dialog()
+
+    def stop_stimulation_dialog(self):
+        button = QMessageBox.question(
+            self, "Save Files", "Do you want to save the current files?")
+        if button == QMessageBox.Yes:
+            print("Yes!")
+        else:
+            print("No!")
 
     def deactivate_buttons(self):
         self.stop_button.setEnabled(True)
@@ -631,28 +661,14 @@ class App(QWidget):
         self.stimulation_tree.clearSelection()
         self.stimulation_tree.setEnabled(False)
 
-    def stop(self, save=True):
-        self.activate_buttons()
-        self.stop_live()
-        if save is not True and self.directory_save_files_checkbox.isChecked() is True:
-            self.stop_stimulation_dialog()
-
-    def stop_stimulation_dialog(self):
-        button = QMessageBox.question(
-            self, "Save Files", "Do you want to save the current files?")
-        if button == QMessageBox.Yes:
-            print("Yes!")
-        else:
-            print("No!")
-
     def activate_buttons(self):
+        if self.directory_save_files_checkbox.isChecked():
+            self.directory_choose_button.setEnabled(True)
         self.stop_button.setEnabled(False)
         self.run_button.setEnabled(True)
         self.experiment_name_cell.setEnabled(True)
         self.mouse_id_cell.setEnabled(True)
         self.directory_save_files_checkbox.setEnabled(True)
-        if self.directory_save_files_checkbox.isChecked():
-            self.directory_choose_button.setEnabled(True)
         self.set_roi_button.setEnabled(True)
         self.experiment_name.setEnabled(True)
         self.mouse_id_label.setEnabled(True)
@@ -851,8 +867,8 @@ class App(QWidget):
 
     def tree_to_type(self):
         dico = {
-            "random-square": 1,
             "square": 0,
+            "random-square": 1,
             "Third": 2
         }
         try:
@@ -1059,27 +1075,13 @@ class App(QWidget):
         except Exception:
             pass
 
-    def open_start_experiment_thread(self):
-        self.open_live_preview_thread()
-        self.start_experiment_thread = Thread(target=self.run_stimulation)
-        self.start_experiment_thread.start()
-
-    def run_stimulation(self):
-        self.experiment.start(save=self.files_saved)
-        self.stop(save=True)
 
     def open_live_preview_thread(self):
         self.live_preview_thread = Thread(target=self.start_live)
         self.live_preview_thread.start()
 
     def start_live(self):
-        # self.camera.initialize(self.daq)
-        # self.camera.loop()
         plt.ion()
-        # self.live_preview_buttons.setCurrentIndex(1)
-        #self.plot_image = plt.imshow(self.numpy, interpolation="nearest")
-        # self.plot_image.axes.get_xaxis().set_visible(False)
-        # self.plot_image.axes.axes.get_yaxis().set_visible(False)
         self.video_running = True
         while self.video_running is True:
             try:
@@ -1111,7 +1113,6 @@ class App(QWidget):
 
         self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
                                                drawtype='box', useblit=True,
-                                               # don't use middle button
                                                button=[1, 3],
                                                minspanx=5, minspany=5,
                                                spancoords='pixels',
@@ -1137,6 +1138,17 @@ class App(QWidget):
         self.rect_selector.clear()
         self.rect_selector = None
         self.reset_roi_button.setEnabled(True)
+
+    def verify_exposure(self):
+        try:
+            boolean_check =  (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1
+        except Exception:
+            boolean_check = False
+        self.exposure_warning_label.setHidden(boolean_check)
+        self.check_run()
+
+    def check_run(self):
+        pass
 
 
 if __name__ == '__main__':
