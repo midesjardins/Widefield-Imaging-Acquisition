@@ -5,6 +5,11 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal
 
+class Root:
+    def __int__(self, x_values, y_values):
+        self.time = x_values
+        self.stim_signal = y_values
+
 class Stimulation:
     def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0.1, delay=0, pulse_type='square', name=""):
         self.daq = daq
@@ -29,16 +34,17 @@ class Stimulation:
         elif self.type == "square":
             return indent+f"{self.name} --- Duration: {self.duration}, Frequency: {self.freq}, Duty: {self.duty}, Delay: {self.delay}"
 
-    def run(self, exp):
+    """def run(self, exp):
         self.exp = exp
-        self.daq.launch(self)
+        self.daq.launch(self)"""
 
 class Block:
-    def __init__(self, name, data, delay=0, iterations=1):
+    def __init__(self, name, data, delay=0, iterations=1, jitter=0):
         self.name = name
         self.data = data
         self.iterations = iterations
         self.delay = delay
+        self.jitter = jitter
         self.exp = None
 
     def __str__(self, indent=""):
@@ -49,12 +55,12 @@ class Block:
                 stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
 
-    def run(self, exp):
+    """def run(self, exp):
         self.exp = exp
         for iteration in range(self.iterations):
             for item in self.data:
                 item.run(self.exp)
-                time.sleep(self.delay)
+                time.sleep(self.delay)"""
 
 class Experiment:
     def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name"):
@@ -66,8 +72,11 @@ class Experiment:
         self.directory = directory + f"/{name}"
         self.daq = daq
 
-    def start(self, save):
-        self.blocks.run(self)
+    def start(self, x_values, y_values, save):
+        #self.blocks.run(self)
+        self.time = x_values
+        self.stim_sginal = y_values
+        self.daq.launch(self)
         if save is True:
             os.mkdir(self.directory)
             self.save()

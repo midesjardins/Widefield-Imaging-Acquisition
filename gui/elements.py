@@ -46,5 +46,5 @@ self.enabled_buttons = [
     self.block_name_cell,
     self.activate_live_preview_button,
     self.deactivate_live_preview_button,
-    self.stimulation_tree,
+    self.stimulation_tree
 ]

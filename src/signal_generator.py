@@ -9,9 +9,6 @@ def square_signal(time_values, frequency, duty_cycle, delay_frames=0):
     return np.concatenate((np.zeros(delay_frames), pulses))[:-delay_frames]
 
 def digital_square(time_values, frequency, duty_cycle, delay_frames=0):
-    print(time_values)
-    print(frequency)
-    print(duty_cycle)
     pulses = np.ma.make_mask(np.array(signal.square(2 * np.pi * frequency * time_values, duty_cycle)).clip(min=0))
     if delay_frames == 0:
         return pulses
