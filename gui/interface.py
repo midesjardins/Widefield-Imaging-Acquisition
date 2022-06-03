@@ -519,6 +519,7 @@ class App(QWidget):
         self.grid_layout.addWidget(self.plot_window, 3, 2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
         self.generate_daq()
+        self.initialize_buttons()
         self.show()
 
     def run(self):
@@ -608,111 +609,17 @@ class App(QWidget):
             print("No!")
 
     def deactivate_buttons(self):
+        for button in self.enabled_buttons:
+            button.setEnabled(False)
         self.stop_button.setEnabled(True)
-        self.run_button.setEnabled(False)
-
-        self.experiment_name_cell.setEnabled(False)
-        self.mouse_id_cell.setEnabled(False)
-        self.directory_save_files_checkbox.setEnabled(False)
-        self.directory_choose_button.setEnabled(False)
-        self.set_roi_button.setEnabled(False)
-        self.experiment_name.setEnabled(False)
-        self.mouse_id_label.setEnabled(False)
-        self.framerate_label.setEnabled(False)
-        self.framerate_cell.setEnabled(False)
-        self.exposure_cell.setEnabled(False)
-        self.exposure_label.setEnabled(False)
-        self.add_brother_branch_button.setEnabled(False)
-        self.add_child_branch_button.setEnabled(False)
-        self.delete_branch_button.setEnabled(False)
-        self.red_button.setEnabled(False)
-        self.speckle_button.setEnabled(False)
-        self.green_button.setEnabled(False)
-        self.fluorescence_button.setEnabled(False)
-
-        self.stimulation_name_label.setEnabled(False)
-        self.stimulation_name_cell.setEnabled(False)
-        self.stimulation_type_label.setEnabled(False)
-        self.stimulation_type_cell.setEnabled(False)
-        self.first_signal_first_canal_check.setEnabled(False)
-        self.first_signal_second_canal_check.setEnabled(False)
-        self.first_signal_type_duration_label.setEnabled(False)
-        self.first_signal_type_duration_cell.setEnabled(False)
-        self.first_signal_type_pulses_label.setEnabled(False)
-        self.first_signal_type_pulses_cell.setEnabled(False)
-        self.first_signal_type_width_label.setEnabled(False)
-        self.first_signal_type_width_cell.setEnabled(False)
-        self.first_signal_type_jitter_label.setEnabled(False)
-        self.first_signal_type_jitter_cell.setEnabled(False)
-        self.second_signal_type_frequency_label.setEnabled(False)
-        self.second_signal_type_frequency_cell.setEnabled(False)
-        self.second_signal_type_duty_label.setEnabled(False)
-        self.second_signal_type_duty_cell.setEnabled(False)
-        self.block_iterations_label.setEnabled(False)
-        self.block_iterations_cell.setEnabled(False)
-        self.block_delay_label.setEnabled(False)
-        self.block_delay_cell.setEnabled(False)
-        self.block_jitter_label.setEnabled(False)
-        self.block_jitter_cell.setEnabled(False)
-        self.block_name_label.setEnabled(False)
-        self.block_name_cell.setEnabled(False)
-        self.activate_live_preview_button.setEnabled(False)
-        self.deactivate_live_preview_button.setEnabled(False)
         self.stimulation_tree.clearSelection()
-        self.stimulation_tree.setEnabled(False)
 
     def activate_buttons(self):
+        for button in self.enabled_buttons:
+            button.setEnabled(True)
         if self.directory_save_files_checkbox.isChecked():
             self.directory_choose_button.setEnabled(True)
         self.stop_button.setEnabled(False)
-        self.run_button.setEnabled(True)
-        self.experiment_name_cell.setEnabled(True)
-        self.mouse_id_cell.setEnabled(True)
-        self.directory_save_files_checkbox.setEnabled(True)
-        self.set_roi_button.setEnabled(True)
-        self.experiment_name.setEnabled(True)
-        self.mouse_id_label.setEnabled(True)
-        self.framerate_label.setEnabled(True)
-        self.framerate_cell.setEnabled(True)
-        self.exposure_cell.setEnabled(True)
-        self.exposure_label.setEnabled(True)
-        self.add_brother_branch_button.setEnabled(True)
-        self.add_child_branch_button.setEnabled(True)
-        self.delete_branch_button.setEnabled(True)
-        self.red_button.setEnabled(True)
-        self.speckle_button.setEnabled(True)
-        self.green_button.setEnabled(True)
-        self.fluorescence_button.setEnabled(True)
-
-        self.stimulation_name_label.setEnabled(True)
-        self.stimulation_name_cell.setEnabled(True)
-        self.stimulation_type_label.setEnabled(True)
-        self.stimulation_type_cell.setEnabled(True)
-        self.first_signal_first_canal_check.setEnabled(True)
-        self.first_signal_second_canal_check.setEnabled(True)
-        self.first_signal_type_duration_label.setEnabled(True)
-        self.first_signal_type_duration_cell.setEnabled(True)
-        self.first_signal_type_pulses_label.setEnabled(True)
-        self.first_signal_type_pulses_cell.setEnabled(True)
-        self.first_signal_type_width_label.setEnabled(True)
-        self.first_signal_type_width_cell.setEnabled(True)
-        self.first_signal_type_jitter_label.setEnabled(True)
-        self.first_signal_type_jitter_cell.setEnabled(True)
-        self.second_signal_type_frequency_label.setEnabled(True)
-        self.second_signal_type_frequency_cell.setEnabled(True)
-        self.second_signal_type_duty_label.setEnabled(True)
-        self.second_signal_type_duty_cell.setEnabled(True)
-        self.block_iterations_label.setEnabled(True)
-        self.block_iterations_cell.setEnabled(True)
-        self.block_delay_label.setEnabled(True)
-        self.block_delay_cell.setEnabled(True)
-        self.block_jitter_label.setEnabled(True)
-        self.block_jitter_cell.setEnabled(True)
-        self.block_name_label.setEnabled(True)
-        self.block_name_cell.setEnabled(True)
-        self.activate_live_preview_button.setEnabled(True)
-        self.deactivate_live_preview_button.setEnabled(True)
-        self.stimulation_tree.setEnabled(True)
 
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(
@@ -1090,14 +997,8 @@ class App(QWidget):
                 pass
         return None
 
-    def update_preview(self, np_array):
-        # self.live_preview_buttons.setCurrentIndex(1)
-        plt.ion()
-        self.plot_image.set_array(np_array)
-
     def stop_live(self):
         self.camera.CameraStopped = True
-        # self.live_preview_buttons.setCurrentIndex(0)
         self.video_running = False
         self.camera.CameraStopped = True
 
@@ -1149,6 +1050,58 @@ class App(QWidget):
 
     def check_run(self):
         pass
+
+    def initialize_buttons(self):
+        self.enabled_buttons = [
+            self.run_button,
+            self.experiment_name_cell,
+            self.mouse_id_cell,
+            self.directory_save_files_checkbox,
+            self.directory_choose_button,
+            self.set_roi_button,
+            self.experiment_name,
+            self.mouse_id_label,
+            self.framerate_label,
+            self.framerate_cell,
+            self.exposure_cell,
+            self.exposure_label,
+            self.add_brother_branch_button,
+            self.add_child_branch_button,
+            self.delete_branch_button,
+            self.red_button,
+            self.speckle_button,
+            self.green_button,
+            self.fluorescence_button,
+            self.stimulation_name_label,
+            self.stimulation_name_cell,
+            self.stimulation_type_label,
+            self.stimulation_type_cell,
+            self.first_signal_first_canal_check,
+            self.first_signal_second_canal_check,
+            self.first_signal_type_duration_label,
+            self.first_signal_type_duration_cell,
+            self.first_signal_type_pulses_label,
+            self.first_signal_type_pulses_cell,
+            self.first_signal_type_width_label,
+            self.first_signal_type_width_cell,
+            self.first_signal_type_jitter_label,
+            self.first_signal_type_jitter_cell,
+            self.second_signal_type_frequency_label,
+            self.second_signal_type_frequency_cell,
+            self.second_signal_type_duty_label,
+            self.second_signal_type_duty_cell,
+            self.block_iterations_label,
+            self.block_iterations_cell,
+            self.block_delay_label,
+            self.block_delay_cell,
+            self.block_jitter_label,
+            self.block_jitter_cell,
+            self.block_name_label,
+            self.block_name_cell,
+            self.activate_live_preview_button,
+            self.deactivate_live_preview_button,
+            self.stimulation_tree
+        ]
 
 
 if __name__ == '__main__':
