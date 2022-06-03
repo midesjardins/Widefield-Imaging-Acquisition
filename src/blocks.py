@@ -67,7 +67,7 @@ class Experiment:
         self.directory = directory + f"/{name}"
         self.daq = daq
 
-    def start(self, x_values, y_values, save):
+    def start(self, x_values, y_values):
         #self.blocks.run(self)
         self.time, self.stim_signal = x_values, y_values
         self.daq.launch(self)

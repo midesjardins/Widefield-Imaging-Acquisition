@@ -479,6 +479,7 @@ class App(QWidget):
         self.deactivate_buttons()
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
+        print(self.plot_x_values, self.plot_y_values)
         self.root_time, self.root_signal = self.plot_x_values, self.plot_y_values
         self.draw(root=True)
         self.open_signal_preview_thread()
@@ -494,7 +495,10 @@ class App(QWidget):
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.experiment.start(self.root_time, self.root_signal)
-        self.experiment.save(self.files_saved, self.roi_extent)
+        try:
+            self.experiment.save(self.files_saved, self.roi_extent)
+        except Exception:
+            self.experiment.save(self.files_saved)
         self.stop(save=True)
         
     def open_signal_preview_thread(self):
@@ -830,24 +834,27 @@ class App(QWidget):
                 item = self.stimulation_tree.currentItem()
             if item.childCount() > 0:
                 if item == self.stimulation_tree.invisibleRootItem():
-                    jitter, delay, iterations_number = 0, 0, 1
+                    jitter, block_delay, iterations_number = 0, 0, 1
                 else:
                     jitter = float(self.block_jitter_cell.text())
                     iterations_number = int(item.text(1))
+                    block_delay = float(self.block_delay_cell.text())
 
                 for iteration in range(iterations_number):
                     for index in range(item.childCount()):
                         child = item.child(index)
                         self.plot(child)
-                    delay = round(float(self.block_delay_cell.text()) + random.random()*jitter, 3)
+                    delay = round(block_delay + random.random()*jitter, 3)
                     time_values = np.linspace(0, delay, int(round(delay))*3000)
                     data = np.zeros(len(time_values))
                     time_values += self.elapsed_time
                     self.elapsed_time += delay
                     self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                     self.plot_y_values = np.concatenate((self.plot_y_values, data))
+                    print(f"block: {self.plot_x_values}")
             else:
                 sign_type, duration, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item)
+                print(sign_type, duration, pulses, jitter, width, frequency, duty)
                 time_values = np.linspace(0, duration, int(round(duration))*3000)
                 data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
                 if sign_type == "square":
@@ -856,7 +863,9 @@ class App(QWidget):
                 self.elapsed_time += duration
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                 self.plot_y_values = np.concatenate((self.plot_y_values, data))
+                print(f"stim: {self.plot_x_values}")
         except Exception as err:
+            print(err)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
