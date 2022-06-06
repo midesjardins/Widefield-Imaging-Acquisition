@@ -29,18 +29,23 @@ class PlotWindow(QDialog):
         y_values = random_square(time_values, pulses, width, jitter)
         return y_values
 
-    def plot(self, x, y, root):
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        ax.plot(x, y)
+    def clear(self):
+        plt.clf()
+
+    def plot(self, x, y, root, color="b"):
+        plt.ion()
+        plt.plot(x,y, color=color)
         if root:
-            self.vertical_line = ax.axvline(0, ls='-', color='r', lw=1, zorder=10)
+            try:
+                self.vertical_line
+            except Exception:
+                self.vertical_line = plt.axvline(0, ls='-', color='r', lw=1, zorder=10)
         else:
             try:
                 self.vertical_line.remove()
             except Exception:
                 pass
-        self.canvas.draw()
+        #self.canvas.draw()
 
 
 class App(QWidget):
@@ -62,7 +67,8 @@ class App(QWidget):
         self.setGeometry(self.left, self.top, self.width, self.height)
 
         self.plot_x_values = []
-        self.plot_y_values = []
+        self.plot_stim1_values = []
+        self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
         self.onlyInt = QIntValidator()
@@ -480,7 +486,7 @@ class App(QWidget):
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
         print(self.plot_x_values, self.plot_y_values)
-        self.root_time, self.root_signal = self.plot_x_values, self.plot_y_values
+        self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
         self.open_signal_preview_thread()
         self.open_live_preview_thread()
@@ -498,7 +504,7 @@ class App(QWidget):
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
         except Exception:
-            self.experiment.save(self.files_saved)
+            self.experiment.save(self.directory_save_files_checkbox.isChecked())
         self.stop(save=True)
         
     def open_signal_preview_thread(self):
@@ -683,6 +689,7 @@ class App(QWidget):
         self.tree_to_signal()
         self.tree_to_canal()
         self.actualize_colors()
+        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -719,6 +726,7 @@ class App(QWidget):
         try:
             self.stimulation_tree.currentItem().setText(
                 4, str(self.stimulation_type_cell.currentText()))
+            self.clear_plot()
             self.plot()
             self.draw()
         except Exception:
@@ -756,6 +764,7 @@ class App(QWidget):
             else:
                 self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
         self.actualize_colors()
+        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -783,6 +792,7 @@ class App(QWidget):
         self.stimulation_tree.currentItem().setText(2, self.block_delay_cell.text())
         self.stimulation_tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.actualize_colors()
+        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -795,14 +805,18 @@ class App(QWidget):
             pass
         self.canal_running = False
 
-    def canals_to_tree(self, first=False):
+    def canals_to_tree(self, int=0, first=False):
         if not self.canal_running:
             if first:
                 self.stimulation_tree.currentItem().setText(11, "False")
                 self.stimulation_tree.currentItem().setText(12, "False")
             else:
+                #print(self.first_signal_first_canal_check.isChecked())
                 self.stimulation_tree.currentItem().setText(11, str(self.first_signal_first_canal_check.isChecked()))
+                #print(self.first_signal_second_canal_check.isChecked())
                 self.stimulation_tree.currentItem().setText(12, str(self.first_signal_second_canal_check.isChecked()))
+            #print(self.stimulation_tree.currentItem().text(11))
+            #print(self.stimulation_tree.currentItem().text(12))
             self.actualize_tree()
 
     def actualize_colors(self, item=None):
@@ -828,6 +842,9 @@ class App(QWidget):
             return True
         return False
 
+    def clear_plot(self):
+        self.plot_window.clear()
+
     def plot(self, item=None):
         try:
             if item is None:
@@ -850,19 +867,32 @@ class App(QWidget):
                     time_values += self.elapsed_time
                     self.elapsed_time += delay
                     self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
-                    self.plot_y_values = np.concatenate((self.plot_y_values, data))
-                    print(f"block: {self.plot_x_values}")
+                    self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
+                    self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data))
             else:
                 sign_type, duration, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item)
                 print(sign_type, duration, pulses, jitter, width, frequency, duty)
                 time_values = np.linspace(0, duration, int(round(duration))*3000)
                 data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
+                print(data)
                 if sign_type == "square":
                     data *= 5
                 time_values += self.elapsed_time
                 self.elapsed_time += duration
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
-                self.plot_y_values = np.concatenate((self.plot_y_values, data))
+                print(f"first boolean {item.text(11)}")
+                print(f"second boolean {item.text(12)}")
+                if item.text(11) == "True":
+                    self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
+                else:
+                    self.plot_stim1_values = np.concatenate((self.plot_stim1_values, np.zeros(len(time_values))))
+
+                if item.text(12) == "True":
+                    self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data))
+                else:
+                    self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
+                #self.plot_stim2_values = np.concatenate((self.plot_y_values, data))
+                #self.plot_stim3_values = np.concatenate((self.plot_y_values, data))
                 print(f"stim: {self.plot_x_values}")
         except Exception as err:
             print(err)
@@ -872,14 +902,18 @@ class App(QWidget):
 
     def draw(self, root=False):
         new_x_values = []
-        new_y_values = []
+        new_stim1_values = []
+        new_stim2_values = []
         try:
             sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
             new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
-            new_y_values = np.take(self.plot_y_values, sampling_indexes, 0)
-            self.plot_window.plot(new_x_values, new_y_values, root)
+            new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
+            new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
+            self.plot_window.plot(new_x_values, new_stim1_values, root)
+            self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.plot_x_values = []
-            self.plot_y_values = []
+            self.plot_stim1_values = []
+            self.plot_stim2_values = []
             self.elapsed_time = 0
         except Exception:
             pass

@@ -58,8 +58,8 @@ class DAQ:
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal = [], [], [], None
 
-    def launch(self, stim):
-        self.stim = stim
+    def launch(self, exp):
+        self.exp = exp
         self.generate_stim_wave()
         self.generate_light_wave()
         self.generate_camera_wave()
@@ -68,22 +68,22 @@ class DAQ:
     
 
     def generate_stim_wave(self):
-        #self.time_values = np.concatenate((stim.time,stim.time_delay + stim.duration))
-        #self.time_values = self.stim.time
-        #self.stim_signal.append(np.concatenate((stim.stim_signal, stim.empty_signal)))
-        if len(self.stim.stim_signal) != 1:
-            self.stim_signal = np.stack((self.stim.stim_signal))
+        #self.time_values = np.concatenate((exp.time,exp.time_delay + exp.duration))
+        #self.time_values = self.exp.time
+        #self.stim_signal.append(np.concatenate((exp.stim_signal, exp.empty_signal)))
+        if len(self.exp.stim_signal) != 1:
+            self.stim_signal = np.stack((self.exp.stim_signal))
         else:
-            self.stim_signal = self.stim.stim_signal[0]
+            self.stim_signal = self.exp.stim_signal[0]
     
     def generate_light_wave(self):
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
-                signal = digital_square(self.stim.time, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
+                signal = digital_square(self.exp.time, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
             else:
-                self.light_signals.append(np.full(len(self.stim.time), False))
+                self.light_signals.append(np.full(len(self.exp.time), False))
         if len(self.light_signals) > 1:
             self.stack_light_signals = np.stack((self.light_signals))
     
@@ -112,21 +112,21 @@ class DAQ:
         else:
             start_time = time.time()
             self.signal_is_running = True
-            while time.time()-start_time < self.stim.time[-1]:
+            while time.time()-start_time < self.exp.time[-1]:
                 self.current_signal_time = round(time.time() - start_time, 2)
                 time.sleep(0.01)
             self.signal_is_running = False
 
     def plot_lights(self):
         for light_signal in self.light_signals:
-            plt.plot(self.stim.time, light_signal)
+            plt.plot(self.exp.time, light_signal)
         plt.show()
 
     def read_metadata(self):
         pass
     
     def reset_daq(self):
-        self.light_signals, self.stim_signal, self.camera_signal, self.stim.time = [], [], None, None
+        self.light_signals, self.stim_signal, self.camera_signal, self.exp.time = [], [], None, None
 
     def start(self, tasks):
         for task in tasks:
@@ -134,7 +134,7 @@ class DAQ:
     
     def wait(self, tasks):
         for task in tasks:
-            task.wait_until_done(timeout=1.5*len(self.stim.time)/3000)
+            task.wait_until_done(timeout=1.5*len(self.exp.time)/3000)
 
     def sample(self, tasks):
         for task in tasks:
