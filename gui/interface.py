@@ -219,7 +219,7 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, vmin=0, vmax=1000)
+        self.plot_image = plt.imshow(self.numpy, cmap="binary_r")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -892,11 +892,11 @@ class App(QWidget):
     def start_live(self):
         plt.ion()
         self.video_running = True
+        while len(self.camera.frames) == 0:
+            pass
+        self.plot_image.set(clim=[0, 1.5*np.maximum(self.camera.frames)]
         while self.video_running is True:
-            try:
-                self.plot_image.set_array(self.camera.frames[-1])
-            except Exception as err:
-                pass
+            self.plot_image.set_array(self.camera.frames[-1])
 
     def stop_live(self):
         self.video_running = False
