@@ -11,7 +11,7 @@ from src.data_handling import shrink_array
 from pylablib.devices import IMAQ
 import matplotlib.pyplot as plt
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 
 class Instrument:
     def __init__(self, port, daq_name):
@@ -100,7 +100,7 @@ class DAQ:
                         s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                    l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])

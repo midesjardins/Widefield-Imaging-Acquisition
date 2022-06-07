@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
-from qtwidgets import Toggle, AnimatedToggle
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
@@ -637,7 +636,7 @@ class App(QWidget):
             self.lights.append(Instrument('port0/line2', 'green'))
         if self.fluorescence_button.isChecked():
             self.lights.append(Instrument('port0/line1', 'blue'))
-        self.stimuli = [Instrument('ao1', 'air-pump')]
+        self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
         self.camera = Camera('img0', 'name')
         self.daq = DAQ('dev1', self.lights, self.stimuli, self.camera, int(
             self.framerate_cell.text()), int(self.exposure_cell.text())/1000, self)
