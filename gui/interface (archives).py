@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
-from qtwidgets import Toggle, AnimatedToggle
-#from superqt import QRangeSlider
-from qrangeslider import QRangeSlider
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
@@ -241,13 +238,12 @@ class App(QWidget):
 
         self.stimulation_tree_window = QVBoxLayout()
         self.stimulation_tree = QTreeWidget()
-        self.stimulation_tree.setHeaderLabels(["0 Name", "1 Iterations", "2 Delay", "3 Jitter", "4 Type", "5 Pulses",
-                                              "6 Duration", "7 Jitter", "8 Width", "9 Frequency", "10 Duty", "11 Type2", "12 Pulses 2", "13 Jitter 2", "14 Width 2", "15 Frequency 2", "16 Duty 2", "17 Blank", "18 Canal 1", "19 Canal 2", "20 Valid"])
-        for i in range(10):
-            #self.stimulation_tree.header().hideSection(i+1)
-            pass
-        #self.stimulation_tree.setHeaderHidden(True)
-        #self.stimulation_tree.setColumnWidth(0, 330)
+        self.stimulation_tree.setHeaderLabels(["Name", "Iterations", "Delay", "Jitter", "Type", "Pulses",
+                                              "Duration", "Jitter", "Width", "Frequency", "Duty", "Canal 1", "Canal 2", "Valid"])
+        for i in range(12):
+            self.stimulation_tree.header().hideSection(i+1)
+        self.stimulation_tree.setHeaderHidden(True)
+        self.stimulation_tree.setColumnWidth(0, 330)
         self.stimulation_tree.currentItemChanged.connect(self.actualize_tree)
         self.stimulation_tree_window.addWidget(self.stimulation_tree)
 
@@ -290,19 +286,13 @@ class App(QWidget):
         self.stimulation_edit_layout = QVBoxLayout()
         self.stimulation_edit_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.canal_window = QVBoxLayout()
-        self.canal_window.setAlignment(Qt.AlignLeft)
-        self.canal_window.setAlignment(Qt.AlignTop)
-        self.canal_window.setContentsMargins(0, 0, 0, 0)
-
-
-
-        self.first_signal_first_canal_check = QCheckBox()
-        self.first_signal_first_canal_check.stateChanged.connect(self.canals_to_tree)
-        self.first_signal_first_canal_check.setText("Canal 1")
-        self.canal_window.addWidget(self.first_signal_first_canal_check)
-
-
+        self.stimulation_name_label = QLabel("Stimulation Name")
+        self.stimulation_name_cell = QLineEdit()
+        self.stimulation_name_cell.textEdited.connect(self.name_to_tree)
+        self.stimulation_name_window = QHBoxLayout()
+        self.stimulation_name_window.addWidget(self.stimulation_name_label)
+        self.stimulation_name_window.addWidget(self.stimulation_name_cell)
+        self.stimulation_edit_layout.addLayout(self.stimulation_name_window)
 
         self.stimulation_type_label = QLabel("Stimulation Type")
         self.stimulation_type_cell = QComboBox()
@@ -313,51 +303,27 @@ class App(QWidget):
         self.stimulation_type_window = QHBoxLayout()
         self.stimulation_type_window.addWidget(self.stimulation_type_label)
         self.stimulation_type_window.addWidget(self.stimulation_type_cell)
-        self.canal_window.addLayout(self.stimulation_type_window)
-
+        self.stimulation_edit_layout.addLayout(self.stimulation_type_window)
         self.different_signals_window = QStackedLayout()
-        self.canal_window.addLayout(self.different_signals_window)
-
-        self.first_signal_second_canal_check = QCheckBox()
-        self.first_signal_second_canal_check.stateChanged.connect(self.canals_to_tree)
-        self.first_signal_second_canal_check.setText("Canal 2")
-        self.canal_window.addWidget(self.first_signal_second_canal_check)
-
-        self.stimulation_type_label2 = QLabel("Stimulation Type")
-        self.stimulation_type_cell2 = QComboBox()
-        self.stimulation_type_cell2.addItem("square")
-        self.stimulation_type_cell2.addItem("random-square")
-        self.stimulation_type_cell2.addItem("Third")
-        self.stimulation_type_cell2.currentIndexChanged.connect(self.type_to_tree)
-        self.stimulation_type_window2 = QHBoxLayout()
-        self.stimulation_type_window2.addWidget(self.stimulation_type_label2)
-        self.stimulation_type_window2.addWidget(self.stimulation_type_cell2)
-        self.canal_window.addLayout(self.stimulation_type_window2)
-
-        self.different_signals_window2 = QStackedLayout()
-        self.canal_window.addLayout(self.different_signals_window2)
-
-        self.stimulation_name_label = QLabel("Stimulation Name")
-        self.stimulation_name_cell = QLineEdit()
-        self.stimulation_name_cell.textEdited.connect(self.name_to_tree)
-        self.stimulation_name_window = QHBoxLayout()
-        self.stimulation_name_window.addWidget(self.stimulation_name_label)
-        self.stimulation_name_window.addWidget(self.stimulation_name_cell)
-        self.stimulation_edit_layout.addLayout(self.stimulation_name_window)
 
         self.first_signal_duration_window = QHBoxLayout()
         self.first_signal_type_duration_label = QLabel("Duration (s)")
         self.first_signal_duration_window.addWidget(self.first_signal_type_duration_label)
         self.first_signal_type_duration_cell = QLineEdit()
-        self.first_signal_duration_window.addWidget(self.first_signal_type_duration_cell)
         self.first_signal_type_duration_cell.setValidator(self.onlyFloat)
         self.first_signal_type_duration_cell.textEdited.connect(self.signal_to_tree)
-        self.stimulation_edit_layout.addLayout(self.first_signal_duration_window)
+        self.first_signal_duration_window.addWidget(self.first_signal_type_duration_cell)
 
-        #self.stimulation_edit_layout.addLayout(self.stimulation_type_window)
+        self.canal_window = QHBoxLayout()
+        self.first_signal_first_canal_check = QCheckBox()
+        self.first_signal_first_canal_check.stateChanged.connect(self.canals_to_tree)
+        self.first_signal_first_canal_check.setText("Canal 1")
+        self.canal_window.addWidget(self.first_signal_first_canal_check)
+        self.first_signal_second_canal_check = QCheckBox()
+        self.first_signal_second_canal_check.stateChanged.connect(self.canals_to_tree)
+        self.first_signal_second_canal_check.setText("Canal 2")
+        self.canal_window.addWidget(self.first_signal_second_canal_check)
         self.stimulation_edit_layout.addLayout(self.canal_window)
-
-
 
         self.first_signal_type_window = QVBoxLayout()
         self.first_signal_type_window.setAlignment(Qt.AlignLeft)
@@ -365,15 +331,8 @@ class App(QWidget):
         self.first_signal_type_window.setContentsMargins(0, 0, 0, 0)
         self.first_signal_type_container = QWidget()
         self.first_signal_type_container.setLayout(self.first_signal_type_window)
-
-        self.first_signal_type_window2 = QVBoxLayout()
-        self.first_signal_type_window2.setAlignment(Qt.AlignLeft)
-        self.first_signal_type_window2.setAlignment(Qt.AlignTop)
-        self.first_signal_type_window2.setContentsMargins(0, 0, 0, 0)
-        self.first_signal_type_container2 = QWidget()
-        self.first_signal_type_container2.setLayout(self.first_signal_type_window2)
-        #self.stimulation_edit_layout.addLayout(self.first_signal_duration_window)
-        #self.stimulation_edit_layout.addLayout(self.different_signals_window)
+        self.stimulation_edit_layout.addLayout(self.first_signal_duration_window)
+        self.stimulation_edit_layout.addLayout(self.different_signals_window)
 
         self.first_signal_pulses_window = QHBoxLayout()
         self.first_signal_type_pulses_label = QLabel("Pulses")
@@ -382,14 +341,6 @@ class App(QWidget):
         self.first_signal_type_pulses_cell.setValidator(self.onlyInt)
         self.first_signal_type_pulses_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_pulses_window.addWidget(self.first_signal_type_pulses_cell)
-
-        self.first_signal_pulses_window2 = QHBoxLayout()
-        self.first_signal_type_pulses_label2 = QLabel("Pulses")
-        self.first_signal_pulses_window2.addWidget(self.first_signal_type_pulses_label2)
-        self.first_signal_type_pulses_cell2 = QLineEdit()
-        self.first_signal_type_pulses_cell2.setValidator(self.onlyInt)
-        self.first_signal_type_pulses_cell2.textEdited.connect(self.signal_to_tree)
-        self.first_signal_pulses_window2.addWidget(self.first_signal_type_pulses_cell2)
 
         self.first_signal_jitter_window = QHBoxLayout()
         self.first_signal_type_jitter_label = QLabel("Jitter (s)")
@@ -400,15 +351,6 @@ class App(QWidget):
         self.first_signal_type_jitter_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_jitter_window.addWidget(self.first_signal_type_jitter_cell)
 
-        self.first_signal_jitter_window2 = QHBoxLayout()
-        self.first_signal_type_jitter_label2 = QLabel("Jitter (s)")
-        self.first_signal_jitter_window2.addWidget(self.first_signal_type_jitter_label2)
-        self.first_signal_type_jitter_cell2 = QLineEdit()
-        self.first_signal_type_jitter_cell2.setValidator(self.onlyFloat)
-        self.first_signal_type_jitter_cell2.setText("0")
-        self.first_signal_type_jitter_cell2.textEdited.connect(self.signal_to_tree)
-        self.first_signal_jitter_window2.addWidget(self.first_signal_type_jitter_cell2)
-
         self.first_signal_width_window = QHBoxLayout()
         self.first_signal_type_width_label = QLabel("Width (s)")
         self.first_signal_width_window.addWidget(self.first_signal_type_width_label)
@@ -418,22 +360,10 @@ class App(QWidget):
         self.first_signal_type_width_cell.textEdited.connect(self.signal_to_tree)
         self.first_signal_width_window.addWidget(self.first_signal_type_width_cell)
 
-        self.first_signal_width_window2 = QHBoxLayout()
-        self.first_signal_type_width_label2 = QLabel("Width (s)")
-        self.first_signal_width_window2.addWidget(self.first_signal_type_width_label2)
-        self.first_signal_type_width_cell2 = QLineEdit()
-        self.first_signal_type_width_cell2.setValidator(self.onlyFloat)
-        self.first_signal_type_width_cell2.setText("0")
-        self.first_signal_type_width_cell2.textEdited.connect(self.signal_to_tree)
-        self.first_signal_width_window2.addWidget(self.first_signal_type_width_cell2)
-
+        self.first_signal_type_window.addLayout(self.first_signal_duration_window)
         self.first_signal_type_window.addLayout(self.first_signal_pulses_window)
         self.first_signal_type_window.addLayout(self.first_signal_width_window)
         self.first_signal_type_window.addLayout(self.first_signal_jitter_window)
-
-        self.first_signal_type_window2.addLayout(self.first_signal_pulses_window2)
-        self.first_signal_type_window2.addLayout(self.first_signal_width_window2)
-        self.first_signal_type_window2.addLayout(self.first_signal_jitter_window2)
 # -------------------
 
         self.second_signal_type_window = QVBoxLayout()
@@ -442,14 +372,7 @@ class App(QWidget):
         self.second_signal_type_window.setAlignment(Qt.AlignTop)
         self.second_signal_type_window.setContentsMargins(0, 0, 0, 0)
         self.second_signal_type_container.setLayout(self.second_signal_type_window)
-        #self.stimulation_edit_layout.addLayout(self.different_signals_window)
-
-        self.second_signal_type_window2 = QVBoxLayout()
-        self.second_signal_type_container2 = QWidget()
-        self.second_signal_type_window2.setAlignment(Qt.AlignLeft)
-        self.second_signal_type_window2.setAlignment(Qt.AlignTop)
-        self.second_signal_type_window2.setContentsMargins(0, 0, 0, 0)
-        self.second_signal_type_container2.setLayout(self.second_signal_type_window2)
+        self.stimulation_edit_layout.addLayout(self.different_signals_window)
 
         self.second_signal_frequency_window = QHBoxLayout()
         self.second_signal_type_frequency_label = QLabel("Frequency (Hz)")
@@ -459,14 +382,6 @@ class App(QWidget):
         self.second_signal_type_frequency_cell.textEdited.connect(self.signal_to_tree)
         self.second_signal_frequency_window.addWidget(self.second_signal_type_frequency_cell)
 
-        self.second_signal_frequency_window2 = QHBoxLayout()
-        self.second_signal_type_frequency_label2 = QLabel("Frequency (Hz)")
-        self.second_signal_frequency_window2.addWidget(self.second_signal_type_frequency_label2)
-        self.second_signal_type_frequency_cell2 = QLineEdit()
-        self.second_signal_type_frequency_cell2.setValidator(self.onlyFloat)
-        self.second_signal_type_frequency_cell2.textEdited.connect(self.signal_to_tree)
-        self.second_signal_frequency_window2.addWidget(self.second_signal_type_frequency_cell2)
-
         self.second_signal_duty_window = QHBoxLayout()
         self.second_signal_type_duty_label = QLabel("Duty (%)")
         self.second_signal_duty_window.addWidget(self.second_signal_type_duty_label)
@@ -475,44 +390,22 @@ class App(QWidget):
         self.second_signal_type_duty_cell.textEdited.connect(self.signal_to_tree)
         self.second_signal_duty_window.addWidget(self.second_signal_type_duty_cell)
 
-        self.second_signal_duty_window2 = QHBoxLayout()
-        self.second_signal_type_duty_label2 = QLabel("Duty (%)")
-        self.second_signal_duty_window2.addWidget(self.second_signal_type_duty_label2)
-        self.second_signal_type_duty_cell2 = QLineEdit()
-        self.second_signal_type_duty_cell2.setValidator(self.onlyFloat)
-        self.second_signal_type_duty_cell2.textEdited.connect(self.signal_to_tree)
-        self.second_signal_duty_window2.addWidget(self.second_signal_type_duty_cell2)
-
         self.second_signal_type_window.addLayout(self.second_signal_frequency_window)
         self.second_signal_type_window.addLayout(self.second_signal_duty_window)
-
-        self.second_signal_type_window2.addLayout(self.second_signal_frequency_window2)
-        self.second_signal_type_window2.addLayout(self.second_signal_duty_window2)
 
 # -------------------
 
         self.third_signal_type_window = QVBoxLayout()
         self.third_signal_type_container = QWidget()
         self.third_signal_type_container.setLayout(self.third_signal_type_window)
-
-        self.third_signal_type_window2 = QVBoxLayout()
-        self.third_signal_type_container2 = QWidget()
-        self.third_signal_type_container2.setLayout(self.third_signal_type_window2)
-        #self.stimulation_edit_layout.addLayout(self.different_signals_window)
+        self.stimulation_edit_layout.addLayout(self.different_signals_window)
 
         self.third_signal_type_name = QLabel("signal3")
         self.third_signal_type_window.addWidget(self.third_signal_type_name)
 
-        self.third_signal_type_name2 = QLabel("signal3")
-        self.third_signal_type_window2.addWidget(self.third_signal_type_name2)
-
         self.different_signals_window.addWidget(self.second_signal_type_container)
         self.different_signals_window.addWidget(self.first_signal_type_container)
         self.different_signals_window.addWidget(self.third_signal_type_container)
-
-        self.different_signals_window2.addWidget(self.second_signal_type_container2)
-        self.different_signals_window2.addWidget(self.first_signal_type_container2)
-        self.different_signals_window2.addWidget(self.third_signal_type_container2)
 
         self.stimulation_edit_container = QWidget()
         self.stimulation_edit_container.setLayout(self.stimulation_edit_layout)
@@ -592,6 +485,7 @@ class App(QWidget):
         self.deactivate_buttons()
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
+        print(self.plot_x_values, self.plot_y_values)
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
         self.open_signal_preview_thread()
@@ -661,38 +555,21 @@ class App(QWidget):
         except Exception as err:
             pass
 
-    def get_tree_item_attributes(self, item, canal=1):
-        if canal ==1:
-            sign_type = item.text(4)
-            duration = float(item.text(6))
-            try:
-                pulses = int(item.text(5))
-                jitter = float(item.text(7))
-                width = float(item.text(8))
-            except Exception:
-                pulses, jitter, width = 0, 0, 0
-            try:
-                frequency = float(item.text(9))
-                duty = float(item.text(10))/100
-            except Exception:
-                frequency, duty = 0, 0
-            return [sign_type, pulses, jitter, width, frequency, duty]
-
-        elif canal ==2:
-            sign_type = item.text(11)
-            duration = float(item.text(6))
-            try:
-                pulses = int(item.text(12))
-                jitter = float(item.text(13))
-                width = float(item.text(14))
-            except Exception:
-                pulses, jitter, width = 0, 0, 0
-            try:
-                frequency = float(item.text(15))
-                duty = float(item.text(16))/100
-            except Exception:
-                frequency, duty = 0, 0
-            return [sign_type, pulses, jitter, width, frequency, duty]
+    def get_tree_item_attributes(self, item):
+        sign_type = item.text(4)
+        duration = float(item.text(6))
+        try:
+            pulses = int(item.text(5))
+            jitter = float(item.text(7))
+            width = float(item.text(8))
+        except Exception:
+            pulses, jitter, width = 0, 0, 0
+        try:
+            frequency = float(item.text(9))
+            duty = float(item.text(10))/100
+        except Exception:
+            frequency, duty = 0, 0
+        return [sign_type, duration, pulses, jitter, width, frequency, duty]
 
     def stop(self, save=True):
         self.activate_buttons()
@@ -708,30 +585,18 @@ class App(QWidget):
         else:
             print("No!")
 
-    def deactivate_buttons(self, buttons=False):
-        if buttons is False:
-            buttons = self.enabled_buttons
-            self.stop_button.setEnabled(True)
-            self.stimulation_tree.clearSelection()
-        for button in buttons:
+    def deactivate_buttons(self):
+        for button in self.enabled_buttons:
             button.setEnabled(False)
+        self.stop_button.setEnabled(True)
+        self.stimulation_tree.clearSelection()
 
-    def show_buttons(self, buttons):
-        for button in buttons:
-            button.setVisible(True)
-
-    def hide_buttons(self, buttons):
-        for button in buttons:
-            button.setVisible(False)
-
-    def activate_buttons(self, buttons=False):
-        if buttons is False:
-            buttons = self.enabled_buttons
-            if self.directory_save_files_checkbox.isChecked():
-                self.directory_choose_button.setEnabled(True)
-            self.stop_button.setEnabled(False)
-        for button in buttons:
+    def activate_buttons(self):
+        for button in self.enabled_buttons:
             button.setEnabled(True)
+        if self.directory_save_files_checkbox.isChecked():
+            self.directory_choose_button.setEnabled(True)
+        self.stop_button.setEnabled(False)
 
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(
@@ -778,7 +643,7 @@ class App(QWidget):
         if self.stimulation_tree.currentItem():
             self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
             self.stimulation_tree.currentItem().setText(1, "1")
-            self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+            self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
             stimulation_tree_item = QTreeWidgetItem()
             self.style_tree_item(stimulation_tree_item)
             self.stimulation_tree.selectedItems()[0].addChild(stimulation_tree_item)
@@ -800,7 +665,7 @@ class App(QWidget):
         self.type_to_tree(first=True)
 
     def style_tree_item(self, item):
-        item.setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+        item.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
         item.setIcon(0, QIcon("gui/icons/wave-square.png"))
         item.setText(0, "No Name")
@@ -856,18 +721,11 @@ class App(QWidget):
     def type_to_tree(self, first=False):
         if first is True:
             self.stimulation_type_cell.setCurrentIndex(0)
-            self.stimulation_type_cell2.setCurrentIndex(0)
-        self.different_signals_window.setCurrentIndex(self.stimulation_type_cell.currentIndex())
-        self.different_signals_window2.setCurrentIndex(self.stimulation_type_cell2.currentIndex())
+        self.different_signals_window.setCurrentIndex(
+            self.stimulation_type_cell.currentIndex())
         try:
-            self.stimulation_tree.currentItem().setText(4, str(self.stimulation_type_cell.currentText()))
-        except Exception:
-            pass
-        try:
-            self.stimulation_tree.currentItem().setText(11, str(self.stimulation_type_cell2.currentText()))
-        except Exception:
-            pass
-        try:
+            self.stimulation_tree.currentItem().setText(
+                4, str(self.stimulation_type_cell.currentText()))
             self.clear_plot()
             self.plot()
             self.draw()
@@ -881,56 +739,30 @@ class App(QWidget):
             "Third": 2
         }
         try:
-            self.stimulation_type_cell.setCurrentIndex(dico[self.stimulation_tree.currentItem().text(4)])
+            self.stimulation_type_cell.setCurrentIndex(
+                dico[self.stimulation_tree.currentItem().text(4)])
         except Exception:
             self.stimulation_type_cell.setCurrentIndex(0)
 
-        try:
-            self.stimulation_type_cell2.setCurrentIndex(dico[self.stimulation_tree.currentItem().text(11)])
-        except Exception:
-            self.stimulation_type_cell2.setCurrentIndex(0)
-
     def signal_to_tree(self):
-        self.stimulation_tree.currentItem().setText(6, self.first_signal_type_duration_cell.text())
-
         self.stimulation_tree.currentItem().setText(5, self.first_signal_type_pulses_cell.text())
+        self.stimulation_tree.currentItem().setText(6, self.first_signal_type_duration_cell.text())
         self.stimulation_tree.currentItem().setText(7, self.first_signal_type_jitter_cell.text())
         self.stimulation_tree.currentItem().setText(8, self.first_signal_type_width_cell.text())
         self.stimulation_tree.currentItem().setText(9, self.second_signal_type_frequency_cell.text())
         self.stimulation_tree.currentItem().setText(10, self.second_signal_type_duty_cell.text())
 
-        self.stimulation_tree.currentItem().setText(12, self.first_signal_type_pulses_cell2.text())
-        self.stimulation_tree.currentItem().setText(13, self.first_signal_type_jitter_cell2.text())
-        self.stimulation_tree.currentItem().setText(14, self.first_signal_type_width_cell2.text())
-        self.stimulation_tree.currentItem().setText(15, self.second_signal_type_frequency_cell2.text())
-        self.stimulation_tree.currentItem().setText(16, self.second_signal_type_duty_cell2.text())
-
-
-        # TODO Change actualization of icons
-        if self.first_signal_first_canal_check.isChecked() and self.stimulation_type_cell.currentText() == "square":
+        if self.stimulation_type_cell.currentText() == "square":
             if self.first_signal_type_duration_cell.text() != "" and self.second_signal_type_frequency_cell.text() != "" and self.second_signal_type_duty_cell.text() != "":
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/circle-check.png"))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/circle-check.png"))
             else:
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
 
-        elif self.first_signal_first_canal_check.isChecked() and self.stimulation_type_cell.currentText() == "random-square":
+        elif self.stimulation_type_cell.currentText() == "random-square":
             if self.first_signal_type_duration_cell.text() != "" and self.first_signal_type_pulses_cell.text() != "" and self.first_signal_type_jitter_cell.text() != "" and self.first_signal_type_width_cell.text() != "":
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/circle-check.png"))
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/circle-check.png"))
             else:
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
-
-        if self.first_signal_second_canal_check.isChecked() and self.stimulation_type_cell.currentText() == "square":
-            if self.first_signal_type_duration_cell.text() != "" and self.second_signal_type_frequency_cell.text() != "" and self.second_signal_type_duty_cell.text() != "":
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/circle-check.png"))
-            else:
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
-
-        elif self.first_signal_second_canal_check.isChecked() and self.stimulation_type_cell.currentText() == "random-square":
-            if self.first_signal_type_duration_cell.text() != "" and self.first_signal_type_pulses_cell.text() != "" and self.first_signal_type_jitter_cell.text() != "" and self.first_signal_type_width_cell.text() != "":
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/circle-check.png"))
-            else:
-                self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
-
+                self.stimulation_tree.currentItem().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
         self.actualize_colors()
         self.clear_plot()
         self.plot()
@@ -938,23 +770,13 @@ class App(QWidget):
 
     def tree_to_signal(self):
         try:
-            self.first_signal_type_duration_cell.setText(self.stimulation_tree.currentItem().text(6))
-            
+            self.second_signal_type_duty_cell.setText(self.stimulation_tree.currentItem().text(10))
+            self.second_signal_type_frequency_cell.setText(self.stimulation_tree.currentItem().text(9))
             self.first_signal_type_pulses_cell.setText(self.stimulation_tree.currentItem().text(5))
+            self.first_signal_type_duration_cell.setText(self.stimulation_tree.currentItem().text(6))
             self.first_signal_type_jitter_cell.setText(self.stimulation_tree.currentItem().text(7))
             self.first_signal_type_width_cell.setText(self.stimulation_tree.currentItem().text(8))
-            self.second_signal_type_frequency_cell.setText(self.stimulation_tree.currentItem().text(9))
-            self.second_signal_type_duty_cell.setText(self.stimulation_tree.currentItem().text(10))
-
-            self.first_signal_type_pulses_cell2.setText(self.stimulation_tree.currentItem().text(12))
-            self.first_signal_type_jitter_cell2.setText(self.stimulation_tree.currentItem().text(13))
-            self.first_signal_type_width_cell2.setText(self.stimulation_tree.currentItem().text(14))
-            self.second_signal_type_frequency_cell2.setText(self.stimulation_tree.currentItem().text(15))
-            self.second_signal_type_duty_cell2.setText(self.stimulation_tree.currentItem().text(16))
-
-
-        except Exception as err:
-            print(f"tree_to_signal {err}")
+        except Exception:
             pass
 
     def tree_to_block(self):
@@ -977,8 +799,8 @@ class App(QWidget):
     def tree_to_canal(self):
         self.canal_running = True
         try:
-            self.first_signal_first_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(18)))
-            self.first_signal_second_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(19)))
+            self.first_signal_first_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(11)))
+            self.first_signal_second_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(12)))
         except Exception:
             pass
         self.canal_running = False
@@ -986,26 +808,16 @@ class App(QWidget):
     def canals_to_tree(self, int=0, first=False):
         if not self.canal_running:
             if first:
-                self.stimulation_tree.currentItem().setText(18, "False")
-                self.stimulation_tree.currentItem().setText(19, "False")
-                self.deactivate_buttons(self.canal1buttons)
-                self.deactivate_buttons(self.canal2buttons)
+                self.stimulation_tree.currentItem().setText(11, "False")
+                self.stimulation_tree.currentItem().setText(12, "False")
             else:
-                self.stimulation_tree.currentItem().setText(18, str(self.first_signal_first_canal_check.isChecked()))
-                if self.first_signal_first_canal_check.isChecked():
-                    self.activate_buttons(self.canal1buttons)
-                else:
-                    self.deactivate_buttons(self.canal1buttons)
-                if self.first_signal_second_canal_check.isChecked():
-                    self.activate_buttons(self.canal2buttons)
-                else:
-                    self.deactivate_buttons(self.canal2buttons)
-                #self.different_signals_window.setEnabled(self.first_signal_first_canal_check.isChecked())
-                self.stimulation_tree.currentItem().setText(19, str(self.first_signal_second_canal_check.isChecked()))
-                self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
-                #self.different_signals_window2.setEnabled(self.first_signal_second_canal_check.isChecked())
+                #print(self.first_signal_first_canal_check.isChecked())
+                self.stimulation_tree.currentItem().setText(11, str(self.first_signal_first_canal_check.isChecked()))
+                #print(self.first_signal_second_canal_check.isChecked())
+                self.stimulation_tree.currentItem().setText(12, str(self.first_signal_second_canal_check.isChecked()))
+            #print(self.stimulation_tree.currentItem().text(11))
+            #print(self.stimulation_tree.currentItem().text(12))
             self.actualize_tree()
-
 
     def actualize_colors(self, item=None):
         if item == None:
@@ -1013,15 +825,15 @@ class App(QWidget):
             item = self.stimulation_tree.invisibleRootItem()
         for child_index in range(item.childCount()):
             if item.text(1) != "" and item.text(2) != "" and item.text(3) != "" and item != self.stimulation_tree.invisibleRootItem():
-                item.setIcon(20, QIcon("gui/icons/circle-check.png"))
+                item.setIcon(13, QIcon("gui/icons/circle-check.png"))
             elif item != self.stimulation_tree.invisibleRootItem():
-                item.setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+                item.setIcon(13, QIcon("gui/icons/alert-triangle.png"))
                 self.run_button.setEnabled(False)
             self.actualize_colors(item.child(child_index))
-        if item.icon(20).pixmap(100).toImage() == QIcon("gui/icons/alert-triangle.png").pixmap(100).toImage():
+        if item.icon(13).pixmap(100).toImage() == QIcon("gui/icons/alert-triangle.png").pixmap(100).toImage():
             self.run_button.setEnabled(False)
             try:
-                item.parent().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+                item.parent().setIcon(13, QIcon("gui/icons/alert-triangle.png"))
             except Exception as err:
                 pass
 
@@ -1058,27 +870,32 @@ class App(QWidget):
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data))
             else:
-                duration = float(item.text(6))
+                sign_type, duration, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item)
+                print(sign_type, duration, pulses, jitter, width, frequency, duty)
                 time_values = np.linspace(0, duration, int(round(duration))*3000)
+                data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
+                print(data)
+                if sign_type == "square":
+                    data *= 5
                 time_values += self.elapsed_time
                 self.elapsed_time += duration
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
-                if item.text(18) == "True":
-                    sign_type, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item, canal=1)
-                    data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
+                print(f"first boolean {item.text(11)}")
+                print(f"second boolean {item.text(12)}")
+                if item.text(11) == "True":
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
                 else:
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, np.zeros(len(time_values))))
 
-                if item.text(19) == "True":
-                    sign_type2, pulses2, jitter2, width2, frequency2, duty2 = self.get_tree_item_attributes(item, canal=2)
-                    data2 = make_signal(time_values, sign_type2, width2, pulses2, jitter2, frequency2, duty2)
-                    self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data2))
+                if item.text(12) == "True":
+                    self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data))
                 else:
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
                 #self.plot_stim2_values = np.concatenate((self.plot_y_values, data))
                 #self.plot_stim3_values = np.concatenate((self.plot_y_values, data))
+                print(f"stim: {self.plot_x_values}")
         except Exception as err:
+            print(err)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
@@ -1088,16 +905,12 @@ class App(QWidget):
         new_stim1_values = []
         new_stim2_values = []
         try:
-            time_start = time.time()
             sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
             new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
             new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
             new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
-            #self.plot_window.plot(new_x_values, new_stim1_values, root)
-            #self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
-            self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root)
-            self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="g")
-            print(f"plot time:{time.time()-time_start}")
+            self.plot_window.plot(new_x_values, new_stim1_values, root)
+            self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.plot_x_values = []
             self.plot_stim1_values = []
             self.plot_stim2_values = []
@@ -1130,6 +943,7 @@ class App(QWidget):
 
         def onselect_function(eclick, erelease):
             self.roi_extent = self.rect_selector.extents
+            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
@@ -1173,8 +987,6 @@ class App(QWidget):
         pass
 
     def initialize_buttons(self):
-        self.canal1buttons = [self.stimulation_type_label, self.stimulation_type_cell, self.first_signal_type_pulses_label, self.first_signal_type_pulses_cell, self.first_signal_type_width_label, self.first_signal_type_width_cell, self.first_signal_type_jitter_label, self.first_signal_type_jitter_cell, self.second_signal_type_frequency_label, self.second_signal_type_frequency_cell, self.second_signal_type_duty_label, self.second_signal_type_duty_cell]
-        self.canal2buttons = [self.stimulation_type_label2, self.stimulation_type_cell2, self.first_signal_type_pulses_label2, self.first_signal_type_pulses_cell2, self.first_signal_type_width_label2, self.first_signal_type_width_cell2, self.first_signal_type_jitter_label2, self.first_signal_type_jitter_cell2, self.second_signal_type_frequency_label2, self.second_signal_type_frequency_cell2, self.second_signal_type_duty_label2, self.second_signal_type_duty_cell2]
         self.enabled_buttons = [
             self.run_button,
             self.experiment_name_cell,

@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from array2gif import write_gif
 from IPython.display import HTML
 import matplotlib.animation as animation
 
@@ -28,6 +27,6 @@ def animate(array, figure):
         plt.draw()
         plt.pause(0.2)
 
-array = get_array("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\data\\First Real Test\\1654112346.2327678-data.npy")
-figure = init()
-animate(array, figure)
+#array = get_array("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\data\\First Real Test\\1654112346.2327678-data.npy")
+#figure = init()
+#animate(array, figure)
