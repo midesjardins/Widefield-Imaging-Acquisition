@@ -75,18 +75,15 @@ class DAQ:
         self.stim_signal[-1] = False
     
     def generate_light_wave(self):
-        number_of_lights = 0
-        for light in self.lights:
-            if light.activated:
-                number_of_lights += 1
         for potential_light_index in range(4):
-            if self.lights[potential_light_index].activated:
-                signal = digital_square(self.exp.time, self.framerate/number_of_lights, self.exposure, int(potential_light_index*3000/(self.framerate)))
+            if potential_light_index < len(self.lights):
+                signal = digital_square(self.exp.time, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
             else:
                 self.light_signals.append(np.full(len(self.exp.time), False))
-        self.stack_light_signals = np.stack((self.light_signals))
+        if len(self.light_signals) > 1:
+            self.stack_light_signals = np.stack((self.light_signals))
     
     def generate_camera_wave(self):
         self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)

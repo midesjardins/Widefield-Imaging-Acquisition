@@ -629,13 +629,17 @@ class App(QWidget):
     def generate_daq(self):
         self.lights = [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
         if self.speckle_button.isChecked():
-            self.lights[0].activate()
+            self.lights.append(Instrument('port0/line3', 'ir'))
+            #self.lights[0].activate()
         if self.red_button.isChecked():
-            self.lights[1].activate()
+            self.lights.append( Instrument('port0/line0', 'red'))
+            #self.lights[1].activate()
         if self.green_button.isChecked():
-            self.lights[2].activate()
+            self.lights.append(Instrument('port0/line2', 'green'))
+            #self.lights[2].activate()
         if self.fluorescence_button.isChecked():
-            self.lights[3].activate()
+            self.lights.append(Instrument('port0/line1', 'blue'))
+            #self.lights[3].activate()
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
         self.camera = Camera('port0/line4', 'name')
         self.daq = DAQ('dev1', self.lights, self.stimuli, self.camera, int(
