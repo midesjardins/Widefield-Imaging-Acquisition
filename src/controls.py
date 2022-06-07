@@ -26,11 +26,14 @@ class Camera(Instrument):
     def __init__(self, port, name):
         super().__init__(port, name)
         self.frames, self.metadata = [], []
+        self.first = True
 
     def initialize(self, daq):
         self.daq = daq
-        self.cam = IMAQ.IMAQCamera(self.port)
-        self.cam.setup_acquisition(nframes=20)
+        if self.first:
+            self.cam = IMAQ.IMAQCamera("img0")
+            self.cam.setup_acquisition(nframes=100)
+        self.first = False
         self.cam.start_acquisition()
 
     def loop(self, task):
@@ -72,7 +75,7 @@ class DAQ:
 
     def generate_stim_wave(self):
         self.stim_signal = np.stack((self.exp.stim_signal))
-        self.stim_signal[-1] = False
+        #self.stim_signal[-1] = 0
     
     def generate_light_wave(self):
         for potential_light_index in range(4):
@@ -81,13 +84,17 @@ class DAQ:
                 signal[-1] = False
                 self.light_signals.append(signal)
             else:
-                self.light_signals.append(np.full(len(self.exp.time), False))
+                pass
+                #self.light_signals.append(np.full(len(self.exp.time), False))
         if len(self.light_signals) > 1:
             self.stack_light_signals = np.stack((self.light_signals))
+        else:
+            self.stack_light_signals = self.light_signals
     
     def generate_camera_wave(self):
         self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+        np.save("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\tesat_signal.npy", self.all_signals)
 
     def write_waveforms(self):
         if WIDEFIELD_COMPUTER:
@@ -98,7 +105,7 @@ class DAQ:
                         s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                    l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
+                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
@@ -128,6 +135,7 @@ class DAQ:
         self.light_signals, self.stim_signal, self.camera_signal, self.exp.time = [], [], None, None
 
     def start(self, tasks):
+        print("start tasks")
         for task in tasks:
             task.start()
     
@@ -137,7 +145,7 @@ class DAQ:
 
     def sample(self, tasks):
         for task in tasks:
-            task.timing.cfg_samp_clk_timing(3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal))
+            task.timing.cfg_samp_clk_timing(3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal[0]))
 
     def write(self, tasks, content):
         for i, task in enumerate(tasks):

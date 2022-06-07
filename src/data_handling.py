@@ -27,6 +27,14 @@ def animate(array, figure):
         plt.draw()
         plt.pause(0.2)
 
+def plot_multiple_arrays(arrays_list):
+    for array in arrays_list:
+        plt.plot(array)
+        plt.show()
+        plt.clf()
+
+#plot_multiple_arrays(np.load("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\tesat_signal.npy"))
+
 #array = get_array("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\data\\First Real Test\\1654112346.2327678-data.npy")
 #figure = init()
 #animate(array, figure)

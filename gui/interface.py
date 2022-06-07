@@ -225,7 +225,7 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, cmap="binary_r")
+        self.plot_image = plt.imshow(self.numpy, cmap="binary_r", vmin=0, vmax=1024)
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -591,7 +591,7 @@ class App(QWidget):
         self.plot(item=self.stimulation_tree.invisibleRootItem())
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
-        self.open_signal_preview_thread()
+        #self.open_signal_preview_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
@@ -627,7 +627,7 @@ class App(QWidget):
                 pass
 
     def generate_daq(self):
-        self.lights = [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'), Instrument('port0/line2', 'green'), Instrument('port0/line1', 'blue')]
+        self.lights = []
         if self.speckle_button.isChecked():
             self.lights.append(Instrument('port0/line3', 'ir'))
             #self.lights[0].activate()
@@ -641,9 +641,14 @@ class App(QWidget):
             self.lights.append(Instrument('port0/line1', 'blue'))
             #self.lights[3].activate()
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
-        self.camera = Camera('port0/line4', 'name')
+        try:
+            self.camera
+        except Exception:
+            self.camera = Camera('port0/line4', 'name')
         self.daq = DAQ('dev1', self.lights, self.stimuli, self.camera, int(
-            self.framerate_cell.text()), int(self.exposure_cell.text())/1000, self)
+            self.framerate_cell.text()), int(self.exposure_cell.text())/100, self)
+
+        # TODO divide by 1000
 
     def create_blocks(self, item=None):
         try:
@@ -1129,7 +1134,6 @@ class App(QWidget):
         self.video_running = True
         while len(self.camera.frames) == 0:
             pass
-        self.plot_image.set(clim=[0, 1.5*np.maximum(self.camera.frames)])
         while self.video_running is True:
             self.plot_image.set_array(self.camera.frames[-1])
 
