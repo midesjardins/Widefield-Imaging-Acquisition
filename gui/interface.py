@@ -706,12 +706,6 @@ class App(QWidget):
         else:
             print("No!")
 
-    def deactivate_buttons(self, buttons):
-        if buttons == self.enabled_buttons:
-            self.stop_button.setEnabled(True)
-            self.stimulation_tree.clearSelection()
-        for button in buttons:
-            button.setEnabled(False)
 
     def show_buttons(self, buttons):
         for button in buttons:
@@ -729,59 +723,22 @@ class App(QWidget):
         for button in buttons:
             button.setEnabled(True)
 
+    def deactivate_buttons(self, buttons):
+        if buttons == self.enabled_buttons:
+            self.stop_button.setEnabled(True)
+            self.stimulation_tree.clearSelection()
+        for button in buttons:
+            button.setEnabled(False)
+
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(
             self, "Select Directory"))
         self.directory_cell.setText(folder)
 
     def enable_directory(self):
-        boolean_result = self.directory_save_files_checkbox.isChecked()
-        self.files_saved = boolean_result
-        self.directory_choose_button.setDisabled(not boolean_result)
-        self.directory_cell.setDisabled(not boolean_result)
-
-    def delete_branch(self):
-        try:
-            root = self.stimulation_tree.invisibleRootItem()
-            parent = self.stimulation_tree.currentItem().parent()
-            if parent.childCount() == 1:
-                parent.setIcon(0, QIcon("gui/icons/wave-square.png"))
-            parent.removeChild(self.stimulation_tree.currentItem())
-            self.check_global_validity()
-        except Exception:
-            root.removeChild(self.stimulation_tree.currentItem())
-            if root.childCount() == 0:
-                self.disable_run()
-
-    def add_brother(self):
-        if self.stimulation_tree.currentItem():
-            stimulation_tree_item = QTreeWidgetItem()
-            self.style_tree_item(stimulation_tree_item)
-            parent = self.stimulation_tree.selectedItems()[0].parent()
-            if parent:
-                index = parent.indexOfChild(
-                    self.stimulation_tree.selectedItems()[0])
-                parent.insertChild(index+1, stimulation_tree_item)
-            else:
-                self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
-            self.stimulation_tree.setCurrentItem(stimulation_tree_item)
-            self.type_to_tree(first=True)
-            self.canals_to_tree(first=True)
-            self.check_global_validity()
-
-    def add_child(self):
-        if self.stimulation_tree.currentItem():
-            self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
-            self.stimulation_tree.currentItem().setText(1, "1")
-            self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
-            stimulation_tree_item = QTreeWidgetItem()
-            self.style_tree_item(stimulation_tree_item)
-            self.stimulation_tree.selectedItems()[0].addChild(stimulation_tree_item)
-            self.stimulation_tree.selectedItems()[0].setExpanded(True)
-            self.stimulation_tree.setCurrentItem(stimulation_tree_item)
-            self.type_to_tree(first=True)
-            self.canals_to_tree(first=True)
-            self.check_global_validity()
+        self.files_saved = self.directory_save_files_checkbox.isChecked()
+        self.directory_choose_button.setEnabled(self.files_saved)
+        self.directory_cell.setEnabled(self.files_saved)
 
     def first_stimulation(self):
         self.run_button.setEnabled(True)
@@ -793,6 +750,45 @@ class App(QWidget):
         self.canals_to_tree(first=True)
         self.type_to_tree(first=True)
         self.check_global_validity()
+
+    def add_brother(self):
+        if self.stimulation_tree.currentItem():
+            stimulation_tree_item = QTreeWidgetItem()
+            self.style_tree_item(stimulation_tree_item)
+            parent = self.stimulation_tree.selectedItems()[0].parent()
+            if parent:
+                index = parent.indexOfChild(self.stimulation_tree.selectedItems()[0])
+                parent.insertChild(index+1, stimulation_tree_item)
+            else:
+                self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
+            self.stimulation_tree.setCurrentItem(stimulation_tree_item)
+            self.type_to_tree(first=True)
+            self.canals_to_tree(first=True)
+            self.check_global_validity()
+
+    def add_child(self):
+        if self.stimulation_tree.currentItem():
+            self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
+            self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+            stimulation_tree_item = QTreeWidgetItem()
+            self.style_tree_item(stimulation_tree_item)
+            self.stimulation_tree.selectedItems()[0].addChild(stimulation_tree_item)
+            self.stimulation_tree.selectedItems()[0].setExpanded(True)
+            self.stimulation_tree.setCurrentItem(stimulation_tree_item)
+            self.type_to_tree(first=True)
+            self.canals_to_tree(first=True)
+            self.check_global_validity()
+
+    def delete_branch(self):
+        try:
+            parent = self.stimulation_tree.currentItem().parent()
+            if parent.childCount() == 1:
+                parent.setIcon(0, QIcon("gui/icons/wave-square.png"))
+        except Exception:
+            parent = self.stimulation_tree.invisibleRootItem()
+        parent.removeChild(self.stimulation_tree.currentItem())
+        self.check_global_validity()
+
 
     def style_tree_item(self, item):
         item.setIcon(20, QIcon("gui/icons/alert-triangle.png"))
