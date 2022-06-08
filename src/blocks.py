@@ -11,6 +11,7 @@ class Stimulation:
         self.name = name
         self.daq = daq
         self.duration = duration
+        self.exp = None
 
         self.type1 = pulse_type1
         self.pulses = pulses
@@ -26,12 +27,6 @@ class Stimulation:
         self.jitter2 = jitter2
         self.freq2 = frequency2
 
-        #self.time_delay = np.linspace(0, delay, delay*3000)
-        #self.time = np.linspace(0, duration, duration*3000)
-        #self.stim_signal = make_signal(self.time, self.type, self.width, self.pulses, self.jitter, self.freq, self.duty)
-        #self.empty_signal = np.zeros(len(self.time_delay))
-        self.exp = None
-
     def __str__(self, indent=""):
         return_value = []
         if self.type1 == "random-square":
@@ -43,10 +38,6 @@ class Stimulation:
         elif self.type2 == "square":
             return_value.append(indent+f"{self.name} -  Canal 2 --- Duration: {self.duration}, Frequency: {self.freq2}, Duty: {self.duty2}")
         return "\n".join(return_value)
-    """def run(self, exp):
-        self.exp = exp
-        self.daq.launch(self)"""
-
 class Block:
     def __init__(self, name, data, delay=0, iterations=1, jitter=0):
         self.name = name
@@ -58,21 +49,11 @@ class Block:
 
     def __str__(self, indent=""):
         stim_list = []
-        print("Number of iterations")
-        print(self.iterations)
         for iteration in range(self.iterations):
-            print("iterations do work")
             stim_list.append(indent + self.name + f" ({iteration+1}/{self.iterations}) --- Delay: {self.delay}, Jitter: {self.jitter}")
             for item in self.data:
                 stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
-
-    """def run(self, exp):
-        self.exp = exp
-        for iteration in range(self.iterations):
-            for item in self.data:
-                item.run(self.exp)
-                time.sleep(self.delay)"""
 
 class Experiment:
     def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name"):
@@ -85,20 +66,21 @@ class Experiment:
         self.daq = daq
 
     def start(self, x_values, y_values):
-        print(x_values)
-        print(y_values)
-        #self.blocks.run(self)
         self.time, self.stim_signal = x_values, y_values
         self.daq.launch(self)
 
     def save(self, save, extents=None):
         if save is True:
-            os.mkdir(self.directory)
+            try:
+                os.mkdir(self.directory)
+            except Exception:
+                pass
             with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:
                 file.write(f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
             
             dictionary = {
                 "Blocks": self.blocks.__str__(),
+                "Lights": self.daq.return_lights(),
                 "Framerate": self.framerate,
                 "Exposition": self.exposition,
                 "Mouse ID": self.mouse_id

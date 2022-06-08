@@ -18,7 +18,6 @@ def init():
 
 def animate(array, figure):
     maximum = np.max(array)
-    print(maximum)
     figure.set(clim=[0,maximum])
     for frame in array:
         figure.set_array(frame)
@@ -45,6 +44,19 @@ def create_complete_stack(first_stack, second_stack):
 
 def reduce_stack(stack, indices):
     return stack[:, indices]
+
+def separate_images(lights, frames):
+    separated_images = []
+    for index in range(len(lights)):
+        separated_images.append(frames[index::len(lights),:,:])
+    return separated_images
+
+
+#lights = ["ir", "red", "green", "blue"]
+#frames = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]],[[19,20,21],[21,22,23],[24,25,26]]])
+#reduced_stack = np.array([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])
+
+#print(separate_images(lights, frames, reduced_stack))
 
 #plot_multiple_arrays(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy"))
 #indices = find_rising_indices(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy")[-1])

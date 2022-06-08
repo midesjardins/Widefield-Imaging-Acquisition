@@ -60,9 +60,15 @@ class DAQ:
         self.name = name
         self.window = window
         self.framerate, self.exposure = framerate, exposure
-        self.signal_is_running = False
+        self.stop_signal = False
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal = [], [], [], None
+
+    def return_lights(self):
+        lights = []
+        for light in self.lights:
+            lights.append(light.name)
+        return lights
 
     def launch(self, exp):
         self.exp = exp
@@ -108,10 +114,13 @@ class DAQ:
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                     self.start([s_task, l_task])
                     self.camera.loop(l_task)
-                    self.wait([s_task, l_task])
+                    while l_task.is_task_done() is False or self.stop_signal is False:
+                        pass
                     self.stop([s_task, l_task])
+                    self.stop_signal = False
 
         else:
+            time.sleep(2)
             np.save("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy", self.all_signals)
             np.save("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy", self.stim_signal)
             pass

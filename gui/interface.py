@@ -60,7 +60,13 @@ class App(QWidget):
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
+        self.daq.stop_signal = True
         self.video_running = False
+        try:
+            self.daq.camera.cam.stop_acquisition()
+        except Exception:
+            pass
+        print("Closed")
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -104,7 +110,8 @@ class App(QWidget):
         self.directory_window = QHBoxLayout()
         self.directory_save_files_checkbox = QCheckBox()
         self.directory_save_files_checkbox.setText("Save")
-        self.directory_save_files_checkbox.stateChanged.connect(self.enable_directory)
+        self.directory_save_files_checkbox.stateChanged.connect(self.choose_directory)
+        #TODO Change for real function
         self.directory_window.addWidget(self.directory_save_files_checkbox)
         self.directory_choose_button = QPushButton("Select Directory")
         self.directory_choose_button.setIcon(QIcon("gui/icons/folder-plus.png"))
@@ -574,7 +581,7 @@ class App(QWidget):
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton('Stop')
         self.stop_button.setIcon(QIcon("gui/icons/player-stop.png"))
-        self.stop_button.clicked.connect(self.stop)
+        self.stop_button.clicked.connect(self.stop_while_running)
         self.stop_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.stop_button)
         self.run_button = QPushButton('Run')
@@ -590,7 +597,7 @@ class App(QWidget):
         self.show()
 
     def run(self):
-        self.deactivate_buttons(buttons = self.enabled_buttons)
+        self.deactivate_buttons(buttons=self.enabled_buttons)
         self.master_block = self.create_blocks()
         self.plot(item=self.stimulation_tree.invisibleRootItem())
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
@@ -612,8 +619,23 @@ class App(QWidget):
             self.experiment.save(self.files_saved, self.roi_extent)
         except Exception:
             self.experiment.save(self.directory_save_files_checkbox.isChecked())
-        self.stop(save=True)
+        self.stop()
         
+    def open_live_preview_thread(self):
+        self.live_preview_thread = Thread(target=self.start_live)
+        self.live_preview_thread.start()
+
+    def start_live(self):
+        plt.ion()
+        self.video_running = True
+        while len(self.camera.frames) == 0 and self.video_running is True:
+            pass
+        while self.video_running is True:
+            self.plot_image.set_array(self.camera.frames[-1])
+
+    def stop_live(self):
+        self.video_running = False
+
     def open_signal_preview_thread(self):
         self.signal_preview_thread = Thread(target=self.preview_signal)
         self.signal_preview_thread.start()
@@ -629,6 +651,7 @@ class App(QWidget):
             except Exception:
                 time.sleep(0.5)
                 pass
+
 
     def generate_daq(self):
         self.lights = []
@@ -682,7 +705,6 @@ class App(QWidget):
                     canal2 = False
                 return Stimulation(self.daq, duration, canal1=canal1, canal2=canal2, pulses=pulses, pulses2=pulses2, jitter=jitter, jitter2=jitter2, width=width, width2=width2, frequency=frequency, frequency2=frequency2, duty=duty, duty2=duty2, pulse_type1=sign_type, pulse_type2=sign_type2, name=item.text(0))
         except Exception as err:
-            print(err)
             pass
 
     def get_tree_item_attributes(self, item, canal=1):
@@ -718,10 +740,14 @@ class App(QWidget):
                 frequency, duty = 0, 0
             return [sign_type, pulses, jitter, width, frequency, duty]
 
-    def stop(self, save=True):
-        self.activate_buttons(buttons = self.enabled_buttons)
+    def stop(self):
+        self.daq.stop_signal = True
         self.stop_live()
-        if save is not True and self.directory_save_files_checkbox.isChecked() is True:
+        self.activate_buttons(buttons = self.enabled_buttons)
+
+    def stop_while_running(self):
+        self.stop()
+        if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
 
     def stop_stimulation_dialog(self):
@@ -742,23 +768,24 @@ class App(QWidget):
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
+        print("activate running")
         if buttons == self.enabled_buttons:
             if self.directory_save_files_checkbox.isChecked():
                 self.directory_choose_button.setEnabled(True)
-            self.stop_button.setEnabled(False)
+            self.stop_button.setDisabled(True)
         for button in buttons:
             button.setEnabled(True)
 
     def deactivate_buttons(self, buttons):
+        print("deactivate runnin")
         if buttons == self.enabled_buttons:
             self.stop_button.setEnabled(True)
             self.stimulation_tree.clearSelection()
         for button in buttons:
-            button.setEnabled(False)
+            button.setDisabled(True)
 
     def choose_directory(self):
-        folder = str(QFileDialog.getExistingDirectory(
-            self, "Select Directory"))
+        folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(folder)
 
     def enable_directory(self):
@@ -767,7 +794,7 @@ class App(QWidget):
         self.directory_cell.setEnabled(self.files_saved)
 
     def first_stimulation(self):
-        self.run_button.setEnabled(True)
+        #self.run_button.setEnabled(True)
         stimulation_tree_item = QTreeWidgetItem()
         self.style_tree_item(stimulation_tree_item)
         self.stimulation_tree.addTopLevelItem(stimulation_tree_item)
@@ -1014,7 +1041,8 @@ class App(QWidget):
     def check_global_validity(self, item=None):
         if item is None:
             item = self.stimulation_tree.invisibleRootItem()
-            if self.check_block_validity(item) is True and self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked():
+            print(self.check_block_validity(item))
+            if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
                 self.enable_run()
             else:
                 self.disable_run()
@@ -1056,7 +1084,9 @@ class App(QWidget):
         if item.childCount() == 0:
             return self.check_stim_validity(item=item)
         if item == self.stimulation_tree.invisibleRootItem():
-            pass
+            if item.childCount() == 0:
+                print("invalid")
+                valid = False
         elif item.childCount() > 0:
             valid = item.text(1) != "" and item.text(2) != "" and item.text(3) != ""
         for child_index in range(item.childCount()):
@@ -1150,24 +1180,7 @@ class App(QWidget):
             self.plot_stim2_values = []
             self.elapsed_time = 0
         except Exception as err:
-            print(err)
             pass
-
-
-    def open_live_preview_thread(self):
-        self.live_preview_thread = Thread(target=self.start_live)
-        self.live_preview_thread.start()
-
-    def start_live(self):
-        plt.ion()
-        self.video_running = True
-        while len(self.camera.frames) == 0:
-            pass
-        while self.video_running is True:
-            self.plot_image.set_array(self.camera.frames[-1])
-
-    def stop_live(self):
-        self.video_running = False
 
     def set_roi(self):
         self.deactivate_buttons(buttons = self.enabled_buttons)
@@ -1218,6 +1231,23 @@ class App(QWidget):
 
     def check_run(self):
         pass
+
+    def check_if_thread_is_alive(self):
+        try:
+            if self.live_preview_thread.is_alive():
+                print("Live preview thread is alive")
+            else:
+                print("Live preview thread is dead")
+        except Exception as err:
+            print(err)
+
+        try:
+            if self.start_experiment_thread.is_alive():
+                print("Start Experiment thread is alive")
+            else:
+                print("Start experiment thread is dead")
+        except Exception as err:
+            print(err)
 
     def initialize_buttons(self):
         self.canal1buttons = [self.stimulation_type_label, self.stimulation_type_cell, self.first_signal_type_pulses_label, self.first_signal_type_pulses_cell, self.first_signal_type_width_label, self.first_signal_type_width_cell, self.first_signal_type_jitter_label, self.first_signal_type_jitter_cell, self.second_signal_type_frequency_label, self.second_signal_type_frequency_cell, self.second_signal_type_duty_label, self.second_signal_type_duty_cell]
