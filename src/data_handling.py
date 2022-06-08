@@ -17,8 +17,6 @@ def init():
     return figure
 
 def animate(array, figure):
-    #figure = plt.imshow(array[0], cmap="binary_r")
-    #plt.ion()
     maximum = np.max(array)
     print(maximum)
     figure.set(clim=[0,maximum])
@@ -33,7 +31,27 @@ def plot_multiple_arrays(arrays_list):
         plt.show()
         plt.clf()
 
-#plot_multiple_arrays(np.load("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\tesat_signal.npy"))
+def find_rising_indices(array):
+    dy = np.diff(array)
+    return np.concatenate(([0], np.where(dy == 1)[0][1::2]))
+
+def create_complete_stack(first_stack, second_stack):
+    array = []
+    for new_array in first_stack:
+        array.append(new_array)
+    for new_array in second_stack:
+        array.append(new_array)
+    return np.stack(array)
+
+def reduce_stack(stack, indices):
+    return stack[:, indices]
+
+#plot_multiple_arrays(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy"))
+#indices = find_rising_indices(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy")[-1])
+#stack = create_complete_stack(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy"), np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy"))
+#print(len(stack[0]))
+#reduced_stack = reduce_stack(stack, indices)
+#print(len(reduced_stack[0]))
 
 #array = get_array("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\data\\First Real Test\\1654112346.2327678-data.npy")
 #figure = init()

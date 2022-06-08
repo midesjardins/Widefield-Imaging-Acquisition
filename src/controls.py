@@ -7,11 +7,11 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.blocks import Stimulation
 from src.signal_generator import digital_square
-from src.data_handling import shrink_array
+from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
 from pylablib.devices import IMAQ
 import matplotlib.pyplot as plt
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 
 class Instrument:
     def __init__(self, port, name):
@@ -75,7 +75,8 @@ class DAQ:
 
     def generate_stim_wave(self):
         self.stim_signal = np.stack((self.exp.stim_signal))
-        #self.stim_signal[-1] = 0
+        self.stim_signal[0][-1] = 0
+        self.stim_signal[1][-1] = 0
     
     def generate_light_wave(self):
         for potential_light_index in range(4):
@@ -83,9 +84,6 @@ class DAQ:
                 signal = digital_square(self.exp.time, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
-            else:
-                pass
-                #self.light_signals.append(np.full(len(self.exp.time), False))
         if len(self.light_signals) > 1:
             self.stack_light_signals = np.stack((self.light_signals))
         else:
@@ -94,7 +92,6 @@ class DAQ:
     def generate_camera_wave(self):
         self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
-        np.save("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\tesat_signal.npy", self.all_signals)
 
     def write_waveforms(self):
         if WIDEFIELD_COMPUTER:
@@ -115,6 +112,8 @@ class DAQ:
                     self.stop([s_task, l_task])
 
         else:
+            np.save("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy", self.all_signals)
+            np.save("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy", self.stim_signal)
             pass
             """start_time = time.time()
             self.signal_is_running = True
@@ -128,8 +127,12 @@ class DAQ:
             plt.plot(self.exp.time, light_signal)
         plt.show()
 
-    def read_metadata(self):
-        pass
+    def save(self, directory):
+        stack = create_complete_stack(self.all_signals, self.stim_signal)
+        indices = find_rising_indices(self.all_signals[-1])
+        reduced_stack = reduce_stack(stack, indices)
+        save_time = time.time()
+        np.save(f"{directory}/{save_time}-signal_data", reduced_stack)
     
     def reset_daq(self):
         self.light_signals, self.stim_signal, self.camera_signal, self.exp.time = [], [], None, None

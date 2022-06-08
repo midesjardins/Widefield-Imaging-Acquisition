@@ -617,13 +617,13 @@ class App(QWidget):
     def preview_signal(self):
         plt.ion()
         while not self.daq.signal_is_running:
-            pass
+            time.sleep(0.01)
         while self.daq.signal_is_running:
             try:
                 self.plot_window.vertical_line.set_xdata([self.daq.current_signal_time,self.daq.current_signal_time])
                 time.sleep(0.5)
             except Exception:
-                time.sleep(0.01)
+                time.sleep(0.5)
                 pass
 
     def generate_daq(self):
@@ -662,9 +662,23 @@ class App(QWidget):
                     return Block("root", children)
                 return Block(item.text(0), children, delay=int(item.text(2)), iterations=int(item.text(1)))
             else:
-                sign_type, duration, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item) 
-                return Stimulation(self.daq, duration, width=width, pulses=pulses, jitter=jitter, frequency=frequency, duty=duty, delay=0, pulse_type=sign_type, name=item.text(0))
+                duration = int(item.text(6))
+                if item.text(18) == "True":
+                    canal1 = True
+                    sign_type, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item, canal=1)
+                else:
+                    canal1=False
+                    sign_type, pulses, jitter, width, frequency, duty = 0, 0, 0, 0, 0,0
+
+                if item.text(19) == "True":
+                    canal2 =True
+                    sign_type2, pulses2, jitter2, width2, frequency2, duty2 = self.get_tree_item_attributes(item, canal=2)
+                else:
+                    sign_type2, pulses2, jitter2, width2, frequency2, duty2 = 0,0,0,0,0,0
+                    canal2 = False
+                return Stimulation(self.daq, duration, canal1=canal1, canal2=canal2, pulses=pulses, pulses2=pulses2, jitter=jitter, jitter2=jitter2, width=width, width2=width2, frequency=frequency, frequency2=frequency2, duty=duty, duty2=duty2, pulse_type1=sign_type, pulse_type2=sign_type2, name=item.text(0))
         except Exception as err:
+            print(err)
             pass
 
     def get_tree_item_attributes(self, item, canal=1):
@@ -951,6 +965,14 @@ class App(QWidget):
         try:
             self.first_signal_first_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(18)))
             self.first_signal_second_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(19)))
+            if self.first_signal_first_canal_check.isChecked():
+                    self.activate_buttons(self.canal1buttons)
+            else:
+                self.deactivate_buttons(self.canal1buttons)
+            if self.first_signal_second_canal_check.isChecked():
+                self.activate_buttons(self.canal2buttons)
+            else:
+                self.deactivate_buttons(self.canal2buttons)
         except Exception:
             pass
         self.canal_running = False
@@ -1097,7 +1119,6 @@ class App(QWidget):
                 else:
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
         except Exception as err:
-            print(err)
             self.plot_x_values = []
             self.plot_y_values = []
             self.elapsed_time = 0
@@ -1121,7 +1142,8 @@ class App(QWidget):
             self.plot_stim1_values = []
             self.plot_stim2_values = []
             self.elapsed_time = 0
-        except Exception:
+        except Exception as err:
+            print(err)
             pass
 
 
