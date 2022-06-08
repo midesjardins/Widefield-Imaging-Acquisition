@@ -152,14 +152,18 @@ class App(QWidget):
         self.exposure_warning_label.setHidden(True)
 
         self.image_settings_second_window = QHBoxLayout()
-        self.speckle_button = QCheckBox('Infrared')
-        self.image_settings_second_window.addWidget(self.speckle_button)
-        self.red_button = QCheckBox('Red')
-        self.image_settings_second_window.addWidget(self.red_button)
-        self.green_button = QCheckBox('Green')
-        self.image_settings_second_window.addWidget(self.green_button)
-        self.fluorescence_button = QCheckBox('Blue')
-        self.image_settings_second_window.addWidget(self.fluorescence_button)
+        self.ir_checkbox = QCheckBox('Infrared')
+        self.ir_checkbox.stateChanged.connect(self.check_lights)
+        self.image_settings_second_window.addWidget(self.ir_checkbox)
+        self.red_checkbox = QCheckBox('Red')
+        self.red_checkbox.stateChanged.connect(self.check_lights)
+        self.image_settings_second_window.addWidget(self.red_checkbox)
+        self.green_checkbox = QCheckBox('Green')
+        self.green_checkbox.stateChanged.connect(self.check_lights)
+        self.image_settings_second_window.addWidget(self.green_checkbox)
+        self.fluorescence_checkbox = QCheckBox('Blue')
+        self.fluorescence_checkbox.stateChanged.connect(self.check_lights)
+        self.image_settings_second_window.addWidget(self.fluorescence_checkbox)
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
 
         self.roi_buttons = QStackedLayout()
@@ -628,16 +632,16 @@ class App(QWidget):
 
     def generate_daq(self):
         self.lights = []
-        if self.speckle_button.isChecked():
+        if self.ir_checkbox.isChecked():
             self.lights.append(Instrument('port0/line3', 'ir'))
             #self.lights[0].activate()
-        if self.red_button.isChecked():
+        if self.red_checkbox.isChecked():
             self.lights.append( Instrument('port0/line0', 'red'))
             #self.lights[1].activate()
-        if self.green_button.isChecked():
+        if self.green_checkbox.isChecked():
             self.lights.append(Instrument('port0/line2', 'green'))
             #self.lights[2].activate()
-        if self.fluorescence_button.isChecked():
+        if self.fluorescence_checkbox.isChecked():
             self.lights.append(Instrument('port0/line1', 'blue'))
             #self.lights[3].activate()
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
@@ -1003,11 +1007,14 @@ class App(QWidget):
 
     def disable_run(self):
         self.run_button.setDisabled(True)
+
+    def check_lights(self):
+        self.check_global_validity()
     
     def check_global_validity(self, item=None):
         if item is None:
             item = self.stimulation_tree.invisibleRootItem()
-            if self.check_block_validity(item) is True:
+            if self.check_block_validity(item) is True and self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked():
                 self.enable_run()
             else:
                 self.disable_run()
@@ -1016,7 +1023,7 @@ class App(QWidget):
         else:
             self.set_icon(item, self.check_stim_validity(item))
         for child_index in range(item.childCount()):
-            self.check_global_validity(item=item.child(child_index))
+            self.check_global_validity(item.child(child_index))
 
     def check_stim_validity(self, item=None):
         valid = True
@@ -1231,10 +1238,10 @@ class App(QWidget):
             self.add_brother_branch_button,
             self.add_child_branch_button,
             self.delete_branch_button,
-            self.red_button,
-            self.speckle_button,
-            self.green_button,
-            self.fluorescence_button,
+            self.red_checkbox,
+            self.ir_checkbox,
+            self.green_checkbox,
+            self.fluorescence_checkbox,
             self.stimulation_name_label,
             self.stimulation_name_cell,
             self.stimulation_type_label,
