@@ -10,8 +10,9 @@ from src.signal_generator import digital_square
 from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
 from pylablib.devices import IMAQ
 import matplotlib.pyplot as plt
+import threading
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 
 class Instrument:
     def __init__(self, port, name):
@@ -26,23 +27,28 @@ class Camera(Instrument):
     def __init__(self, port, name):
         super().__init__(port, name)
         self.frames, self.metadata = [], []
-        self.first = True
+        #self.first = True
+        self.cam = IMAQ.IMAQCamera("img0")
+        self.cam.setup_acquisition(nframes=100)
 
     def initialize(self, daq):
         self.daq = daq
-        if self.first:
-            self.cam = IMAQ.IMAQCamera("img0")
-            self.cam.setup_acquisition(nframes=100)
-        self.first = False
+        self.frames, self.metadata = [], []
+        #if self.first:
+            #self.cam = IMAQ.IMAQCamera("img0")
+            #self.cam.setup_acquisition(nframes=100)
+        #self.first = False
         self.cam.start_acquisition()
 
     def loop(self, task):
-        while not task.is_task_done():
+        while task.is_task_done() is False and self.daq.stop_signal is False:
+            print("working working")
             self.cam.wait_for_frame(timeout=200)
             print(len(self.frames))
             img_tuple =  self.cam.read_multiple_images(return_info=True)
             self.frames += img_tuple[0]
             self.metadata += img_tuple[1]
+        self.daq_stop_signal = False
         self.cam.stop_acquisition()
     
     def save(self, directory, extents):
@@ -102,6 +108,7 @@ class DAQ:
     def write_waveforms(self):
         if WIDEFIELD_COMPUTER:
             with nidaqmx.Task(new_task_name='lights') as l_task:
+                self.control_task = l_task
                 with nidaqmx.Task(new_task_name='stimuli') as s_task:
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
@@ -114,8 +121,6 @@ class DAQ:
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                     self.start([s_task, l_task])
                     self.camera.loop(l_task)
-                    while l_task.is_task_done() is False or self.stop_signal is False:
-                        pass
                     self.stop([s_task, l_task])
                     self.stop_signal = False
 

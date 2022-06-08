@@ -110,7 +110,7 @@ class App(QWidget):
         self.directory_window = QHBoxLayout()
         self.directory_save_files_checkbox = QCheckBox()
         self.directory_save_files_checkbox.setText("Save")
-        self.directory_save_files_checkbox.stateChanged.connect(self.choose_directory)
+        self.directory_save_files_checkbox.stateChanged.connect(self.check_if_thread_is_alive)
         #TODO Change for real function
         self.directory_window.addWidget(self.directory_save_files_checkbox)
         self.directory_choose_button = QPushButton("Select Directory")
@@ -592,7 +592,7 @@ class App(QWidget):
         self.plot_window = PlotWindow()
         self.grid_layout.addWidget(self.plot_window, 3, 2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
-        self.generate_daq()
+        self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
 
@@ -611,7 +611,7 @@ class App(QWidget):
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
-        self.generate_daq()
+        self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.experiment.start(self.root_time, self.root_signal)
@@ -642,9 +642,7 @@ class App(QWidget):
 
     def preview_signal(self):
         plt.ion()
-        while not self.daq.signal_is_running:
-            time.sleep(0.01)
-        while self.daq.signal_is_running:
+        while self.stop_signal is False and self.daq.control_task.is_task_done() is False:
             try:
                 self.plot_window.vertical_line.set_xdata([self.daq.current_signal_time,self.daq.current_signal_time])
                 time.sleep(0.5)
@@ -652,28 +650,30 @@ class App(QWidget):
                 time.sleep(0.5)
                 pass
 
+    def open_daq_generation_thread(self):
+        self.daq_generation_thread = Thread(target=self.generate_daq)
+        self.daq_generation_thread.start()
 
     def generate_daq(self):
         self.lights = []
-        if self.ir_checkbox.isChecked():
-            self.lights.append(Instrument('port0/line3', 'ir'))
-            #self.lights[0].activate()
-        if self.red_checkbox.isChecked():
-            self.lights.append( Instrument('port0/line0', 'red'))
-            #self.lights[1].activate()
-        if self.green_checkbox.isChecked():
-            self.lights.append(Instrument('port0/line2', 'green'))
-            #self.lights[2].activate()
-        if self.fluorescence_checkbox.isChecked():
-            self.lights.append(Instrument('port0/line1', 'blue'))
-            #self.lights[3].activate()
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
-        try:
-            self.camera
-        except Exception:
-            self.camera = Camera('port0/line4', 'name')
-        self.daq = DAQ('dev1', self.lights, self.stimuli, self.camera, int(
-            self.framerate_cell.text()), int(self.exposure_cell.text())/100, self)
+        self.camera = Camera('port0/line4', 'name')
+        self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/100, self)
+
+    def actualize_daq(self):
+        lights = []
+        if self.ir_checkbox.isChecked():
+            lights.append(Instrument('port0/line3', 'ir'))
+        if self.red_checkbox.isChecked():
+            lights.append( Instrument('port0/line0', 'red'))
+        if self.green_checkbox.isChecked():
+            lights.append(Instrument('port0/line2', 'green'))
+        if self.fluorescence_checkbox.isChecked():
+            lights.append(Instrument('port0/line1', 'blue'))
+        self.daq.lights = lights
+        self.camera.frames = []
+        self.daq.stop_signal = False
+
 
         # TODO divide by 1000
 
@@ -742,6 +742,7 @@ class App(QWidget):
 
     def stop(self):
         self.daq.stop_signal = True
+        self.daq.stop_signal = True
         self.stop_live()
         self.activate_buttons(buttons = self.enabled_buttons)
 
@@ -751,8 +752,7 @@ class App(QWidget):
             self.stop_stimulation_dialog()
 
     def stop_stimulation_dialog(self):
-        button = QMessageBox.question(
-            self, "Save Files", "Do you want to save the current files?")
+        button = QMessageBox.question(self, "Save Files", "Do you want to save the current files?")
         if button == QMessageBox.Yes:
             print("Yes!")
         else:
