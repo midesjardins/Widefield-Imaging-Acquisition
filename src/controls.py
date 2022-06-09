@@ -11,6 +11,8 @@ from src.data_handling import shrink_array, find_rising_indices, create_complete
 from pylablib.devices import IMAQ
 import matplotlib.pyplot as plt
 import threading
+import warnings
+warnings.filterwarnings("ignore")
 
 WIDEFIELD_COMPUTER = True
 
@@ -35,7 +37,7 @@ class Camera(Instrument):
 
     def initialize(self, daq):
         self.daq = daq
-        self.frames, self.metadata = [], []
+        self.frames = []
         #if self.first:
             #self.cam = IMAQ.IMAQCamera("img0")
             #self.cam.setup_acquisition(nframes=100)
@@ -45,9 +47,7 @@ class Camera(Instrument):
     def loop(self, task):
         while task.is_task_done() is False and self.daq.stop_signal is False:
             self.cam.wait_for_frame(timeout=200)
-            img_tuple =  self.cam.read_multiple_images(return_info=True)
-            self.frames += img_tuple[0]
-            self.metadata += img_tuple[1]
+            self.frames += self.cam.read_multiple_images()
             self.video_running = True
         self.video_running = False
         self.daq.stop_signal = False
@@ -81,8 +81,11 @@ class DAQ:
     def launch(self, exp):
         self.exp = exp
         self.generate_stim_wave()
+        print(str(time.time()-self.start_runtime) + "to generate stim wave")
         self.generate_light_wave()
+        print(str(time.time()-self.start_runtime) + "to generate light wave")
         self.generate_camera_wave()
+        print(str(time.time()-self.start_runtime) + "to generate camers wave")
         self.write_waveforms()
         self.reset_daq()
     
@@ -118,10 +121,13 @@ class DAQ:
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                     l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
+                    print(str(time.time()-self.start_runtime) + "to define tasks")
                     self.camera.initialize(self)
+                    print(str(time.time()-self.start_runtime) + "to initialize camera")
                     self.sample([s_task, l_task])
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                     self.start([s_task, l_task])
+                    print(str(time.time()-self.start_runtime) + "to sample/write/start")
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
 
@@ -153,7 +159,6 @@ class DAQ:
         self.light_signals, self.stim_signal, self.camera_signal, self.exp.time = [], [], None, None
 
     def start(self, tasks):
-        print("start tasks")
         for task in tasks:
             task.start()
     

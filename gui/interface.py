@@ -604,16 +604,16 @@ class App(QWidget):
         self.show()
 
     def run(self):
-        self.start_runtime = time.time()
+        self.daq.start_runtime = time.time()
         self.deactivate_buttons(buttons=self.enabled_buttons)
-        print(str(time.time()-self.start_runtime) + "to deactivate buttons")
+        print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
         self.master_block = self.create_blocks()
-        print(str(time.time()-self.start_runtime) + "to generate master block")
+        print(str(time.time()-self.daq.start_runtime) + "to generate master block")
         self.plot(item=self.stimulation_tree.invisibleRootItem())
-        print(str(time.time()-self.start_runtime) + "to plot the signal")
+        print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
-        print(str(time.time()-self.start_runtime) + "to draw the signal")
+        print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
@@ -626,7 +626,7 @@ class App(QWidget):
         self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
-        print(str(time.time()-self.start_runtime) + "to intialize the experiment")
+        print(str(time.time()-self.daq.start_runtime) + "to intialize the experiment")
         self.experiment.start(self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
@@ -642,9 +642,12 @@ class App(QWidget):
         plt.ion()
         while self.camera.video_running is False:
             pass
-        print(str(time.time()-self.start_runtime) + "to set first image")
+        first =True
         while self.camera.video_running is True:
             self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+            if first is True:
+                print(str(time.time()-self.daq.start_runtime) + "to set first image")
+                first = False
 
     def stop_live(self):
         self.video_running = False
