@@ -62,10 +62,7 @@ class App(QWidget):
     def closeEvent(self, *args, **kwargs):
         self.daq.stop_signal = True
         self.video_running = False
-        try:
-            self.daq.camera.cam.stop_acquisition()
-        except Exception:
-            pass
+        self.daq.camera.cam.stop_acquisition()
         print("Closed")
 
     def initUI(self):
@@ -171,7 +168,17 @@ class App(QWidget):
         self.fluorescence_checkbox = QCheckBox('Blue')
         self.fluorescence_checkbox.stateChanged.connect(self.check_lights)
         self.image_settings_second_window.addWidget(self.fluorescence_checkbox)
+
+        self.light_channel_layout = QHBoxLayout()
+        self.preview_light_label = QLabel("Light Channel Preview")
+        self.light_channel_layout.addWidget(self.preview_light_label)
+        self.preview_light_combo = QComboBox()
+        self.preview_light_combo.setEnabled(False)
+        self.preview_light_combo.currentIndexChanged.connect(self.change_preview_light_channel)
+        self.light_channel_layout.addWidget(self.preview_light_combo)
+
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
+        self.image_settings_main_window.addLayout(self.light_channel_layout)
 
         self.roi_buttons = QStackedLayout()
 
@@ -236,7 +243,7 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, cmap="binary_r", vmin=0, vmax=1024)
+        self.plot_image = plt.imshow(self.numpy, cmap="binary_r", vmin=0, vmax=4096)
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -597,11 +604,16 @@ class App(QWidget):
         self.show()
 
     def run(self):
+        self.start_runtime = time.time()
         self.deactivate_buttons(buttons=self.enabled_buttons)
+        print(str(time.time()-self.start_runtime) + "to deactivate buttons")
         self.master_block = self.create_blocks()
+        print(str(time.time()-self.start_runtime) + "to generate master block")
         self.plot(item=self.stimulation_tree.invisibleRootItem())
+        print(str(time.time()-self.start_runtime) + "to plot the signal")
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
+        print(str(time.time()-self.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
@@ -614,6 +626,7 @@ class App(QWidget):
         self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
+        print(str(time.time()-self.start_runtime) + "to intialize the experiment")
         self.experiment.start(self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
@@ -627,11 +640,11 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
-        self.video_running = True
-        while len(self.camera.frames) == 0 and self.video_running is True:
+        while self.camera.video_running is False:
             pass
-        while self.video_running is True:
-            self.plot_image.set_array(self.camera.frames[-1])
+        print(str(time.time()-self.start_runtime) + "to set first image")
+        while self.camera.video_running is True:
+            self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
 
     def stop_live(self):
         self.video_running = False
@@ -650,12 +663,14 @@ class App(QWidget):
                 time.sleep(0.5)
                 pass
 
+    def change_preview_light_channel(self):
+        self.live_preview_light_index = self.preview_light_combo.currentIndex()
+
     def open_daq_generation_thread(self):
         self.daq_generation_thread = Thread(target=self.generate_daq)
         self.daq_generation_thread.start()
 
     def generate_daq(self):
-        self.lights = []
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
         self.camera = Camera('port0/line4', 'name')
         self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/100, self)
@@ -768,7 +783,6 @@ class App(QWidget):
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
-        print("activate running")
         if buttons == self.enabled_buttons:
             if self.directory_save_files_checkbox.isChecked():
                 self.directory_choose_button.setEnabled(True)
@@ -777,7 +791,6 @@ class App(QWidget):
             button.setEnabled(True)
 
     def deactivate_buttons(self, buttons):
-        print("deactivate runnin")
         if buttons == self.enabled_buttons:
             self.stop_button.setEnabled(True)
             self.stimulation_tree.clearSelection()
@@ -1035,13 +1048,29 @@ class App(QWidget):
     def disable_run(self):
         self.run_button.setDisabled(True)
 
+    def count_lights(self):
+        count = 0
+        text = []
+        for checkbox in [self.ir_checkbox, self.red_checkbox, self.green_checkbox, self.fluorescence_checkbox]:
+            if checkbox.isChecked():
+                count += 1
+                text.append(checkbox.text())
+        return (count, text)
+
     def check_lights(self):
+        self.preview_light_combo.clear()
+        if self.count_lights()[0] == 0:
+            self.preview_light_combo.setEnabled(False)
+        else:
+            self.preview_light_combo.setEnabled(True)
+        for i in range(4):
+            if i < self.count_lights()[0]:
+                self.preview_light_combo.addItem(self.count_lights()[1][i])
         self.check_global_validity()
     
     def check_global_validity(self, item=None):
         if item is None:
             item = self.stimulation_tree.invisibleRootItem()
-            print(self.check_block_validity(item))
             if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
                 self.enable_run()
             else:
@@ -1085,7 +1114,6 @@ class App(QWidget):
             return self.check_stim_validity(item=item)
         if item == self.stimulation_tree.invisibleRootItem():
             if item.childCount() == 0:
-                print("invalid")
                 valid = False
         elif item.childCount() > 0:
             valid = item.text(1) != "" and item.text(2) != "" and item.text(3) != ""
@@ -1249,6 +1277,22 @@ class App(QWidget):
         except Exception as err:
             print(err)
 
+        try:
+            if self.daq_generation_thread.is_alive():
+                print("Daq Generation thread is alive")
+            else:
+                print("Daq generation thread is dead")
+        except Exception as err:
+            print(err)
+
+        try:
+            if self.signal_preview_thread.is_alive():
+                print("Signal Preview thread is alive")
+            else:
+                print("Signal Preview thread is dead")
+        except Exception as err:
+            print(err)
+
     def initialize_buttons(self):
         self.canal1buttons = [self.stimulation_type_label, self.stimulation_type_cell, self.first_signal_type_pulses_label, self.first_signal_type_pulses_cell, self.first_signal_type_width_label, self.first_signal_type_width_cell, self.first_signal_type_jitter_label, self.first_signal_type_jitter_cell, self.second_signal_type_frequency_label, self.second_signal_type_frequency_cell, self.second_signal_type_duty_label, self.second_signal_type_duty_cell]
         self.canal2buttons = [self.stimulation_type_label2, self.stimulation_type_cell2, self.first_signal_type_pulses_label2, self.first_signal_type_pulses_cell2, self.first_signal_type_width_label2, self.first_signal_type_width_cell2, self.first_signal_type_jitter_label2, self.first_signal_type_jitter_cell2, self.second_signal_type_frequency_label2, self.second_signal_type_frequency_cell2, self.second_signal_type_duty_label2, self.second_signal_type_duty_cell2]
@@ -1256,7 +1300,7 @@ class App(QWidget):
             self.run_button,
             self.experiment_name_cell,
             self.mouse_id_cell,
-            self.directory_save_files_checkbox,
+            #self.directory_save_files_checkbox,
             self.directory_choose_button,
             self.set_roi_button,
             self.experiment_name,

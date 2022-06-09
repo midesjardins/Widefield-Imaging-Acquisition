@@ -28,8 +28,10 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames, self.metadata = [], []
         #self.first = True
+        self.video_running = False
         self.cam = IMAQ.IMAQCamera("img0")
         self.cam.setup_acquisition(nframes=100)
+        self.cam.start_acquisition()
 
     def initialize(self, daq):
         self.daq = daq
@@ -38,18 +40,18 @@ class Camera(Instrument):
             #self.cam = IMAQ.IMAQCamera("img0")
             #self.cam.setup_acquisition(nframes=100)
         #self.first = False
-        self.cam.start_acquisition()
+        #self.cam.start_acquisition()
 
     def loop(self, task):
         while task.is_task_done() is False and self.daq.stop_signal is False:
-            print("working working")
             self.cam.wait_for_frame(timeout=200)
-            print(len(self.frames))
             img_tuple =  self.cam.read_multiple_images(return_info=True)
             self.frames += img_tuple[0]
             self.metadata += img_tuple[1]
-        self.daq_stop_signal = False
-        self.cam.stop_acquisition()
+            self.video_running = True
+        self.video_running = False
+        self.daq.stop_signal = False
+        #self.cam.stop_acquisition()
     
     def save(self, directory, extents):
         if extents:
@@ -122,7 +124,6 @@ class DAQ:
                     self.start([s_task, l_task])
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
-                    self.stop_signal = False
 
         else:
             time.sleep(2)
