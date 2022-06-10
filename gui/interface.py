@@ -258,11 +258,11 @@ class App(QWidget):
         self.stimulation_tree = QTreeWidget()
         self.stimulation_tree.setHeaderLabels(["0 Name", "1 Iterations", "2 Delay", "3 Jitter", "4 Type", "5 Pulses",
                                               "6 Duration", "7 Jitter", "8 Width", "9 Frequency", "10 Duty", "11 Type2", "12 Pulses 2", "13 Jitter 2", "14 Width 2", "15 Frequency 2", "16 Duty 2", "17 Blank", "18 Canal 1", "19 Canal 2", "20 Valid"])
-        for i in range(10):
-            #self.stimulation_tree.header().hideSection(i+1)
+        for i in range(19):
+            self.stimulation_tree.header().hideSection(i+1)
             pass
-        #self.stimulation_tree.setHeaderHidden(True)
-        #self.stimulation_tree.setColumnWidth(0, 330)
+        self.stimulation_tree.setHeaderHidden(True)
+        self.stimulation_tree.setColumnWidth(0, 330)
         self.stimulation_tree.currentItemChanged.connect(self.actualize_window)
         self.stimulation_tree_window.addWidget(self.stimulation_tree)
 

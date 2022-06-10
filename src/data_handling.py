@@ -1,8 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-from IPython.display import HTML
-import matplotlib.animation as animation
 
 def shrink_array(array, extents):
     return array[:,extents[0]:extents[1], extents[2]:extents[3]]

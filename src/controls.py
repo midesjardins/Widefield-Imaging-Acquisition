@@ -14,7 +14,7 @@ import threading
 import warnings
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 
 class Instrument:
     def __init__(self, port, name):
