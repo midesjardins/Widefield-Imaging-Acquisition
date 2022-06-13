@@ -627,7 +627,7 @@ class App(QWidget):
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         print(str(time.time()-self.daq.start_runtime) + "to intialize the experiment")
-        self.experiment.start(self.root_time, self.root_signal)
+        self.daq.start(self.experiment.name, self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
         except Exception:

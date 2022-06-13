@@ -72,7 +72,7 @@ class Camera(Instrument):
         """
         if extents:
             self.frames = shrink_array(self.frames, extents)
-        np.save(f"{directory}/{self.daq.exp.name}-data", self.frames)
+        np.save(f"{directory}/{self.daq.experiment_name}-data", self.frames)
 
 
         
@@ -95,13 +95,18 @@ class DAQ:
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal = [], [], [], None
 
-    def launch(self, exp):
+    def launch(self, name, time_values, stim_values):
         """Generate stimulation, light and camera signal and write them to the DAQ
 
         Args:
-            exp (Experiment): The associated Experiment instance
+            name (str): The name of the experiment
+            time_values (array): A array containing the time values
+            stim_values (array): A array containing the stimulation values
         """
-        self.exp = exp
+
+        self.experiment_name = name
+        self.time_values = time_values
+        self.stim_values = stim_values
         self.generate_stim_wave()
         self.generate_light_wave()
         self.generate_camera_wave()
@@ -111,7 +116,7 @@ class DAQ:
 
     def generate_stim_wave(self):
         """Create a stack of the stimulation signals and set the last values to zero"""
-        self.stim_signal = np.stack((self.exp.stim_signal))
+        self.stim_signal = np.stack((self.stim_values))
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
     
@@ -119,17 +124,15 @@ class DAQ:
         """Generate a light signal for each light used and set the last value to zero"""
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
-                signal = digital_square(self.exp.time, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
+                signal = digital_square(self.time_values, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
         if len(self.light_signals) > 1:
-            self.stack_light_signals = np.stack((self.light_signals))
-        else:
-            self.stack_light_signals = self.light_signals
+            self.light_signals = np.stack((self.light_signals))
     
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
-        self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)
+        self.camera_signal = np.max(np.vstack((self.light_signals)), axis=0)
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
@@ -143,14 +146,11 @@ class DAQ:
                         s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                    l_task.do_channels.add_do_chan(f"{self.name}/port0/line4")
-                    print(str(time.time()-self.start_runtime) + "to define tasks")
+                    l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
-                    print(str(time.time()-self.start_runtime) + "to initialize camera")
                     self.sample([s_task, l_task])
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                     self.start([s_task, l_task])
-                    print(str(time.time()-self.start_runtime) + "to sample/write/start")
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
 
@@ -167,12 +167,12 @@ class DAQ:
         stack = create_complete_stack(self.all_signals, self.stim_signal)
         indices = find_rising_indices(self.all_signals[-1])
         reduced_stack = reduce_stack(stack, indices)
-        np.save(f"{directory}/{self.exp.name}-signal_data", reduced_stack)
+        np.save(f"{directory}/{self.experiment_name}-signal_data", reduced_stack)
     
     def reset_daq(self):
         """Reset the DAQ parameters
         """
-        self.light_signals, self.stim_signal, self.camera_signal, self.exp.time = [], [], None, None
+        self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], None, None
 
     def start(self, tasks):
         """Start each nidaqmx task in a list
@@ -190,7 +190,7 @@ class DAQ:
             tasks (list): A list of nidaqmx tasks
         """
         for task in tasks:
-            task.wait_until_done(timeout=1.5*len(self.exp.time)/3000)
+            task.wait_until_done(timeout=1.5*len(self.time_values)/3000)
 
     def sample(self, tasks):
         """Set the sampling rate for a list of nidaqmx tasks

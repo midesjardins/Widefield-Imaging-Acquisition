@@ -66,8 +66,7 @@ class Experiment:
         self.daq = daq
 
     def start(self, x_values, y_values):
-        self.time, self.stim_signal = x_values, y_values
-        self.daq.launch(self)
+        self.daq.launch(self.name, x_values, y_values)
 
     def save(self, save, extents=None):
         if save is True:
