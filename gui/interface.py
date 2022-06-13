@@ -107,7 +107,7 @@ class App(QWidget):
         self.directory_window = QHBoxLayout()
         self.directory_save_files_checkbox = QCheckBox()
         self.directory_save_files_checkbox.setText("Save")
-        self.directory_save_files_checkbox.stateChanged.connect(self.check_if_thread_is_alive)
+        self.directory_save_files_checkbox.stateChanged.connect(self.enable_directory)
         #TODO Change for real function
         self.directory_window.addWidget(self.directory_save_files_checkbox)
         self.directory_choose_button = QPushButton("Select Directory")
