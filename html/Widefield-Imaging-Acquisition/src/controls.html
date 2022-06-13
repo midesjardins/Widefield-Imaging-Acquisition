@@ -42,10 +42,8 @@ warnings.filterwarnings(&#34;ignore&#34;)
 WIDEFIELD_COMPUTER = False
 
 class Instrument:
-    &#34;&#34;&#34;A class used to represent a physical instrument (analog or digital) controlled by a DAQ&#34;&#34;&#34;
-
     def __init__(self, port, name):
-        &#34;&#34;&#34;Initialize an Instrument instance
+        &#34;&#34;&#34;A class used to represent a analog or digital instrument controlled by a DAQ
 
         Args:
             port (str): The associated physical port
@@ -56,10 +54,8 @@ class Instrument:
         self.cam = None
 
 class Camera(Instrument):
-    &#34;&#34;&#34;A class used to represent a physical camera connected to the computer by a framegrabber&#34;&#34;&#34;
-
     def __init__(self, port, name):
-        &#34;&#34;&#34;Initialize the camera instance
+        &#34;&#34;&#34;A class used to represent a physical camera connected to the computer by a framegrabber
 
         Args:
             port (str): The name of the camera physical trigger port
@@ -110,10 +106,8 @@ class Camera(Instrument):
         
 
 class DAQ:
-    &#34;&#34;&#34;A class used to represent a Data Acquisition Device (DAQ)&#34;&#34;&#34;
-
     def __init__(self, name, lights, stimuli, camera, framerate, exposure):
-        &#34;&#34;&#34;Initialize the DAQ parameters
+        &#34;&#34;&#34;A class used to represent a Data Acquisition Device (DAQ)
 
         Args:
             name (str): The name of the DAQ
@@ -133,7 +127,7 @@ class DAQ:
         &#34;&#34;&#34;Generate stimulation, light and camera signal and write them to the DAQ
 
         Args:
-            exp (`Widefield-Imaging-Acquisition.src.blocks.Experiment`): The associated Experiment instance
+            exp (Experiment): The associated Experiment instance
         &#34;&#34;&#34;
         self.exp = exp
         self.generate_stim_wave()
@@ -270,7 +264,6 @@ class DAQ:
 </code></dt>
 <dd>
 <div class="desc"><p>A class used to represent a physical camera connected to the computer by a framegrabber</p>
-<p>Initialize the camera instance</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>port</code></strong> :&ensp;<code>str</code></dt>
@@ -283,10 +276,8 @@ class DAQ:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Camera(Instrument):
-    &#34;&#34;&#34;A class used to represent a physical camera connected to the computer by a framegrabber&#34;&#34;&#34;
-
     def __init__(self, port, name):
-        &#34;&#34;&#34;Initialize the camera instance
+        &#34;&#34;&#34;A class used to represent a physical camera connected to the computer by a framegrabber
 
         Args:
             port (str): The name of the camera physical trigger port
@@ -429,7 +420,6 @@ Equal to None if original size is kept</dd>
 </code></dt>
 <dd>
 <div class="desc"><p>A class used to represent a Data Acquisition Device (DAQ)</p>
-<p>Initialize the DAQ parameters</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
@@ -450,10 +440,8 @@ Equal to None if original size is kept</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQ:
-    &#34;&#34;&#34;A class used to represent a Data Acquisition Device (DAQ)&#34;&#34;&#34;
-
     def __init__(self, name, lights, stimuli, camera, framerate, exposure):
-        &#34;&#34;&#34;Initialize the DAQ parameters
+        &#34;&#34;&#34;A class used to represent a Data Acquisition Device (DAQ)
 
         Args:
             name (str): The name of the DAQ
@@ -473,7 +461,7 @@ Equal to None if original size is kept</dd>
         &#34;&#34;&#34;Generate stimulation, light and camera signal and write them to the DAQ
 
         Args:
-            exp (`Widefield-Imaging-Acquisition.src.blocks.Experiment`): The associated Experiment instance
+            exp (Experiment): The associated Experiment instance
         &#34;&#34;&#34;
         self.exp = exp
         self.generate_stim_wave()
@@ -655,7 +643,10 @@ Equal to None if original size is kept</dd>
 <dd>
 <div class="desc"><p>Generate stimulation, light and camera signal and write them to the DAQ</p>
 <h2 id="args">Args</h2>
-<p>exp (<code>Widefield-Imaging-Acquisition.src.blocks.Experiment</code>): The associated Experiment instance</p></div>
+<dl>
+<dt><strong><code>exp</code></strong> :&ensp;<code>Experiment</code></dt>
+<dd>The associated Experiment instance</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -664,7 +655,7 @@ Equal to None if original size is kept</dd>
     &#34;&#34;&#34;Generate stimulation, light and camera signal and write them to the DAQ
 
     Args:
-        exp (`Widefield-Imaging-Acquisition.src.blocks.Experiment`): The associated Experiment instance
+        exp (Experiment): The associated Experiment instance
     &#34;&#34;&#34;
     self.exp = exp
     self.generate_stim_wave()
@@ -881,8 +872,7 @@ Equal to None if original size is kept</dd>
 <span>(</span><span>port, name)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A class used to represent a physical instrument (analog or digital) controlled by a DAQ</p>
-<p>Initialize an Instrument instance</p>
+<div class="desc"><p>A class used to represent a analog or digital instrument controlled by a DAQ</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>port</code></strong> :&ensp;<code>str</code></dt>
@@ -895,10 +885,8 @@ Equal to None if original size is kept</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Instrument:
-    &#34;&#34;&#34;A class used to represent a physical instrument (analog or digital) controlled by a DAQ&#34;&#34;&#34;
-
     def __init__(self, port, name):
-        &#34;&#34;&#34;Initialize an Instrument instance
+        &#34;&#34;&#34;A class used to represent a analog or digital instrument controlled by a DAQ
 
         Args:
             port (str): The associated physical port

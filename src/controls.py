@@ -15,7 +15,7 @@ WIDEFIELD_COMPUTER = False
 
 class Instrument:
     def __init__(self, port, name):
-        """A class used to represent a physical instrument (analog or digital) controlled by a DAQ
+        """A class used to represent a analog or digital instrument controlled by a DAQ
 
         Args:
             port (str): The associated physical port
