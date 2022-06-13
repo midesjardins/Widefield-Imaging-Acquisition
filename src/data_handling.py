@@ -2,7 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def shrink_array(array, extents):
-    return array[:,extents[0]:extents[1], extents[2]:extents[3]]
+    print(extents)
+    print(round(extents[0]))
+    print("array size on enter")
+    print(len(array[0]))
+    new_array = array[:,round(extents[0]):round(extents[1]), round(extents[2]):round(extents[3])]
+    #new_array = array[:,round(extents[0]):round(extents[1])]
+    print("array size on close")
+    return array
 
 def get_array(directory):
     return np.load(directory)

@@ -9,10 +9,9 @@ from src.signal_generator import digital_square
 from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
 from pylablib.devices import IMAQ
 import warnings
-warnings.filterwarnings("ignore")
+#warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = False
-
+WIDEFIELD_COMPUTER = True
 class Instrument:
     def __init__(self, port, name):
         """A class used to represent a analog or digital instrument controlled by a DAQ
@@ -51,15 +50,20 @@ class Camera(Instrument):
         self.frames = []
 
     def loop(self, task):
+        self.task = task
         """While camera is running, add each acquired frame to a frames list
 
         Args:
             task (Task): The nidaqmx task used to track if acquisition is finished
         """
         while task.is_task_done() is False and self.daq.stop_signal is False:
-            self.cam.wait_for_frame(timeout=200)
-            self.frames += self.cam.read_multiple_images()
-            self.video_running = True
+            try:
+                self.cam.wait_for_frame(timeout=0.1)
+                self.frames += self.cam.read_multiple_images()
+                self.video_running = True
+            except Exception:
+                pass
+        self.frames += self.cam.read_multiple_images()
         self.video_running = False
     
     def save(self, directory, extents):
@@ -72,6 +76,8 @@ class Camera(Instrument):
         """
         if extents:
             self.frames = shrink_array(self.frames, extents)
+        print(len(self.frames))
+        print(len(self.frames[0]))
         np.save(f"{directory}/{self.daq.experiment_name}-data", self.frames)
 
 
@@ -111,7 +117,9 @@ class DAQ:
         self.generate_light_wave()
         self.generate_camera_wave()
         self.write_waveforms()
+        print("write waveforms done")
         self.reset_daq()
+        print("reset daq done")
     
 
     def generate_stim_wave(self):
@@ -124,15 +132,17 @@ class DAQ:
         """Generate a light signal for each light used and set the last value to zero"""
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
-                signal = digital_square(self.time_values, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
+                signal = digital_square(self.time_values, self.framerate/len(self.lights), self.framerate*self.exposure/len(self.lights), int(potential_light_index*3000/(self.framerate)))
                 signal[-1] = False
                 self.light_signals.append(signal)
         if len(self.light_signals) > 1:
-            self.light_signals = np.stack((self.light_signals))
+            self.stacked_lights = np.stack((self.light_signals))
+        else:
+            self.stacked_lights = self.light_signals
     
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
-        self.camera_signal = np.max(np.vstack((self.light_signals)), axis=0)
+        self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
@@ -157,6 +167,12 @@ class DAQ:
         else:
             time.sleep(2)
             pass
+
+    def return_lights(self):
+        lights = []
+        for light in self.lights:
+            lights.append(light.name)
+        return lights
 
     def save(self, directory):
         """Save the light and stimulation data for each frame as a NPY file

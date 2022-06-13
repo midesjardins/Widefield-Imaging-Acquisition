@@ -1,3 +1,4 @@
+from operator import truediv
 import sys
 import time
 import random
@@ -112,6 +113,7 @@ class App(QWidget):
         self.directory_window.addWidget(self.directory_save_files_checkbox)
         self.directory_choose_button = QPushButton("Select Directory")
         self.directory_choose_button.setIcon(QIcon("gui/icons/folder-plus.png"))
+        #self.directory_choose_button.setIcon(QIcon(os.path.join("gui", "icons", "folder-plus.png")))
         self.directory_choose_button.setDisabled(True)
         self.directory_choose_button.clicked.connect(self.choose_directory)
         self.directory_window.addWidget(self.directory_choose_button)
@@ -627,7 +629,7 @@ class App(QWidget):
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         print(str(time.time()-self.daq.start_runtime) + "to intialize the experiment")
-        self.daq.start(self.experiment.name, self.root_time, self.root_signal)
+        self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
         except Exception:
@@ -642,12 +644,8 @@ class App(QWidget):
         plt.ion()
         while self.camera.video_running is False:
             pass
-        first =True
         while self.camera.video_running is True:
             self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
-            if first is True:
-                print(str(time.time()-self.daq.start_runtime) + "to set first image")
-                first = False
 
     def stop_live(self):
         self.video_running = False
@@ -676,7 +674,7 @@ class App(QWidget):
     def generate_daq(self):
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
         self.camera = Camera('port0/line4', 'name')
-        self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/100)
+        self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/1000)
 
     def actualize_daq(self):
         lights = []
@@ -689,6 +687,8 @@ class App(QWidget):
         if self.fluorescence_checkbox.isChecked():
             lights.append(Instrument('port0/line1', 'blue'))
         self.daq.lights = lights
+        self.daq.framerate = int(self.framerate_cell.text())
+        self.daq.exposure = int(self.exposure_cell.text())/1000
         self.camera.frames = []
         self.daq.stop_signal = False
 
@@ -1254,7 +1254,7 @@ class App(QWidget):
 
     def verify_exposure(self):
         try:
-            boolean_check =  (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1
+            boolean_check = (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1
         except Exception:
             boolean_check = False
         self.exposure_warning_label.setHidden(boolean_check)
