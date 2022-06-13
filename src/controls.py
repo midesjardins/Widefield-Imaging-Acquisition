@@ -5,12 +5,9 @@ import os
 from nidaqmx.constants import AcquisitionType
 import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.blocks import Stimulation
 from src.signal_generator import digital_square
 from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
 from pylablib.devices import IMAQ
-import matplotlib.pyplot as plt
-import threading
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -18,84 +15,108 @@ WIDEFIELD_COMPUTER = False
 
 class Instrument:
     def __init__(self, port, name):
+        """A class used to represent a physical instrument (analog or digital) controlled by a DAQ
+
+        Args:
+            port (str): The associated physical port
+            name (str): The name of the instrument
+        """
         self.port = port
         self.name = name
         self.cam = None
-        self.activated = False
-    def activate(self):
-        self.activated = True
 
 class Camera(Instrument):
     def __init__(self, port, name):
+        """A class used to represent a physical camera connected to the computer by a framegrabber
+
+        Args:
+            port (str): The name of the camera physical trigger port
+            name (str): The name of the camera (can be found using NI-MAX)
+        """
         super().__init__(port, name)
-        self.frames, self.metadata = [], []
-        #self.first = True
+        self.frames = []
         self.video_running = False
         self.cam = IMAQ.IMAQCamera("img0")
         self.cam.setup_acquisition(nframes=100)
         self.cam.start_acquisition()
 
     def initialize(self, daq):
+        """Initialize / Reset the camera parameters
+
+        Args:
+            daq (DAQ): The associated DAQ instance
+        """
         self.daq = daq
+        self.daq.stop_signal = False
         self.frames = []
-        #if self.first:
-            #self.cam = IMAQ.IMAQCamera("img0")
-            #self.cam.setup_acquisition(nframes=100)
-        #self.first = False
-        #self.cam.start_acquisition()
 
     def loop(self, task):
+        """While camera is running, add each acquired frame to a frames list
+
+        Args:
+            task (Task): The nidaqmx task used to track if acquisition is finished
+        """
         while task.is_task_done() is False and self.daq.stop_signal is False:
             self.cam.wait_for_frame(timeout=200)
             self.frames += self.cam.read_multiple_images()
             self.video_running = True
         self.video_running = False
-        self.daq.stop_signal = False
-        #self.cam.stop_acquisition()
     
     def save(self, directory, extents):
+        """Save the acquired frames (reduced if necessary) to a 3D NPY file
+
+        Args:
+            directory (str): The location in which to save the NPY file
+            extents (tuple): The positions of the corners used to resize the frames 
+                             Equal to None if original size is kept
+        """
         if extents:
             self.frames = shrink_array(self.frames, extents)
-        save_time = time.time()
-        np.save(f"{directory}/{save_time}-data", self.frames)
-        np.save(f"{directory}/{save_time}-metadata", self.metadata)
+        np.save(f"{directory}/{self.daq.exp.name}-data", self.frames)
 
 
         
 
 class DAQ:
-    def __init__(self, name, lights, stimuli, camera, framerate, exposure, window):
+    def __init__(self, name, lights, stimuli, camera, framerate, exposure):
+        """A class used to represent a Data Acquisition Device (DAQ)
+
+        Args:
+            name (str): The name of the DAQ
+            lights (list of Instrument): A list of the lights used in the experiment
+            stimuli (list of Instrument): A list of the stimuli used in the experiment
+            camera (Camera): The camera used in the experiment
+            framerate (int): The acquisition framerate
+            exposure (float): The exposure time in seconds
+        """
         self.name = name
-        self.window = window
         self.framerate, self.exposure = framerate, exposure
         self.stop_signal = False
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
         self.tasks, self.light_signals, self.stim_signal, self.camera_signal = [], [], [], None
 
-    def return_lights(self):
-        lights = []
-        for light in self.lights:
-            lights.append(light.name)
-        return lights
-
     def launch(self, exp):
+        """Generate stimulation, light and camera signal and write them to the DAQ
+
+        Args:
+            exp (Experiment): The associated Experiment instance
+        """
         self.exp = exp
         self.generate_stim_wave()
-        print(str(time.time()-self.start_runtime) + "to generate stim wave")
         self.generate_light_wave()
-        print(str(time.time()-self.start_runtime) + "to generate light wave")
         self.generate_camera_wave()
-        print(str(time.time()-self.start_runtime) + "to generate camers wave")
         self.write_waveforms()
         self.reset_daq()
     
 
     def generate_stim_wave(self):
+        """Create a stack of the stimulation signals and set the last values to zero"""
         self.stim_signal = np.stack((self.exp.stim_signal))
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
     
     def generate_light_wave(self):
+        """Generate a light signal for each light used and set the last value to zero"""
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
                 signal = digital_square(self.exp.time, self.framerate/len(self.lights), self.exposure, int(potential_light_index*3000/(self.framerate)))
@@ -107,10 +128,12 @@ class DAQ:
             self.stack_light_signals = self.light_signals
     
     def generate_camera_wave(self):
+        """Generate camera signal using the light signals and add it to the list of all signals"""
         self.camera_signal = np.max(np.vstack((self.stack_light_signals)), axis=0)
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
+        """Write lights, stimuli and camera signal to the DAQ"""
         if WIDEFIELD_COMPUTER:
             with nidaqmx.Task(new_task_name='lights') as l_task:
                 self.control_task = l_task
@@ -133,61 +156,66 @@ class DAQ:
 
         else:
             time.sleep(2)
-            np.save("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy", self.all_signals)
-            np.save("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy", self.stim_signal)
             pass
-            """start_time = time.time()
-            self.signal_is_running = True
-            while time.time()-start_time < self.exp.time[-1]:
-                self.current_signal_time = round(time.time() - start_time, 2)
-                time.sleep(0.01)
-            self.signal_is_running = False"""
-
-    def plot_lights(self):
-        for light_signal in self.light_signals:
-            plt.plot(self.exp.time, light_signal)
-        plt.show()
 
     def save(self, directory):
+        """Save the light and stimulation data for each frame as a NPY file
+
+        Args:
+            directory (str): The directory in which to save the NPY file
+        """
         stack = create_complete_stack(self.all_signals, self.stim_signal)
         indices = find_rising_indices(self.all_signals[-1])
         reduced_stack = reduce_stack(stack, indices)
-        save_time = time.time()
-        np.save(f"{directory}/{save_time}-signal_data", reduced_stack)
+        np.save(f"{directory}/{self.exp.name}-signal_data", reduced_stack)
     
     def reset_daq(self):
+        """Reset the DAQ parameters
+        """
         self.light_signals, self.stim_signal, self.camera_signal, self.exp.time = [], [], None, None
 
     def start(self, tasks):
+        """Start each nidaqmx task in a list
+
+        Args:
+            tasks (list): A list of nidaqmx tasks
+        """
         for task in tasks:
             task.start()
     
     def wait(self, tasks):
+        """Wait for completion of nidaqmx tasks in a list
+
+        Args:
+            tasks (list): A list of nidaqmx tasks
+        """
         for task in tasks:
             task.wait_until_done(timeout=1.5*len(self.exp.time)/3000)
 
     def sample(self, tasks):
+        """Set the sampling rate for a list of nidaqmx tasks
+
+        Args:
+            tasks (list): A list of nidaqmx tasks
+        """
         for task in tasks:
             task.timing.cfg_samp_clk_timing(3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal[0]))
 
     def write(self, tasks, content):
+        """Write a list of arrays to a list of nidaqmx tasks
+
+        Args:
+            tasks (list): A list of nidaqmx tasks
+            content (list): A list of arrays to write
+        """
         for i, task in enumerate(tasks):
             task.write(content[i])
     
     def stop(self, tasks):
+        """Stop each nidaqmx task in a list
+
+        Args:
+            tasks (list): A list of nidaqmx tasks
+        """
         for task in tasks:
             task.stop()
-    
-
-
-
-
-"""LIGHTS = [Instrument('port0/line3', 'ir'), Instrument('port0/line0', 'red'),
-                       Instrument('port0/line2', 'green')]
-STIMULI = [Instrument('ao1', 'air-pump')]
-CAMERA = Camera('img0', 'name')
-DAQ1 = DAQ('dev1', LIGHTS, STIMULI, CAMERA, 3, 0.01, None)
-STIMULATION = Stimulation(DAQ1,10,frequency=1,duty=0.1)
-DAQ1.generate_stim_wave(STIMULATION)
-DAQ1.generate_light_wave()
-DAQ1.plot_lights()"""
