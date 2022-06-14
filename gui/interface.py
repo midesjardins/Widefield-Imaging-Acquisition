@@ -890,7 +890,6 @@ class App(QWidget):
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
-        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -937,7 +936,6 @@ class App(QWidget):
         except Exception:
             pass
         try:
-            self.clear_plot()
             self.plot()
             self.draw()
         except Exception:
@@ -976,7 +974,6 @@ class App(QWidget):
 
 
         self.check_global_validity()
-        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -1010,7 +1007,6 @@ class App(QWidget):
         self.stimulation_tree.currentItem().setText(2, self.block_delay_cell.text())
         self.stimulation_tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.check_global_validity()
-        self.clear_plot()
         self.plot()
         self.draw()
 
