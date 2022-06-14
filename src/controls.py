@@ -9,7 +9,7 @@ from src.signal_generator import digital_square
 from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
 from pylablib.devices import IMAQ
 import warnings
-#warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore")
 
 WIDEFIELD_COMPUTER = True
 class Instrument:
@@ -76,8 +76,6 @@ class Camera(Instrument):
         """
         if extents:
             self.frames = shrink_array(self.frames, extents)
-        print(len(self.frames))
-        print(len(self.frames[0]))
         np.save(f"{directory}/{self.daq.experiment_name}-data", self.frames)
 
 
