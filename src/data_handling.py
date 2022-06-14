@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def shrink_array(array, extents):
+    """Reduce the dimensions of frames to match ROI and return a list of frames"""
     return np.array(array)[:,round(extents[0]):round(extents[1]), round(extents[2]):round(extents[3])]
 
 def get_array(directory):
