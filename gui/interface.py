@@ -615,14 +615,14 @@ class App(QWidget):
     def run(self):
         self.daq.start_runtime = time.time()
         self.deactivate_buttons(buttons=self.enabled_buttons)
-        print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
+        #print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
         self.master_block = self.create_blocks()
-        print(str(time.time()-self.daq.start_runtime) + "to generate master block")
+        #print(str(time.time()-self.daq.start_runtime) + "to generate master block")
         self.plot(item=self.stimulation_tree.invisibleRootItem())
-        print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
+        #print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
-        print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
+        #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
@@ -1203,11 +1203,11 @@ class App(QWidget):
         new_stim1_values = []
         new_stim2_values = []
         try:
-            time_start = time.time()
-            sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
-            new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
-            new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
-            new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
+            #time_start = time.time()
+            #sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
+            #new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
+            #new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
+            #new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
             #self.plot_window.plot(new_x_values, new_stim1_values, root)
             #self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root)
