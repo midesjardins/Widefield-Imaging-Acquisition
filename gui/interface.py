@@ -30,10 +30,9 @@ class PlotWindow(QDialog):
         y_values = random_square(time_values, pulses, width, jitter)
         return y_values
 
-    def clear(self):
-        plt.clf()
-
     def plot(self, x, y, root, color="b"):
+        plt.figure(self.figure.number)
+        plt.clf()
         plt.ion()
         plt.plot(x,y, color=color)
         if root:
@@ -883,7 +882,6 @@ class App(QWidget):
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
-        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -930,7 +928,6 @@ class App(QWidget):
         except Exception:
             pass
         try:
-            self.clear_plot()
             self.plot()
             self.draw()
         except Exception:
@@ -969,7 +966,6 @@ class App(QWidget):
 
 
         self.check_global_validity()
-        self.clear_plot()
         self.plot()
         self.draw()
 
@@ -1003,7 +999,6 @@ class App(QWidget):
         self.stimulation_tree.currentItem().setText(2, self.block_delay_cell.text())
         self.stimulation_tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.check_global_validity()
-        self.clear_plot()
         self.plot()
         self.draw()
 
