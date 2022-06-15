@@ -56,17 +56,14 @@ def separate_images(lights, frames):
         separated_images.append(frames[index::len(lights),:,:])
     return separated_images
 
-def split_frames_in_path(path):
+def extract_from_path(path):
     files_list = os.listdir(path)
     for file_name in files_list:
         if "-data" in file_name:
             frames = get_array(os.path.join(path, file_name))
         if "-metadata" in file_name and "json" in file_name:
             lights = get_dictionary(os.path.join(path, file_name))["Lights"]
-            print(lights)
-    arrays = separate_images(lights, frames)
-    for i, array in enumerate(arrays):
-        np.save(os.path.join(path, f"{lights[i]}.npy"), array)
+    return (lights, frames)
 
 
 #lights = ["ir", "red", "green", "blue"]
