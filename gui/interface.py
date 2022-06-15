@@ -112,7 +112,7 @@ class App(QWidget):
         #TODO Change for real function
         self.directory_window.addWidget(self.directory_save_files_checkbox)
         self.directory_choose_button = QPushButton("Select Directory")
-        self.directory_choose_button.setIcon(QIcon("gui/icons/folder-plus.png"))
+        self.directory_choose_button.setIcon(QIcon(os.path.join("gui", "icons", "folder-plus.png")))
         #self.directory_choose_button.setIcon(QIcon(os.path.join("gui", "icons", "folder-plus.png")))
         self.directory_choose_button.setDisabled(True)
         self.directory_choose_button.clicked.connect(self.choose_directory)
