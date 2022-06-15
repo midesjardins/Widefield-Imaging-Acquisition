@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+import json
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames"""
@@ -7,6 +9,11 @@ def shrink_array(array, extents):
 
 def get_array(directory):
     return np.load(directory)
+
+def get_dictionary(directory):
+    with open(directory, 'r') as file:
+        dictionary = json.load(file)
+    return dictionary
 
 def init():
     figure = plt.imshow(np.random.random([1024, 1024]))
@@ -48,6 +55,18 @@ def separate_images(lights, frames):
     for index in range(len(lights)):
         separated_images.append(frames[index::len(lights),:,:])
     return separated_images
+
+def split_frames_in_path(path):
+    files_list = os.listdir(path)
+    for file_name in files_list:
+        if "-data" in file_name:
+            frames = get_array(os.path.join(path, file_name))
+        if "-metadata" in file_name and "json" in file_name:
+            lights = get_dictionary(os.path.join(path, file_name))["Lights"]
+            print(lights)
+    arrays = separate_images(lights, frames)
+    for i, array in enumerate(arrays):
+        np.save(os.path.join(path, f"{lights[i]}.npy"), array)
 
 
 #lights = ["ir", "red", "green", "blue"]
