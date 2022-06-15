@@ -8,7 +8,7 @@ def shrink_array(array, extents):
     return np.array(array)[:,round(extents[0]):round(extents[1]), round(extents[2]):round(extents[3])]
 
 def get_array(directory):
-    return np.load(directory)
+    return np.array(np.load(directory))
 
 def get_dictionary(directory):
     with open(directory, 'r') as file:
