@@ -4,7 +4,7 @@ import time
 import random
 import os
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QLocale
 import numpy as np
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
@@ -31,9 +31,12 @@ class PlotWindow(QDialog):
         return y_values
 
     def clear(self):
+        plt.figure(self.figure.number)
+        plt.ion()
         plt.clf()
 
     def plot(self, x, y, root, color="b"):
+        plt.figure(self.figure.number)
         plt.ion()
         plt.plot(x,y, color=color)
         if root:
@@ -75,8 +78,12 @@ class App(QWidget):
         self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
         self.onlyFloat = QDoubleValidator()
+        self.onlyFloat.setLocale(locale)
+        self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
+
         self.onlyFramerate = QIntValidator()
         self.onlyFramerate.setRange(1, 57)
         self.onlyExposure = QIntValidator()
