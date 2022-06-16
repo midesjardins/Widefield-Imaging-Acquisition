@@ -4,7 +4,7 @@ import time
 import random
 import os
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QLocale
 import numpy as np
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
@@ -31,22 +31,14 @@ class PlotWindow(QDialog):
         return y_values
 
     def clear(self):
+        plt.figure(self.figure.number)
+        plt.ion()
         plt.clf()
 
     def plot(self, x, y, root, color="b"):
+        plt.figure(self.figure.number)
         plt.ion()
         plt.plot(x,y, color=color)
-        if root:
-            try:
-                self.vertical_line
-            except Exception:
-                self.vertical_line = plt.axvline(0, ls='-', color='r', lw=1, zorder=10)
-        else:
-            try:
-                self.vertical_line.remove()
-            except Exception:
-                pass
-        #self.canvas.draw()
 
 
 class App(QWidget):
@@ -75,8 +67,13 @@ class App(QWidget):
         self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        self.cwd = os.path.dirname(os.path.dirname(__file__))
+        locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
         self.onlyFloat = QDoubleValidator()
+        self.onlyFloat.setLocale(locale)
+        self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
+
         self.onlyFramerate = QIntValidator()
         self.onlyFramerate.setRange(1, 57)
         self.onlyExposure = QIntValidator()
@@ -112,7 +109,7 @@ class App(QWidget):
         #TODO Change for real function
         self.directory_window.addWidget(self.directory_save_files_checkbox)
         self.directory_choose_button = QPushButton("Select Directory")
-        self.directory_choose_button.setIcon(QIcon("gui/icons/folder-plus.png"))
+        self.directory_choose_button.setIcon(QIcon(os.path.join(self.cwd, "gui", "icons", "folder-plus.png")))
         #self.directory_choose_button.setIcon(QIcon(os.path.join("gui", "icons", "folder-plus.png")))
         self.directory_choose_button.setDisabled(True)
         self.directory_choose_button.clicked.connect(self.choose_directory)
@@ -190,14 +187,15 @@ class App(QWidget):
         self.roi_layout1.setContentsMargins(0, 0, 0, 0)
         self.reset_roi_button = QPushButton()
         self.reset_roi_button.setText("Reset ROI")
-        self.reset_roi_button.setIcon(QIcon("gui/icons/zoom-out-area.png"))
+        self.reset_roi_button.setIcon(QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-out-area.png")))
+        #self.reset_roi_button.setIcon(QIcon("gui/icons/zoom-out-area.png"))
         self.reset_roi_button.setEnabled(False)
         self.reset_roi_button.clicked.connect(self.reset_roi)
         self.roi_layout1.addWidget(self.reset_roi_button)
 
         self.set_roi_button = QPushButton()
         self.set_roi_button.setText("Set ROI")
-        self.set_roi_button.setIcon(QIcon("gui/icons/zoom-in-area.png"))
+        self.set_roi_button.setIcon(QIcon(os.path.join(self.cwd, "gui","icons","zoom-in-area.png")))
         self.set_roi_button.clicked.connect(self.set_roi)
         self.roi_layout1.addWidget(self.set_roi_button)
         self.roi_layout1_container = QWidget()
@@ -209,13 +207,13 @@ class App(QWidget):
         self.roi_layout2.setContentsMargins(0, 0, 0, 0)
         self.cancel_roi_button = QPushButton()
         self.cancel_roi_button.setText("Cancel")
-        self.cancel_roi_button.setIcon(QIcon("gui/icons/zoom-cancel.png"))
+        self.cancel_roi_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","zoom-cancel.png")))
         self.cancel_roi_button.clicked.connect(self.cancel_roi)
         self.roi_layout2.addWidget(self.cancel_roi_button)
 
         self.save_roi_button = QPushButton()
         self.save_roi_button.setText("Save ROI")
-        self.save_roi_button.setIcon(QIcon("gui/icons/zoom-check.png"))
+        self.save_roi_button.setIcon(QIcon(os.path.join(self.cwd,"gui", "icons", "zoom-check.png")))
         self.save_roi_button.clicked.connect(self.save_roi)
         self.roi_layout2.addWidget(self.save_roi_button)
         self.roi_layout2_container = QWidget()
@@ -229,12 +227,12 @@ class App(QWidget):
 
         self.activate_live_preview_button = QPushButton()
         self.activate_live_preview_button.setText("Start Live Preview")
-        self.activate_live_preview_button.setIcon(QIcon("gui/icons/video"))
+        self.activate_live_preview_button.setIcon(QIcon(os.path.join(self.cwd,"gui", "icons", "video.png")))
         self.activate_live_preview_button.clicked.connect(self.open_live_preview_thread)
 
         self.deactivate_live_preview_button = QPushButton()
         self.deactivate_live_preview_button.setText("Stop Live Preview")
-        self.deactivate_live_preview_button.setIcon(QIcon("gui/icons/video-off"))
+        self.deactivate_live_preview_button.setIcon(QIcon(os.path.join(self.cwd,"gui", "icons", "video-off.png")))
         self.deactivate_live_preview_button.clicked.connect(self.stop_live)
 
         self.image_settings_main_window.addStretch()
@@ -272,22 +270,22 @@ class App(QWidget):
         self.stimulation_tree_second_window = QHBoxLayout()
         self.stim_buttons_container = QWidget()
         self.delete_branch_button = QPushButton('Delete')
-        self.delete_branch_button.setIcon(QIcon("gui/icons/trash.png"))
+        self.delete_branch_button.setIcon(QIcon(os.path.join(self.cwd,"gui", "icons", "trash.png")))
         self.delete_branch_button.clicked.connect(self.delete_branch)
         self.stimulation_tree_second_window.addWidget(self.delete_branch_button)
         self.add_brother_branch_button = QPushButton('Add Sibling')
         self.add_brother_branch_button.clicked.connect(self.add_brother)
-        self.add_brother_branch_button.setIcon(QIcon("gui/icons/arrow-bar-down.png"))
+        self.add_brother_branch_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","arrow-bar-down.png")))
         self.stimulation_tree_second_window.addWidget(self.add_brother_branch_button)
         self.add_child_branch_button = QPushButton('Add Child')
         self.add_child_branch_button.clicked.connect(self.add_child)
-        self.add_child_branch_button.setIcon(QIcon("gui/icons/arrow-bar-right.png"))
+        self.add_child_branch_button.setIcon(QIcon(os.path.join(self.cwd,"gui", "icons", "arrow-bar-right.png")))
         self.stimulation_tree_second_window.addWidget(self.add_child_branch_button)
         self.stim_buttons_container.setLayout(self.stimulation_tree_second_window)
         self.stimulation_tree_switch_window.addWidget(self.stim_buttons_container)
 
         self.new_branch_button = QPushButton("New Stimulation")
-        self.new_branch_button.setIcon(QIcon("gui/icons/square-plus.png"))
+        self.new_branch_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","square-plus.png")))
         self.stimulation_tree_third_window = QHBoxLayout()
         self.stimulation_tree_third_window.addWidget(self.new_branch_button)
         self.stim_buttons_container2 = QWidget()
@@ -589,12 +587,12 @@ class App(QWidget):
 
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton('Stop')
-        self.stop_button.setIcon(QIcon("gui/icons/player-stop.png"))
+        self.stop_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","player-stop.png")))
         self.stop_button.clicked.connect(self.stop_while_running)
         self.stop_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.stop_button)
         self.run_button = QPushButton('Run')
-        self.run_button.setIcon(QIcon("gui/icons/player-play.png"))
+        self.run_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","player-play.png")))
         self.run_button.clicked.connect(self.run)
         self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
@@ -608,14 +606,14 @@ class App(QWidget):
     def run(self):
         self.daq.start_runtime = time.time()
         self.deactivate_buttons(buttons=self.enabled_buttons)
-        print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
+        #print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
         self.master_block = self.create_blocks()
-        print(str(time.time()-self.daq.start_runtime) + "to generate master block")
+        #print(str(time.time()-self.daq.start_runtime) + "to generate master block")
         self.plot(item=self.stimulation_tree.invisibleRootItem())
-        print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
+        #print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
         self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
         self.draw(root=True)
-        print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
+        #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
@@ -837,8 +835,8 @@ class App(QWidget):
 
     def add_child(self):
         if self.stimulation_tree.currentItem():
-            self.stimulation_tree.currentItem().setIcon(0, QIcon("gui/icons/package.png"))
-            self.stimulation_tree.currentItem().setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+            self.stimulation_tree.currentItem().setIcon(0, QIcon(os.path.join("gui","icons","package.png")))
+            self.stimulation_tree.currentItem().setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
             stimulation_tree_item = QTreeWidgetItem()
             self.style_tree_item(stimulation_tree_item)
             self.stimulation_tree.selectedItems()[0].addChild(stimulation_tree_item)
@@ -852,7 +850,7 @@ class App(QWidget):
         try:
             parent = self.stimulation_tree.currentItem().parent()
             if parent.childCount() == 1:
-                parent.setIcon(0, QIcon("gui/icons/wave-square.png"))
+                parent.setIcon(0, QIcon(os.path.join("gui","icons","wave-square.png")))
         except Exception:
             parent = self.stimulation_tree.invisibleRootItem()
         parent.removeChild(self.stimulation_tree.currentItem())
@@ -860,9 +858,9 @@ class App(QWidget):
 
 
     def style_tree_item(self, item):
-        item.setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+        item.setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
-        item.setIcon(0, QIcon("gui/icons/wave-square.png"))
+        item.setIcon(0, QIcon(os.path.join("gui","icons","wave-square.png")))
         item.setText(0, "No Name")
 
 
@@ -1128,9 +1126,9 @@ class App(QWidget):
     def set_icon(self, item, valid):
         try:
             if valid:
-                item.setIcon(20, QIcon("gui/icons/circle-check.png"))
+                item.setIcon(20, QIcon(os.path.join("gui","icons","circle-check.png")))
             else:
-                item.setIcon(20, QIcon("gui/icons/alert-triangle.png"))
+                item.setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
         except Exception:
             pass
 
@@ -1196,13 +1194,14 @@ class App(QWidget):
         new_stim1_values = []
         new_stim2_values = []
         try:
-            time_start = time.time()
-            sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
-            new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
-            new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
-            new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
+            #time_start = time.time()
+            #sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
+            #new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
+            #new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
+            #new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
             #self.plot_window.plot(new_x_values, new_stim1_values, root)
             #self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
+            self.plot_window.clear()
             self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root)
             self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="g")
             #print(f"plot time:{time.time()-time_start}")
