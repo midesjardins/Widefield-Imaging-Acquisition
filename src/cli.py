@@ -11,4 +11,6 @@ vectors = separate_vectors(lights, vector)
 for i, array in enumerate(arrays):
     print(f"Saving {lights[i].capitalize()} Channel...")
     np.save(os.path.join(path, f"{lights[i]}.npy"), array)
+    print(f"Saving {lights[i].capitalize()} Metadata...")
+    np.save(os.path.join(path, f"{lights[i]}-signals.npy"), vectors[i])
 print("Extraction Done!")
