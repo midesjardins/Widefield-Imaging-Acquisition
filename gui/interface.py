@@ -39,17 +39,6 @@ class PlotWindow(QDialog):
         plt.figure(self.figure.number)
         plt.ion()
         plt.plot(x,y, color=color)
-        if root:
-            try:
-                self.vertical_line
-            except Exception:
-                self.vertical_line = plt.axvline(0, ls='-', color='r', lw=1, zorder=10)
-        else:
-            try:
-                self.vertical_line.remove()
-            except Exception:
-                pass
-        #self.canvas.draw()
 
 
 class App(QWidget):
@@ -1210,6 +1199,7 @@ class App(QWidget):
             #new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
             #self.plot_window.plot(new_x_values, new_stim1_values, root)
             #self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
+            self.plot_window.clear()
             self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root)
             self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="g")
             #print(f"plot time:{time.time()-time_start}")
