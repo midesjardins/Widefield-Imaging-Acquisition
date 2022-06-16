@@ -53,9 +53,12 @@ class App(QWidget):
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
-        self.daq.stop_signal = True
         self.video_running = False
-        self.daq.camera.cam.stop_acquisition()
+        try:
+            self.daq.stop_signal = True
+            self.daq.camera.cam.stop_acquisition()
+        except Exception:
+            pass
         print("Closed")
 
     def initUI(self):
@@ -604,7 +607,6 @@ class App(QWidget):
         self.show()
 
     def run(self):
-        self.daq.start_runtime = time.time()
         self.deactivate_buttons(buttons=self.enabled_buttons)
         #print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
         self.master_block = self.create_blocks()
@@ -626,7 +628,6 @@ class App(QWidget):
         self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
-        print(str(time.time()-self.daq.start_runtime) + "to intialize the experiment")
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
@@ -640,11 +641,13 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
-        while self.camera.video_running is False:
+        try: 
+            while self.camera.video_running is False:
+                pass
+            while self.camera.video_running is True:
+                self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+        except Exception:
             pass
-        while self.camera.video_running is True:
-            self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
-
     def stop_live(self):
         self.video_running = False
 
@@ -670,26 +673,30 @@ class App(QWidget):
         self.daq_generation_thread.start()
 
     def generate_daq(self):
+        try:
+            self.camera = Camera('port0/line4', 'name')
+        except Exception:
+            self.camera =None
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
-        self.camera = Camera('port0/line4', 'name')
         self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/1000)
-
     def actualize_daq(self):
-        lights = []
-        if self.ir_checkbox.isChecked():
-            lights.append(Instrument('port0/line3', 'ir'))
-        if self.red_checkbox.isChecked():
-            lights.append( Instrument('port0/line0', 'red'))
-        if self.green_checkbox.isChecked():
-            lights.append(Instrument('port0/line2', 'green'))
-        if self.fluorescence_checkbox.isChecked():
-            lights.append(Instrument('port0/line1', 'blue'))
-        self.daq.lights = lights
-        self.daq.framerate = int(self.framerate_cell.text())
-        self.daq.exposure = int(self.exposure_cell.text())/1000
-        self.camera.frames = []
-        self.daq.stop_signal = False
-
+        try:
+            lights = []
+            if self.ir_checkbox.isChecked():
+                lights.append(Instrument('port0/line3', 'ir'))
+            if self.red_checkbox.isChecked():
+                lights.append( Instrument('port0/line0', 'red'))
+            if self.green_checkbox.isChecked():
+                lights.append(Instrument('port0/line2', 'green'))
+            if self.fluorescence_checkbox.isChecked():
+                lights.append(Instrument('port0/line1', 'blue'))
+            self.daq.lights = lights
+            self.daq.framerate = int(self.framerate_cell.text())
+            self.daq.exposure = int(self.exposure_cell.text())/1000
+            self.camera.frames = []
+            self.daq.stop_signal = False
+        except Exception:
+            pass
 
         # TODO divide by 1000
 
@@ -757,10 +764,12 @@ class App(QWidget):
             return [sign_type, pulses, jitter, width, frequency, duty]
 
     def stop(self):
-        self.daq.stop_signal = True
-        self.daq.stop_signal = True
         self.stop_live()
         self.activate_buttons(buttons = self.enabled_buttons)
+        try:
+            self.daq.stop_signal = True
+        except Exception:
+            pass
 
     def stop_while_running(self):
         self.stop()
@@ -1186,7 +1195,8 @@ class App(QWidget):
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
         except Exception as err:
             self.plot_x_values = []
-            self.plot_y_values = []
+            self.plot_stim1_values = []
+            self.plot_stim2_values = []
             self.elapsed_time = 0
 
     def draw(self, root=False):
