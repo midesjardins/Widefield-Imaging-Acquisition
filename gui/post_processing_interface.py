@@ -5,7 +5,7 @@ import sys
 import os
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.data_handling import extract_from_path, separate_images, get_dictionary
+from src.data_handling import extract_from_path, separate_images, separate_vectors
 import numpy as np
 
 
@@ -69,13 +69,16 @@ class App(QWidget):
     def split_arrays(self):
         path = self.directory_cell.text()
         self.progress_bar_label.setText(f"Extracting Files...")
-        lights, frames = extract_from_path(path)
+        lights, frames, vector = extract_from_path(path)
         self.progress_bar.setMaximum(2*len(lights)-1)
         arrays = separate_images(lights, frames)
+        vectors = separate_vectors(lights, vector)
         for i, array in enumerate(arrays):
             self.progress_bar.setValue(2*i)
             self.progress_bar_label.setText(f"Saving {lights[i].capitalize()} Channel...")
             np.save(os.path.join(path, f"{lights[i]}.npy"), array)
+            self.progress_bar_label.setText(f"Saving {lights[i].capitalize()} Metadata...")
+            np.save(os.path.join(path, f"{lights[i]}-signals.npy"), vectors[i])
             self.progress_bar.setValue(2*i+1)
         self.progress_bar_label.setText(f"Done!")
         self.choose_directory_button.setEnabled(True)
