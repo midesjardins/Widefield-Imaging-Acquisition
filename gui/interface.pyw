@@ -1186,7 +1186,8 @@ class App(QWidget):
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
         except Exception as err:
             self.plot_x_values = []
-            self.plot_y_values = []
+            self.plot_stim1_values = []
+            self.plot_stim2_values = []
             self.elapsed_time = 0
 
     def draw(self, root=False):
