@@ -1072,7 +1072,8 @@ class App(QWidget):
     def check_global_validity(self, item=None):
         if item is None:
             item = self.stimulation_tree.invisibleRootItem()
-            if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
+           # if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
+            if self.check_block_validity(item):
                 self.enable_run()
             else:
                 self.disable_run()
