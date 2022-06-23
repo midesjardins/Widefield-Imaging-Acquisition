@@ -50,12 +50,12 @@ class Camera(Instrument):
         self.frames = []
 
     def loop(self, task):
-        self.task = task
         """While camera is running, add each acquired frame to a frames list
 
         Args:
             task (Task): The nidaqmx task used to track if acquisition is finished
         """
+        self.task = task
         while task.is_task_done() is False and self.daq.stop_signal is False:
             try:
                 self.cam.wait_for_frame(timeout=0.1)
@@ -94,6 +94,8 @@ class DAQ:
             exposure (float): The exposure time in seconds
         """
         self.name = name
+        self.trigger_activated = False
+        self.trigger_port = None
         self.framerate, self.exposure = framerate, exposure
         self.stop_signal = False
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
@@ -119,6 +121,12 @@ class DAQ:
         self.reset_daq()
         print("reset daq done")
     
+    def set_trigger(self, port):
+        self.trigger_activated = True
+        self.trigger_port = port
+
+    def remove_trigger(self):
+         self.trigger_activated = False
 
     def generate_stim_wave(self):
         """Create a stack of the stimulation signals and set the last values to zero"""
@@ -159,6 +167,14 @@ class DAQ:
                     self.sample([s_task, l_task])
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                     self.start([s_task, l_task])
+                    if self.trigger_activated:
+                         with nidaqmx.Task(new_task_name='trigger') as t_task:
+                            t_task.di_channels.add_di_chan(self.trigger_port)
+                            while True:
+                                if t_task.read():
+                                    break
+                        
+
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
 

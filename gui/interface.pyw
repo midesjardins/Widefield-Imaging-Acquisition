@@ -9,7 +9,7 @@ import numpy as np
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.widgets import RectangleSelector
+from matplotlib.widgets import RectangleSelector 
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
@@ -118,6 +118,10 @@ class App(QWidget):
         self.directory_cell.setReadOnly(True)
         self.directory_window.addWidget(self.directory_cell)
         self.experiment_settings_main_window.addLayout(self.directory_window)
+        self.trigger_checkbox = QCheckBox("Wait for Trigger")
+        self.trigger_activated = False
+        self.trigger_checkbox.stateChanged.connect(self.set_trigger)
+        self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
 
         self.experiment_settings_main_window.addStretch()
 
@@ -602,6 +606,15 @@ class App(QWidget):
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
+
+    def set_trigger(self):
+        if self.trigger_checkbox.isChecked():
+            self.run_button.setText("Run at Trigger")
+            self.daq.set_trigger("port0/line3")
+            # TODO (to be changed)
+        else:
+            self.run_button.setText("Run")
+            self.daq.remove_trigger()
 
     def run(self):
         self.daq.start_runtime = time.time()
