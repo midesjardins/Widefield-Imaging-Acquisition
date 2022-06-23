@@ -35,9 +35,12 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames = []
         self.video_running = False
-        self.cam = IMAQ.IMAQCamera("img0")
-        self.cam.setup_acquisition(nframes=100)
-        self.cam.start_acquisition()
+        try:
+            self.cam = IMAQ.IMAQCamera("img0")
+            self.cam.setup_acquisition(nframes=100)
+            self.cam.start_acquisition()
+        except Exception:
+            pass
 
     def initialize(self, daq):
         """Initialize / Reset the camera parameters
