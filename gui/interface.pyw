@@ -1232,20 +1232,16 @@ class App(QWidget):
                     for index in range(item.childCount()):
                         child = item.child(index)
                         self.plot(child)
-                    delay = round(block_delay + random.random()*jitter, 3)
-                    time_values = np.linspace(0, delay, int(round(delay))*3000)
+                    delay = block_delay + random.random()*jitter
+                    time_values = np.linspace(self.elapsed_time, self.elapsed_time+delay, int(round(delay*3000)))
                     data = np.zeros(len(time_values))
-                    time_values += self.elapsed_time
                     self.elapsed_time += delay
                     self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data))
             else:
                 duration = float(item.text(6))
-                time_values = np.linspace(0, duration, int(round(duration))*3000)
-                time_values += self.elapsed_time
-                self.elapsed_time += duration
-                self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
+                time_values = np.linspace(0, duration, int(round(duration*3000)))
                 if item.text(18) == "True":
                     sign_type, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item, canal=1)
                     data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
@@ -1259,6 +1255,9 @@ class App(QWidget):
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data2))
                 else:
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
+                time_values += self.elapsed_time
+                self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
+                self.elapsed_time += duration
         except Exception as err:
             self.plot_x_values = []
             self.plot_stim1_values = []
@@ -1286,6 +1285,7 @@ class App(QWidget):
             self.plot_stim2_values = []
             self.elapsed_time = 0
         except Exception as err:
+            print(err)
             pass
 
     def set_roi(self):

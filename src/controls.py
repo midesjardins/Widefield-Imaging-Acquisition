@@ -11,7 +11,7 @@ from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 class Instrument:
     def __init__(self, port, name):
         """A class used to represent a analog or digital instrument controlled by a DAQ
