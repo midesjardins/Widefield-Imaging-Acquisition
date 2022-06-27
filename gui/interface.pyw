@@ -13,6 +13,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
+from src.data_handling import get_dictionary
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -53,9 +54,12 @@ class App(QWidget):
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
-        self.daq.stop_signal = True
         self.video_running = False
-        self.daq.camera.cam.stop_acquisition()
+        try:
+            self.daq.stop_signal = True
+            self.daq.camera.cam.stop_acquisition()
+        except Exception:
+            pass
         print("Closed")
 
     def initUI(self):
@@ -284,9 +288,14 @@ class App(QWidget):
         self.stim_buttons_container.setLayout(self.stimulation_tree_second_window)
         self.stimulation_tree_switch_window.addWidget(self.stim_buttons_container)
 
+
+        self.stimulation_tree_third_window = QHBoxLayout()
+        self.import_button = QPushButton("Import Configuration")
+        self.import_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","packge-import.png")))
+        self.import_button.clicked.connect(self.import_config)
+        self.stimulation_tree_third_window.addWidget(self.import_button)
         self.new_branch_button = QPushButton("New Stimulation")
         self.new_branch_button.setIcon(QIcon(os.path.join(self.cwd,"gui","icons","square-plus.png")))
-        self.stimulation_tree_third_window = QHBoxLayout()
         self.stimulation_tree_third_window.addWidget(self.new_branch_button)
         self.stim_buttons_container2 = QWidget()
         self.stim_buttons_container2.setLayout(self.stimulation_tree_third_window)
@@ -603,8 +612,61 @@ class App(QWidget):
         self.initialize_buttons()
         self.show()
 
+
+    def import_config(self):
+        file = QFileDialog.getOpenFileName()[0]
+        try:
+            blocks = get_dictionary(file)["Blocks"]
+            self.recursive_print(blocks)
+            self.check_global_validity()
+            self.plot(self.stimulation_tree.invisibleRootItem())
+            self.draw()
+        except Exception as err:
+            print(err)
+
+    def recursive_print(self, block, parent = None):
+        if block["type"] == "Block":
+            if block["name"] == "root":
+                tree_item = self.stimulation_tree.invisibleRootItem()
+            else:
+                tree_item = QTreeWidgetItem()
+                parent.addChild(tree_item)
+                self.set_block_attributes(tree_item, block)
+            for item in block["data"]:
+                self.recursive_print(item, parent=tree_item)
+        elif block["type"] == "Stimulation":
+            tree_item = QTreeWidgetItem()
+            parent.addChild(tree_item)
+            self.set_stim_attributes(tree_item, block)
+
+    def set_block_attributes(self, tree_item, dictionary):
+        tree_item.setIcon(0, QIcon(os.path.join("gui","icons","package.png")))
+        tree_item.setText(0, dictionary["name"])
+        tree_item.setText(1, str(dictionary["iterations"]))
+        tree_item.setText(2, str(dictionary["delay"]))
+        tree_item.setText(3, str(dictionary["jitter"]))
+
+    def set_stim_attributes(self, tree_item, dictionary):
+        tree_item.setIcon(0, QIcon(os.path.join("gui","icons","wave-square.png")))
+        tree_item.setText(0, dictionary["name"])
+        tree_item.setText(4, str(dictionary["type1"]))
+        tree_item.setText(5, str(dictionary["pulses"]))
+        tree_item.setText(6, str(dictionary["duration"]))
+        tree_item.setText(7, str(dictionary["jitter"]))
+        tree_item.setText(8, str(dictionary["width"]))
+        tree_item.setText(9, str(dictionary["freq"]))
+        tree_item.setText(10, str(dictionary["duty"]))
+        tree_item.setText(11, str(dictionary["type2"]))
+        tree_item.setText(12, str(dictionary["pulses2"]))
+        tree_item.setText(13, str(dictionary["jitter2"]))
+        tree_item.setText(14, str(dictionary["width2"]))
+        tree_item.setText(15, str(dictionary["freq2"]))
+        tree_item.setText(16, str(dictionary["duty2"]))
+        tree_item.setText(18, str(dictionary["canal1"]))
+        tree_item.setText(19, str(dictionary["canal2"]))
+            
+
     def run(self):
-        self.daq.start_runtime = time.time()
         self.deactivate_buttons(buttons=self.enabled_buttons)
         #print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
         self.master_block = self.create_blocks()
@@ -626,7 +688,6 @@ class App(QWidget):
         self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
-        print(str(time.time()-self.daq.start_runtime) + "to intialize the experiment")
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
@@ -640,11 +701,13 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
-        while self.camera.video_running is False:
+        try: 
+            while self.camera.video_running is False:
+                pass
+            while self.camera.video_running is True:
+                self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+        except Exception:
             pass
-        while self.camera.video_running is True:
-            self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
-
     def stop_live(self):
         self.video_running = False
 
@@ -664,32 +727,41 @@ class App(QWidget):
 
     def change_preview_light_channel(self):
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        print(self.live_preview_light_index)
 
     def open_daq_generation_thread(self):
         self.daq_generation_thread = Thread(target=self.generate_daq)
         self.daq_generation_thread.start()
 
     def generate_daq(self):
+        try:
+            self.camera = Camera('port0/line4', 'name')
+        except Exception:
+            self.camera =None
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
-        self.camera = Camera('port0/line4', 'name')
+        try:
+            self.camera = Camera('port0/line4', 'name')
+        except Exception:
+            self.camera = None
         self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/1000)
-
     def actualize_daq(self):
-        lights = []
-        if self.ir_checkbox.isChecked():
-            lights.append(Instrument('port0/line3', 'ir'))
-        if self.red_checkbox.isChecked():
-            lights.append( Instrument('port0/line0', 'red'))
-        if self.green_checkbox.isChecked():
-            lights.append(Instrument('port0/line2', 'green'))
-        if self.fluorescence_checkbox.isChecked():
-            lights.append(Instrument('port0/line1', 'blue'))
-        self.daq.lights = lights
-        self.daq.framerate = int(self.framerate_cell.text())
-        self.daq.exposure = int(self.exposure_cell.text())/1000
-        self.camera.frames = []
-        self.daq.stop_signal = False
-
+        try:
+            lights = []
+            if self.ir_checkbox.isChecked():
+                lights.append(Instrument('port0/line3', 'ir'))
+            if self.red_checkbox.isChecked():
+                lights.append( Instrument('port0/line0', 'red'))
+            if self.green_checkbox.isChecked():
+                lights.append(Instrument('port0/line2', 'green'))
+            if self.fluorescence_checkbox.isChecked():
+                lights.append(Instrument('port0/line1', 'blue'))
+            self.daq.lights = lights
+            self.daq.framerate = int(self.framerate_cell.text())
+            self.daq.exposure = int(self.exposure_cell.text())/1000
+            self.camera.frames = []
+            self.daq.stop_signal = False
+        except Exception:
+            pass
 
         # TODO divide by 1000
 
@@ -757,10 +829,12 @@ class App(QWidget):
             return [sign_type, pulses, jitter, width, frequency, duty]
 
     def stop(self):
-        self.daq.stop_signal = True
-        self.daq.stop_signal = True
         self.stop_live()
         self.activate_buttons(buttons = self.enabled_buttons)
+        try:
+            self.daq.stop_signal = True
+        except Exception:
+            pass
 
     def stop_while_running(self):
         self.stop()
@@ -1072,7 +1146,8 @@ class App(QWidget):
     def check_global_validity(self, item=None):
         if item is None:
             item = self.stimulation_tree.invisibleRootItem()
-            if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
+           # if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
+            if self.check_block_validity(item):
                 self.enable_run()
             else:
                 self.disable_run()
@@ -1157,20 +1232,16 @@ class App(QWidget):
                     for index in range(item.childCount()):
                         child = item.child(index)
                         self.plot(child)
-                    delay = round(block_delay + random.random()*jitter, 3)
-                    time_values = np.linspace(0, delay, int(round(delay))*3000)
+                    delay = block_delay + random.random()*jitter
+                    time_values = np.linspace(self.elapsed_time, self.elapsed_time+delay, int(round(delay*3000)))
                     data = np.zeros(len(time_values))
-                    time_values += self.elapsed_time
                     self.elapsed_time += delay
                     self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data))
             else:
                 duration = float(item.text(6))
-                time_values = np.linspace(0, duration, int(round(duration))*3000)
-                time_values += self.elapsed_time
-                self.elapsed_time += duration
-                self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
+                time_values = np.linspace(0, duration, int(round(duration*3000)))
                 if item.text(18) == "True":
                     sign_type, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item, canal=1)
                     data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
@@ -1184,6 +1255,9 @@ class App(QWidget):
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data2))
                 else:
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
+                time_values += self.elapsed_time
+                self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
+                self.elapsed_time += duration
         except Exception as err:
             self.plot_x_values = []
             self.plot_stim1_values = []
@@ -1211,6 +1285,7 @@ class App(QWidget):
             self.plot_stim2_values = []
             self.elapsed_time = 0
         except Exception as err:
+            print(err)
             pass
 
     def set_roi(self):
