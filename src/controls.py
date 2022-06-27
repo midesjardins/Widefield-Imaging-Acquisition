@@ -35,7 +35,7 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames = []
         self.video_running = False
-        self.cam = IMAQ.IMAQCamera("img0")
+        self.cam = IMAQ.IMAQCamera()
         self.cam.setup_acquisition(nframes=100)
         self.cam.start_acquisition()
 
@@ -140,7 +140,10 @@ class DAQ:
     
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
-        self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
+        try:
+            self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
+        except ValueError:
+            self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
@@ -157,10 +160,18 @@ class DAQ:
                     l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
-                    self.write([s_task, l_task], [self.stim_signal, self.all_signals])
-                    self.start([s_task, l_task])
-                    self.camera.loop(l_task)
-                    self.stop([s_task, l_task])
+                    if len(self.lights) > 0: 
+                        self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                        self.start([s_task, l_task])
+                        self.camera.loop(l_task)
+                        self.stop([s_task, l_task])
+                    else:
+                        self.write([s_task], [self.stim_signal])
+                        self.start([s_task])
+                        while s_task.is_task_done() is False and self.stop_signal is False:
+                            time.sleep(0.01)
+                            pass
+                        self.stop([s_task])
 
         else:
             time.sleep(2)
