@@ -27,6 +27,9 @@ class Stimulation:
         self.jitter2 = jitter2
         self.freq2 = frequency2
 
+        self.canal1 = canal1
+        self.canal2=  canal2
+
     def __str__(self, indent=""):
         return_value = []
         if self.type1 == "random-square":
@@ -38,6 +41,28 @@ class Stimulation:
         elif self.type2 == "square":
             return_value.append(indent+f"{self.name} -  Canal 2 --- Duration: {self.duration}, Frequency: {self.freq2}, Duty: {self.duty2}")
         return "\n".join(return_value)
+
+    def toJSON(self):
+        dictionary = {
+            "type": "Stimulation",
+            "name": self.name,
+            "duration": self.duration,
+            "type1": self.type1,
+            "pulses": self.pulses,
+            "width": self.width,
+            "duty": self.duty,
+            "jitter": self.jitter,
+            "freq": self.freq,
+            "type2": self.type2,
+            "pulses2": self.pulses2,
+            "width2": self.width2,
+            "duty2": self.duty2,
+            "jitter2": self.jitter2,
+            "freq2": self.freq2,
+            "canal1": self.canal1,
+            "canal2": self.canal2
+        }
+        return dictionary
 class Block:
     def __init__(self, name, data, delay=0, iterations=1, jitter=0):
         self.name = name
@@ -54,6 +79,20 @@ class Block:
             for item in self.data:
                 stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
+
+    def toJSON(self):
+        data_list = []
+        for item in self.data:
+            data_list.append(item.toJSON())
+        dictionary = {
+            "type": "Block",
+            "name": self.name,
+            "iterations": self.iterations,
+            "delay": self.delay,
+            "jitter": self.jitter,
+            "data": data_list
+        }
+        return dictionary
 
 class Experiment:
     def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name"):
@@ -78,7 +117,7 @@ class Experiment:
                 file.write(f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
             
             dictionary = {
-                "Blocks": self.blocks.__str__(),
+                "Blocks": self.blocks.toJSON(),
                 "Lights": self.daq.return_lights(),
                 "Framerate": self.framerate,
                 "Exposition": self.exposition,
