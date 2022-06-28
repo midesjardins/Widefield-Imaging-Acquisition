@@ -19,9 +19,14 @@ from src.blocks import Stimulation, Block, Experiment
 
 
 class PlotWindow(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, subplots=False, parent=None):
         super(PlotWindow, self).__init__(parent)
-        self.figure = plt.figure()
+        if subplots:
+            self.figure, self.axis = plt.subplots(2, sharex=True)
+            self.axis[0].get_yaxis().set_visible(False)
+            self.axis[1].get_yaxis().set_visible(False)
+        else:
+            self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
@@ -34,12 +39,14 @@ class PlotWindow(QDialog):
     def clear(self):
         plt.figure(self.figure.number)
         plt.ion()
-        plt.clf()
+        self.axis[0].clear()
+        self.axis[1].clear()
 
-    def plot(self, x, y, root, color="b"):
+    def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
         plt.figure(self.figure.number)
         plt.ion()
-        plt.plot(x,y, color=color)
+        self.axis[index].plot(x, y)
+       # plt.plot(x,y, color=color)
 
 
 class App(QWidget):
@@ -605,7 +612,7 @@ class App(QWidget):
         self.run_button.clicked.connect(self.run)
         self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
-        self.plot_window = PlotWindow()
+        self.plot_window = PlotWindow(subplots=True)
         self.grid_layout.addWidget(self.plot_window, 3, 2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
         self.open_daq_generation_thread()
@@ -1116,6 +1123,9 @@ class App(QWidget):
                 self.stimulation_tree.currentItem().setText(19, str(self.first_signal_second_canal_check.isChecked()))
                 self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
                 self.check_global_validity()
+                self.clear_plot()
+                self.plot()
+                self.draw()
 
     def enable_run(self):
         self.run_button.setDisabled(False)
@@ -1277,8 +1287,8 @@ class App(QWidget):
             #self.plot_window.plot(new_x_values, new_stim1_values, root)
             #self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.plot_window.clear()
-            self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root)
-            self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="g")
+            self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root, index=0)
+            self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="#FFE51C", index=1)
             #print(f"plot time:{time.time()-time_start}")
             self.plot_x_values = []
             self.plot_stim1_values = []
