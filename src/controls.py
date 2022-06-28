@@ -11,7 +11,7 @@ from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 class Instrument:
     def __init__(self, port, name):
         """A class used to represent a analog or digital instrument controlled by a DAQ
@@ -35,9 +35,12 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames = []
         self.video_running = False
-        self.cam = IMAQ.IMAQCamera("img0")
-        self.cam.setup_acquisition(nframes=100)
-        self.cam.start_acquisition()
+        try:
+            self.cam = IMAQ.IMAQCamera("img0")
+            self.cam.setup_acquisition(nframes=100)
+            self.cam.start_acquisition()
+        except Exception:
+            pass
 
     def initialize(self, daq):
         """Initialize / Reset the camera parameters
@@ -48,6 +51,9 @@ class Camera(Instrument):
         self.daq = daq
         self.daq.stop_signal = False
         self.frames = []
+
+    def delete_frames(self):
+        self.cam.read_multiple_images()
 
     def loop(self, task):
         self.task = task
@@ -61,8 +67,8 @@ class Camera(Instrument):
                 self.cam.wait_for_frame(timeout=0.1)
                 self.frames += self.cam.read_multiple_images()
                 self.video_running = True
-            except Exception:
-                pass
+            except Exception as err:
+                print(err)
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
     
@@ -140,7 +146,10 @@ class DAQ:
     
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
-        self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
+        try:
+            self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
+        except ValueError:
+            self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
@@ -159,10 +168,20 @@ class DAQ:
                     l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
-                    self.write([s_task, l_task], [self.stim_signal, self.all_signals])
-                    self.start([s_task, l_task])
-                    self.camera.loop(l_task)
-                    self.stop([s_task, l_task])
+                    if len(self.lights) > 0: 
+                        self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                        self.camera.delete_frames()
+                        self.start([s_task, l_task])
+                        self.camera.loop(l_task)
+                        self.stop([s_task, l_task])
+                    else:
+                        self.write([s_task], [self.stim_signal])
+                        self.camera.delete_frames()
+                        self.start([s_task])
+                        while s_task.is_task_done() is False and self.stop_signal is False:
+                            time.sleep(0.01)
+                            pass
+                        self.stop([s_task])
                     s_task.write([[0, 0],[0, 0]])
                     l_task.write(null_lights)
                     self.start([s_task, l_task])
