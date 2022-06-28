@@ -1,4 +1,3 @@
-from operator import truediv
 import sys
 import time
 import random
@@ -736,7 +735,6 @@ class App(QWidget):
 
     def change_preview_light_channel(self):
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
-        print(self.live_preview_light_index)
 
     def open_daq_generation_thread(self):
         self.daq_generation_thread = Thread(target=self.generate_daq)
