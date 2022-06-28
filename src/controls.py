@@ -113,7 +113,7 @@ class DAQ:
             time_values (array): A array containing the time values
             stim_values (array): A array containing the stimulation values
         """
-
+        self.reset_daq()
         self.experiment_name = name
         self.time_values = time_values
         self.stim_values = stim_values
@@ -121,9 +121,6 @@ class DAQ:
         self.generate_light_wave()
         self.generate_camera_wave()
         self.write_waveforms()
-        print("write waveforms done")
-        self.reset_daq()
-        print("reset daq done")
     
 
     def generate_stim_wave(self):
@@ -206,6 +203,7 @@ class DAQ:
         Args:
             directory (str): The directory in which to save the NPY file
         """
+
         stack = create_complete_stack(self.all_signals, self.stim_signal)
         indices = find_rising_indices(self.all_signals[-1])
         reduced_stack = reduce_stack(stack, indices)

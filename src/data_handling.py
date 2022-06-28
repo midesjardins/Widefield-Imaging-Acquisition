@@ -37,7 +37,7 @@ def plot_multiple_arrays(arrays_list):
 
 def find_rising_indices(array):
     dy = np.diff(array)
-    return np.concatenate(([0], np.where(dy == 1)[0][1::2]))
+    return np.concatenate(([0], np.where(dy == 1)[0][1::2]+1))
 
 def create_complete_stack(first_stack, second_stack):
     array = []
