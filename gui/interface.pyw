@@ -85,10 +85,8 @@ class App(QWidget):
         self.onlyFloat.setLocale(locale)
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
 
-        self.onlyFramerate = QIntValidator()
-        self.onlyFramerate.setRange(1, 57)
-        self.onlyExposure = QIntValidator()
-        self.onlyExposure.setRange(1,900)
+        self.onlyFramerate = QIntValidator(1, 57, self)
+        self.onlyExposure = QIntValidator(1,900, self)
 
         self.grid_layout = QGridLayout()
         self.setLayout(self.grid_layout)
@@ -1349,7 +1347,7 @@ class App(QWidget):
 
     def verify_exposure(self):
         try:
-            boolean_check = (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1
+            boolean_check = (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1 and int(self.framerate_cell.text()) <= 57
         except Exception:
             boolean_check = False
         self.exposure_warning_label.setHidden(boolean_check)
