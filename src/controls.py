@@ -125,7 +125,6 @@ class DAQ:
         self.stim_signal = np.stack((self.stim_values))
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
-        self.null_stim_signal = np.array([False, False])
     
     def generate_light_wave(self):
         """Generate a light signal for each light used and set the last value to zero"""
@@ -143,7 +142,6 @@ class DAQ:
         """Generate camera signal using the light signals and add it to the list of all signals"""
         self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
-        self.null_all_signals = np.full(len(self.all_signals), False)
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
@@ -151,11 +149,13 @@ class DAQ:
             with nidaqmx.Task(new_task_name='lights') as l_task:
                 self.control_task = l_task
                 with nidaqmx.Task(new_task_name='stimuli') as s_task:
+                    null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
                         s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                        null_lights.append([False, False])
                     l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
@@ -163,7 +163,8 @@ class DAQ:
                     self.start([s_task, l_task])
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
-                    self.write([s_task, l_task]), [self.null_stim_signal, self.null_all_signals]
+                    s_task.write([[0, 0],[0, 0]])
+                    l_task.write(null_lights)
                     self.start([s_task, l_task])
 
         else:
