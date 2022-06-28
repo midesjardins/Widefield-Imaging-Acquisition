@@ -22,7 +22,6 @@ class Instrument:
         """
         self.port = port
         self.name = name
-        self.cam = None
 
 class Camera(Instrument):
     def __init__(self, port, name):
@@ -35,9 +34,13 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames = []
         self.video_running = False
-        self.cam = IMAQ.IMAQCamera("img0")
-        self.cam.setup_acquisition(nframes=100)
-        self.cam.start_acquisition()
+        try:
+            self.cam = IMAQ.IMAQCamera("img0")
+            self.cam.setup_acquisition(nframes=100)
+            self.cam.start_acquisition()
+        except Exception as err:
+            print(err)
+            pass
 
     def initialize(self, daq):
         """Initialize / Reset the camera parameters
@@ -48,6 +51,9 @@ class Camera(Instrument):
         self.daq = daq
         self.daq.stop_signal = False
         self.frames = []
+
+    def delete_frames(self):
+        self.cam.read_multiple_images()
 
     def loop(self, task):
         """While camera is running, add each acquired frame to a frames list
@@ -61,8 +67,8 @@ class Camera(Instrument):
                 self.cam.wait_for_frame(timeout=0.1)
                 self.frames += self.cam.read_multiple_images()
                 self.video_running = True
-            except Exception:
-                pass
+            except Exception as err:
+                print(err)
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
     
@@ -136,6 +142,7 @@ class DAQ:
     
     def generate_light_wave(self):
         """Generate a light signal for each light used and set the last value to zero"""
+        self.light_signals = []
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
                 signal = digital_square(self.time_values, self.framerate/len(self.lights), self.framerate*self.exposure/len(self.lights), int(potential_light_index*3000/(self.framerate)))
@@ -148,7 +155,10 @@ class DAQ:
     
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
-        self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
+        try:
+            self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
+        except ValueError:
+            self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def write_waveforms(self):
@@ -157,25 +167,49 @@ class DAQ:
             with nidaqmx.Task(new_task_name='lights') as l_task:
                 self.control_task = l_task
                 with nidaqmx.Task(new_task_name='stimuli') as s_task:
+                    null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
                         s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                        null_lights.append([False, False])
                     l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
-                    self.write([s_task, l_task], [self.stim_signal, self.all_signals])
-                    if self.trigger_activated:
+                    if len(self.lights) > 0: 
+                        self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                        self.camera.delete_frames()
+                        if self.trigger_activated:
                          with nidaqmx.Task(new_task_name='trigger') as t_task:
                             t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
                             while True:
                                 time.sleep(0.001)
                                 if t_task.read():
                                     break
-                    self.start([s_task, l_task])
-                    self.camera.loop(l_task)
-                    self.stop([s_task, l_task])
+                        self.start([s_task, l_task])
+                        self.camera.loop(l_task)
+                        self.stop([s_task, l_task])
+                        s_task.write([[0, 0],[0, 0]])
+                        l_task.write(null_lights)
+                        self.start([s_task, l_task])
+                    else:
+                        self.write([s_task], [self.stim_signal])
+                        self.camera.delete_frames()
+                        if self.trigger_activated:
+                         with nidaqmx.Task(new_task_name='trigger') as t_task:
+                            t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
+                            while True:
+                                time.sleep(0.001)
+                                if t_task.read():
+                                    break
+                        self.start([s_task])
+                        while s_task.is_task_done() is False and self.stop_signal is False:
+                            time.sleep(0.01)
+                            pass
+                        self.stop([s_task])
+                        s_task.write([[0, 0],[0, 0]])
+                        self.start([s_task])
 
         else:
             time.sleep(2)
