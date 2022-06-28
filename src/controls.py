@@ -56,12 +56,12 @@ class Camera(Instrument):
         self.cam.read_multiple_images()
 
     def loop(self, task):
-        self.task = task
         """While camera is running, add each acquired frame to a frames list
 
         Args:
             task (Task): The nidaqmx task used to track if acquisition is finished
         """
+        self.task = task
         while task.is_task_done() is False and self.daq.stop_signal is False:
             try:
                 self.cam.wait_for_frame(timeout=0.1)
@@ -100,6 +100,8 @@ class DAQ:
             exposure (float): The exposure time in seconds
         """
         self.name = name
+        self.trigger_activated = False
+        self.trigger_port = None
         self.framerate, self.exposure = framerate, exposure
         self.stop_signal = False
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
@@ -125,6 +127,12 @@ class DAQ:
         self.reset_daq()
         print("reset daq done")
     
+    def set_trigger(self, port):
+        self.trigger_activated = True
+        self.trigger_port = port
+
+    def remove_trigger(self):
+         self.trigger_activated = False
 
     def generate_stim_wave(self):
         """Create a stack of the stimulation signals and set the last values to zero"""
@@ -172,6 +180,13 @@ class DAQ:
                     if len(self.lights) > 0: 
                         self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                         self.camera.delete_frames()
+                        if self.trigger_activated:
+                         with nidaqmx.Task(new_task_name='trigger') as t_task:
+                            t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
+                            while True:
+                                time.sleep(0.001)
+                                if t_task.read():
+                                    break
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
@@ -181,6 +196,13 @@ class DAQ:
                     else:
                         self.write([s_task], [self.stim_signal])
                         self.camera.delete_frames()
+                        if self.trigger_activated:
+                         with nidaqmx.Task(new_task_name='trigger') as t_task:
+                            t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
+                            while True:
+                                time.sleep(0.001)
+                                if t_task.read():
+                                    break
                         self.start([s_task])
                         while s_task.is_task_done() is False and self.stop_signal is False:
                             time.sleep(0.01)
@@ -188,7 +210,6 @@ class DAQ:
                         self.stop([s_task])
                         s_task.write([[0, 0],[0, 0]])
                         self.start([s_task])
-                        
 
         else:
             time.sleep(2)
