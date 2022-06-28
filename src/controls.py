@@ -158,11 +158,13 @@ class DAQ:
             with nidaqmx.Task(new_task_name='lights') as l_task:
                 self.control_task = l_task
                 with nidaqmx.Task(new_task_name='stimuli') as s_task:
+                    null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
                         s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                        null_lights.append([False, False])
                     l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
@@ -180,6 +182,9 @@ class DAQ:
                             time.sleep(0.01)
                             pass
                         self.stop([s_task])
+                    s_task.write([[0, 0],[0, 0]])
+                    l_task.write(null_lights)
+                    self.start([s_task, l_task])
 
         else:
             time.sleep(2)
