@@ -174,6 +174,9 @@ class DAQ:
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
+                        s_task.write([[0, 0],[0, 0]])
+                        l_task.write(null_lights)
+                        self.start([s_task, l_task])
                     else:
                         self.write([s_task], [self.stim_signal])
                         self.camera.delete_frames()
@@ -182,9 +185,9 @@ class DAQ:
                             time.sleep(0.01)
                             pass
                         self.stop([s_task])
-                    s_task.write([[0, 0],[0, 0]])
-                    l_task.write(null_lights)
-                    self.start([s_task, l_task])
+                        s_task.write([[0, 0],[0, 0]])
+                        self.start([s_task])
+                        
 
         else:
             time.sleep(2)
