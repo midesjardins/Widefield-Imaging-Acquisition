@@ -32,14 +32,17 @@ class Stimulation:
 
     def __str__(self, indent=""):
         return_value = []
-        if self.type1 == "random-square":
-            return_value.append(indent+f"{self.name} - Canal 1 --- Duration: {self.duration}, Pulses: {self.pulses}, Width: {self.width}, Jitter: {self.jitter}")
-        elif self.type1 == "square":
-            return_value.append(indent+f"{self.name} -  Canal 1 --- Duration: {self.duration}, Frequency: {self.freq}, Duty: {self.duty}")
-        if self.type2 == "random-square":
-            return_value.append(indent+f"{self.name} - Canal 2 --- Duration: {self.duration}, Pulses: {self.pulses2}, Width: {self.width2}, Jitter: {self.jitter2}")
-        elif self.type2 == "square":
-            return_value.append(indent+f"{self.name} -  Canal 2 --- Duration: {self.duration}, Frequency: {self.freq2}, Duty: {self.duty2}")
+        if self.type1 == "random-square" and self.canal1:
+            return_value.append(indent+f"{self.name} - Channel 1 --- Duration: {self.duration}, Pulses: {self.pulses}, Width: {self.width}, Jitter: {self.jitter}")
+        elif self.type1 == "square" and self.canal1:
+            return_value.append(indent+f"{self.name} - Channel 1 --- Duration: {self.duration}, Frequency: {self.freq}, Duty: {self.duty}")
+        if self.type2 == "random-square" and self.canal2:
+            return_value.append(indent+f"{self.name} - Channel 2 --- Duration: {self.duration}, Pulses: {self.pulses2}, Width: {self.width2}, Jitter: {self.jitter2}")
+        elif self.type2 == "square" and self.canal2:
+            return_value.append(indent+f"{self.name} - Channel 2 --- Duration: {self.duration}, Frequency: {self.freq2}, Duty: {self.duty2}")
+        if not self.canal1 and not self.canal2:
+            return_value.append(indent+f"{self.name} - No Channels --- Duration: {self.duration}")
+        return_value.append("***")
         return "\n".join(return_value)
 
     def toJSON(self):
