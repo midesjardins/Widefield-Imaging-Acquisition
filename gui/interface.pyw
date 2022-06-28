@@ -714,6 +714,7 @@ class App(QWidget):
             while self.camera.video_running is True:
                 self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
         except Exception:
+            pass
 
     def stop_live(self):
         self.camera.video_running = False
@@ -746,10 +747,6 @@ class App(QWidget):
         except Exception:
             self.camera =None
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
-        try:
-            self.camera = Camera('port0/line4', 'name')
-        except Exception:
-            self.camera = None
         self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/1000)
     def actualize_daq(self):
         try:
