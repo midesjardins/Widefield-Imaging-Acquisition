@@ -166,15 +166,14 @@ class DAQ:
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
-                    self.start([s_task, l_task])
                     if self.trigger_activated:
                          with nidaqmx.Task(new_task_name='trigger') as t_task:
                             t_task.di_channels.add_di_chan(self.trigger_port)
                             while True:
+                                time.sleep(0.001)
                                 if t_task.read():
                                     break
-                        
-
+                    self.start([s_task, l_task])
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
 
