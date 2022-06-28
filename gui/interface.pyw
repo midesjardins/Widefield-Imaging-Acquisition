@@ -425,6 +425,7 @@ class App(QWidget):
         self.first_signal_jitter_window.addWidget(self.first_signal_type_jitter_cell)
 
         self.first_signal_jitter_window2 = QHBoxLayout()
+        self.first_signal_jitter_window2 = QHBoxLayout()
         self.first_signal_type_jitter_label2 = QLabel("Jitter (s)")
         self.first_signal_jitter_window2.addWidget(self.first_signal_type_jitter_label2)
         self.first_signal_type_jitter_cell2 = QLineEdit()
@@ -739,10 +740,6 @@ class App(QWidget):
         except Exception:
             self.camera =None
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
-        try:
-            self.camera = Camera('port0/line4', 'name')
-        except Exception:
-            self.camera = None
         self.daq = DAQ('dev1', [], self.stimuli, self.camera, int(self.framerate_cell.text()), int(self.exposure_cell.text())/1000)
     def actualize_daq(self):
         try:
@@ -760,7 +757,8 @@ class App(QWidget):
             self.daq.exposure = int(self.exposure_cell.text())/1000
             self.camera.frames = []
             self.daq.stop_signal = False
-        except Exception:
+        except Exception as err:
+            print(err)
             pass
 
         # TODO divide by 1000

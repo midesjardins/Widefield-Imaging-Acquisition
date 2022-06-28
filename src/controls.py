@@ -22,7 +22,6 @@ class Instrument:
         """
         self.port = port
         self.name = name
-        self.cam = None
 
 class Camera(Instrument):
     def __init__(self, port, name):
@@ -39,7 +38,8 @@ class Camera(Instrument):
             self.cam = IMAQ.IMAQCamera("img0")
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
-        except Exception:
+        except Exception as err:
+            print(err)
             pass
 
     def initialize(self, daq):
@@ -131,6 +131,7 @@ class DAQ:
     
     def generate_light_wave(self):
         """Generate a light signal for each light used and set the last value to zero"""
+        self.light_signals = []
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
                 signal = digital_square(self.time_values, self.framerate/len(self.lights), self.framerate*self.exposure/len(self.lights), int(potential_light_index*3000/(self.framerate)))
