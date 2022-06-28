@@ -610,7 +610,7 @@ class App(QWidget):
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
             self.run_button.setText("Run at Trigger")
-            self.daq.set_trigger("port0/line3")
+            self.daq.set_trigger("port1/line0")
             # TODO (to be changed)
         else:
             self.run_button.setText("Run")

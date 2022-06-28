@@ -168,7 +168,7 @@ class DAQ:
                     self.write([s_task, l_task], [self.stim_signal, self.all_signals])
                     if self.trigger_activated:
                          with nidaqmx.Task(new_task_name='trigger') as t_task:
-                            t_task.di_channels.add_di_chan(self.trigger_port)
+                            t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
                             while True:
                                 time.sleep(0.001)
                                 if t_task.read():
