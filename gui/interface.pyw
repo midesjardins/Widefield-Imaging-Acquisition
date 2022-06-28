@@ -615,6 +615,7 @@ class App(QWidget):
         self.draw(root=True)
         #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
+        self.actualize_daq()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
@@ -623,10 +624,8 @@ class App(QWidget):
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
-        self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
-        print(str(time.time()-self.daq.start_runtime) + "to intialize the experiment")
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         try:
             self.experiment.save(self.files_saved, self.roi_extent)
@@ -641,12 +640,13 @@ class App(QWidget):
     def start_live(self):
         plt.ion()
         while self.camera.video_running is False:
+            print(len(self.camera.frames))
             pass
         while self.camera.video_running is True:
             self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
 
     def stop_live(self):
-        self.video_running = False
+        self.camera.video_running = False
 
     def open_signal_preview_thread(self):
         self.signal_preview_thread = Thread(target=self.preview_signal)
@@ -664,6 +664,7 @@ class App(QWidget):
 
     def change_preview_light_channel(self):
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        print(self.live_preview_light_index)
 
     def open_daq_generation_thread(self):
         self.daq_generation_thread = Thread(target=self.generate_daq)
@@ -757,7 +758,6 @@ class App(QWidget):
             return [sign_type, pulses, jitter, width, frequency, duty]
 
     def stop(self):
-        self.daq.stop_signal = True
         self.daq.stop_signal = True
         self.stop_live()
         self.activate_buttons(buttons = self.enabled_buttons)
