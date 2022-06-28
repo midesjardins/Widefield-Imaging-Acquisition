@@ -19,9 +19,14 @@ from src.blocks import Stimulation, Block, Experiment
 
 
 class PlotWindow(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, subplots=False, parent=None):
         super(PlotWindow, self).__init__(parent)
-        self.figure = plt.figure()
+        if subplots:
+            self.figure, self.axis = plt.subplots(2, sharex=True)
+            self.axis[0].get_yaxis().set_visible(False)
+            self.axis[1].get_yaxis().set_visible(False)
+        else:
+            self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
@@ -34,12 +39,14 @@ class PlotWindow(QDialog):
     def clear(self):
         plt.figure(self.figure.number)
         plt.ion()
-        plt.clf()
+        self.axis[0].clear()
+        self.axis[1].clear()
 
-    def plot(self, x, y, root, color="b"):
+    def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
         plt.figure(self.figure.number)
         plt.ion()
-        plt.plot(x,y, color=color)
+        self.axis[index].plot(x, y)
+       # plt.plot(x,y, color=color)
 
 
 class App(QWidget):
@@ -606,7 +613,7 @@ class App(QWidget):
         self.run_button.clicked.connect(self.run)
         self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
-        self.plot_window = PlotWindow()
+        self.plot_window = PlotWindow(subplots=True)
         self.grid_layout.addWidget(self.plot_window, 3, 2)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
         self.open_daq_generation_thread()
@@ -678,6 +685,7 @@ class App(QWidget):
         self.draw(root=True)
         #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
+        self.actualize_daq()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
@@ -686,7 +694,6 @@ class App(QWidget):
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
-        self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
@@ -709,8 +716,9 @@ class App(QWidget):
                 self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
         except Exception:
             pass
+
     def stop_live(self):
-        self.video_running = False
+        self.camera.video_running = False
 
     def open_signal_preview_thread(self):
         self.signal_preview_thread = Thread(target=self.preview_signal)
@@ -1114,6 +1122,9 @@ class App(QWidget):
                 self.stimulation_tree.currentItem().setText(19, str(self.first_signal_second_canal_check.isChecked()))
                 self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
                 self.check_global_validity()
+                self.clear_plot()
+                self.plot()
+                self.draw()
 
     def enable_run(self):
         self.run_button.setDisabled(False)
@@ -1275,8 +1286,8 @@ class App(QWidget):
             #self.plot_window.plot(new_x_values, new_stim1_values, root)
             #self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.plot_window.clear()
-            self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root)
-            self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="g")
+            self.plot_window.plot(self.plot_x_values, self.plot_stim1_values, root, index=0)
+            self.plot_window.plot(self.plot_x_values, self.plot_stim2_values, root, color="#FFE51C", index=1)
             #print(f"plot time:{time.time()-time_start}")
             self.plot_x_values = []
             self.plot_stim1_values = []
@@ -1393,9 +1404,12 @@ class App(QWidget):
             self.green_checkbox,
             self.fluorescence_checkbox,
             self.stimulation_name_label,
+            self.directory_save_files_checkbox,
             self.stimulation_name_cell,
             self.stimulation_type_label,
             self.stimulation_type_cell,
+            self.stimulation_type_label2,
+            self.stimulation_type_cell2,
             self.first_signal_first_canal_check,
             self.first_signal_second_canal_check,
             self.first_signal_type_duration_label,
@@ -1410,6 +1424,16 @@ class App(QWidget):
             self.second_signal_type_frequency_cell,
             self.second_signal_type_duty_label,
             self.second_signal_type_duty_cell,
+            self.first_signal_type_pulses_label2,
+            self.first_signal_type_pulses_cell2,
+            self.first_signal_type_width_label2,
+            self.first_signal_type_width_cell2,
+            self.first_signal_type_jitter_label2,
+            self.first_signal_type_jitter_cell2,
+            self.second_signal_type_frequency_label2,
+            self.second_signal_type_frequency_cell2,
+            self.second_signal_type_duty_label2,
+            self.second_signal_type_duty_cell2,
             self.block_iterations_label,
             self.block_iterations_cell,
             self.block_delay_label,
