@@ -52,6 +52,9 @@ class Camera(Instrument):
         self.daq.stop_signal = False
         self.frames = []
 
+    def delete_frames(self):
+        self.cam.read_multiple_images()
+
     def loop(self, task):
         self.task = task
         """While camera is running, add each acquired frame to a frames list
@@ -64,8 +67,8 @@ class Camera(Instrument):
                 self.cam.wait_for_frame(timeout=0.1)
                 self.frames += self.cam.read_multiple_images()
                 self.video_running = True
-            except Exception:
-                pass
+            except Exception as err:
+                print(err)
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
     
@@ -165,11 +168,13 @@ class DAQ:
                     self.sample([s_task, l_task])
                     if len(self.lights) > 0: 
                         self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                        self.camera.delete_frames()
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
                     else:
                         self.write([s_task], [self.stim_signal])
+                        self.camera.delete_frames()
                         self.start([s_task])
                         while s_task.is_task_done() is False and self.stop_signal is False:
                             time.sleep(0.01)

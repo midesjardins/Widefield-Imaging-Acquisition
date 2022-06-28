@@ -684,6 +684,7 @@ class App(QWidget):
         self.draw(root=True)
         #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
+        self.actualize_daq()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
@@ -692,7 +693,6 @@ class App(QWidget):
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
-        self.actualize_daq()
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
@@ -714,9 +714,9 @@ class App(QWidget):
             while self.camera.video_running is True:
                 self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
         except Exception:
-            pass
+
     def stop_live(self):
-        self.video_running = False
+        self.camera.video_running = False
 
     def open_signal_preview_thread(self):
         self.signal_preview_thread = Thread(target=self.preview_signal)
