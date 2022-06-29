@@ -5,7 +5,7 @@ import json
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames"""
-    return np.array(array)[:,round(extents[0]):round(extents[1]), round(extents[2]):round(extents[3])]
+    return np.array(array)[:,round(extents[2]):round(extents[3]), round(extents[0]):round(extents[1])]
 
 def get_array(directory):
     return np.array(np.load(directory))
@@ -82,6 +82,7 @@ def extract_from_path(path):
         if "-signal_data" in file_name:
             vector = get_array(os.path.join(path, file_name))
     return (lights, frames, vector)
+
 
 #lights = ["ir", "red", "green", "blue"]
 #frames = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]],[[19,20,21],[21,22,23],[24,25,26]]])
