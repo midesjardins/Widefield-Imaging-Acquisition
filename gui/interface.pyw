@@ -1303,6 +1303,7 @@ class App(QWidget):
 
         def onselect_function(eclick, erelease):
             self.roi_extent = self.rect_selector.extents
+            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
