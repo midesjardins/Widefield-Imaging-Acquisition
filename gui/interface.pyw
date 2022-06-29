@@ -8,7 +8,7 @@ import numpy as np
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.widgets import RectangleSelector
+from matplotlib.widgets import RectangleSelector 
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
@@ -84,10 +84,8 @@ class App(QWidget):
         self.onlyFloat.setLocale(locale)
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
 
-        self.onlyFramerate = QIntValidator()
-        self.onlyFramerate.setRange(1, 57)
-        self.onlyExposure = QIntValidator()
-        self.onlyExposure.setRange(1,900)
+        self.onlyFramerate = QIntValidator(1, 57, self)
+        self.onlyExposure = QIntValidator(1,900, self)
 
         self.grid_layout = QGridLayout()
         self.setLayout(self.grid_layout)
@@ -128,6 +126,10 @@ class App(QWidget):
         self.directory_cell.setReadOnly(True)
         self.directory_window.addWidget(self.directory_cell)
         self.experiment_settings_main_window.addLayout(self.directory_window)
+        self.trigger_checkbox = QCheckBox("Wait for Trigger")
+        self.trigger_activated = False
+        self.trigger_checkbox.stateChanged.connect(self.set_trigger)
+        self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
 
         self.experiment_settings_main_window.addStretch()
 
@@ -618,7 +620,15 @@ class App(QWidget):
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
-
+    
+    def set_trigger(self):
+        if self.trigger_checkbox.isChecked():
+            self.run_button.setText("Run at Trigger")
+            self.daq.set_trigger("port1/line0")
+            # TODO (to be changed)
+        else:
+            self.run_button.setText("Run")
+            self.daq.remove_trigger()
 
     def import_config(self):
         file = QFileDialog.getOpenFileName()[0]
@@ -671,7 +681,6 @@ class App(QWidget):
         tree_item.setText(16, str(dictionary["duty2"]))
         tree_item.setText(18, str(dictionary["canal1"]))
         tree_item.setText(19, str(dictionary["canal2"]))
-            
 
     def run(self):
         self.deactivate_buttons(buttons=self.enabled_buttons)
@@ -1337,7 +1346,7 @@ class App(QWidget):
 
     def verify_exposure(self):
         try:
-            boolean_check = (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1
+            boolean_check = (int(self.exposure_cell.text())/1000+0.0015)*int(self.framerate_cell.text()) < 1 and int(self.framerate_cell.text()) <= 57
         except Exception:
             boolean_check = False
         self.exposure_warning_label.setHidden(boolean_check)
