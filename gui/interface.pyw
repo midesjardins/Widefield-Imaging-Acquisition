@@ -1323,6 +1323,7 @@ class App(QWidget):
                                                interactive=True)
 
     def reset_roi(self):
+        plt.figure(self.image_view.figure.number)
         plt.xlim(0, 1024)
         plt.ylim(0, 1024)
         self.roi_extent = None
@@ -1337,6 +1338,7 @@ class App(QWidget):
     def save_roi(self):
         self.activate_buttons(buttons = self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
+        plt.figure(self.image_view.figure.number)
         plt.ion()
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
