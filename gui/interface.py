@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QLocale
 import numpy as np
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar, QSlider
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector 
@@ -78,6 +78,7 @@ class App(QWidget):
         self.elapsed_time = 0
         self.files_saved = False
         self.roi_extent = None
+        self.max_exposure = 4096
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
@@ -236,6 +237,12 @@ class App(QWidget):
         self.roi_buttons.addWidget(self.roi_layout2_container)
 
         self.image_settings_main_window.addLayout(self.roi_buttons)
+
+        self.exposure_slider = QSlider(Qt.Horizontal, self)
+        self.exposure_slider.setRange(0, 4096)
+        self.exposure_slider.setValue(4096)
+        self.exposure_slider.valueChanged.connect(self.adjust_exposure)
+        self.image_settings_main_window.addWidget(self.exposure_slider)
         self.image_settings_main_window.addStretch()
 
         self.activate_live_preview_button = QPushButton()
@@ -621,6 +628,10 @@ class App(QWidget):
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
+
+    def adjust_exposure(self):
+        self.max_exposure = self.exposure_slider.value()
+        print(self.max_exposure)
     
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
@@ -724,7 +735,7 @@ class App(QWidget):
                 pass
             while self.camera.video_running is True: 
                 try:
-                    self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+                    self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
                 except Exception:
                     pass
                 time.sleep(0.001)
