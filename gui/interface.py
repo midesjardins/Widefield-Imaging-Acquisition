@@ -77,6 +77,7 @@ class App(QWidget):
         self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        self.roi_extent = None
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
@@ -877,12 +878,16 @@ class App(QWidget):
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
+        for button in buttons:
+            button.setEnabled(True)
         if buttons == self.enabled_buttons:
             if self.directory_save_files_checkbox.isChecked():
                 self.directory_choose_button.setEnabled(True)
+            if self.roi_extent is None:
+                self.reset_roi_button.setEnabled(False)
+            else:
+                self.set_roi_button.setEnabled(False)         
             self.stop_button.setDisabled(True)
-        for button in buttons:
-            button.setEnabled(True)
 
     def deactivate_buttons(self, buttons):
         if buttons == self.enabled_buttons:
@@ -1406,6 +1411,7 @@ class App(QWidget):
             #self.directory_save_files_checkbox,
             self.directory_choose_button,
             self.set_roi_button,
+            self.reset_roi_button,
             self.experiment_name,
             self.mouse_id_label,
             self.framerate_label,
