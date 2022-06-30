@@ -719,10 +719,16 @@ class App(QWidget):
         plt.ion()
         try: 
             while self.camera.video_running is False:
+                time.sleep(0.01)
                 pass
-            while self.camera.video_running is True:
-                self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
-        except Exception:
+            while self.camera.video_running is True: 
+                try:
+                    self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+                except Exception:
+                    pass
+                time.sleep(0.001)
+        except Exception as err:
+            print(err)
             pass
 
     def stop_live(self):
