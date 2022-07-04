@@ -695,6 +695,7 @@ class App(QWidget):
         #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
         self.actualize_daq()
+        self.open_live_saving_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
@@ -711,6 +712,23 @@ class App(QWidget):
         except Exception:
             self.experiment.save(self.directory_save_files_checkbox.isChecked())
         self.stop()
+
+    def open_live_saving_thread(self):
+        self.live_save_thread = Thread(target=self.live_save)
+        self.live_save_thread.start()
+    
+    def live_save(self):
+        while self.camera.video_running is False:
+                time.sleep(0.01)
+                pass
+        while self.camera.video_running is True: 
+            print(len(self.camera.frames))
+            if len(self.camera.frames) > 1200:
+                self.memory = self.camera.frames[:1199]
+                self.camera.frames = self.camera.frames[1200:]
+                if self.directory_save_files_checkbox.isChecked():
+                    np.save(f"data\\{time.time()}", self.memory)
+            time.sleep(0.01)
         
     def open_live_preview_thread(self):
         self.live_preview_thread = Thread(target=self.start_live)
@@ -718,6 +736,7 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
+        self.memory = []
         try: 
             while self.camera.video_running is False:
                 time.sleep(0.01)
