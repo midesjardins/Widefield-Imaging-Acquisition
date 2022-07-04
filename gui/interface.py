@@ -1,4 +1,3 @@
-from operator import truediv
 import sys
 import time
 import random
@@ -13,7 +12,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary
+from src.data_handling import get_dictionary, shrink_array
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -78,6 +77,7 @@ class App(QWidget):
         self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        self.roi_extent = None
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
@@ -695,6 +695,7 @@ class App(QWidget):
         #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
         #self.open_signal_preview_thread()
         self.actualize_daq()
+        self.open_live_saving_thread()
         self.open_live_preview_thread()
         self.open_start_experiment_thread()
 
@@ -711,6 +712,39 @@ class App(QWidget):
         except Exception:
             self.experiment.save(self.directory_save_files_checkbox.isChecked())
         self.stop()
+
+    def open_live_saving_thread(self):
+        self.live_save_thread = Thread(target=self.live_save)
+        self.live_save_thread.start()
+    
+    def live_save(self):
+        self.camera.file_index = 0
+        self.camera.is_saving = False
+        if self.directory_save_files_checkbox.isChecked():
+            try:
+                os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text()))
+                os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), "data"))
+            except Exception as err:
+                print(err)
+        while self.camera.video_running is False:
+                time.sleep(0.01)
+                pass
+        while self.camera.video_running is True: 
+            print(len(self.camera.frames))
+            if len(self.camera.frames) > 1200:
+                self.memory = self.camera.frames[:1200]
+                self.camera.frames = self.camera.frames[1200:]
+                if self.directory_save_files_checkbox.isChecked():
+                    try:
+                        self.memory = shrink_array(self.memory, self.roi_extent)
+                    except Exception:
+                        pass
+                    self.camera.is_saving = True
+                    np.save(os.path.join(self.directory_cell.text(),self.experiment_name_cell.text(), "data", f"{self.camera.file_index}.npy"), self.memory)
+                    self.memory = None
+                    self.camera.file_index +=1
+                    self.camera.is_saving = False
+            time.sleep(0.01)
         
     def open_live_preview_thread(self):
         self.live_preview_thread = Thread(target=self.start_live)
@@ -718,12 +752,19 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
+        self.memory = []
         try: 
             while self.camera.video_running is False:
+                time.sleep(0.01)
                 pass
-            while self.camera.video_running is True:
-                self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
-        except Exception:
+            while self.camera.video_running is True: 
+                try:
+                    self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+                except Exception:
+                    pass
+                time.sleep(0.001)
+        except Exception as err:
+            print(err)
             pass
 
     def stop_live(self):
@@ -745,7 +786,6 @@ class App(QWidget):
 
     def change_preview_light_channel(self):
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
-        print(self.live_preview_light_index)
 
     def open_daq_generation_thread(self):
         self.daq_generation_thread = Thread(target=self.generate_daq)
@@ -873,12 +913,16 @@ class App(QWidget):
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
+        for button in buttons:
+            button.setEnabled(True)
         if buttons == self.enabled_buttons:
             if self.directory_save_files_checkbox.isChecked():
                 self.directory_choose_button.setEnabled(True)
+            if self.roi_extent is None:
+                self.reset_roi_button.setEnabled(False)
+            else:
+                self.set_roi_button.setEnabled(False)         
             self.stop_button.setDisabled(True)
-        for button in buttons:
-            button.setEnabled(True)
 
     def deactivate_buttons(self, buttons):
         if buttons == self.enabled_buttons:
@@ -1314,6 +1358,7 @@ class App(QWidget):
 
         def onselect_function(eclick, erelease):
             self.roi_extent = self.rect_selector.extents
+            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(self.plot_image.axes, onselect_function,
@@ -1324,6 +1369,7 @@ class App(QWidget):
                                                interactive=True)
 
     def reset_roi(self):
+        plt.figure(self.image_view.figure.number)
         plt.xlim(0, 1024)
         plt.ylim(0, 1024)
         self.roi_extent = None
@@ -1338,6 +1384,7 @@ class App(QWidget):
     def save_roi(self):
         self.activate_buttons(buttons = self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
+        plt.figure(self.image_view.figure.number)
         plt.ion()
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
@@ -1399,6 +1446,7 @@ class App(QWidget):
             #self.directory_save_files_checkbox,
             self.directory_choose_button,
             self.set_roi_button,
+            self.reset_roi_button,
             self.experiment_name,
             self.mouse_id_label,
             self.framerate_label,
