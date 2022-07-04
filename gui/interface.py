@@ -706,10 +706,13 @@ class App(QWidget):
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
-        try:
-            self.experiment.save(self.files_saved, self.roi_extent)
-        except Exception:
-            self.experiment.save(self.directory_save_files_checkbox.isChecked())
+        if self.daq.stop_signal and not self.save_files_after_stop:
+            pass
+        else:
+            try:
+                self.experiment.save(self.files_saved, self.roi_extent)
+            except Exception:
+                self.experiment.save(self.directory_save_files_checkbox.isChecked())
         self.stop()
         
     def open_live_preview_thread(self):
@@ -857,16 +860,17 @@ class App(QWidget):
             pass
 
     def stop_while_running(self):
-        self.stop()
         if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
+        self.stop()
+        
 
     def stop_stimulation_dialog(self):
         button = QMessageBox.question(self, "Save Files", "Do you want to save the current files?")
         if button == QMessageBox.Yes:
-            print("Yes!")
+            self.save_files_after_stop = True
         else:
-            print("No!")
+            self.save_files_after_stop = False
 
 
     def show_buttons(self, buttons):
