@@ -718,7 +718,7 @@ class App(QWidget):
         self.live_save_thread.start()
     
     def live_save(self):
-        self.camera.live_index = 0
+        self.camera.file_index = 0
         try:
             os.mkdir(os.path.join(self.directory_cell.text(), "data"))
         except Exception:
@@ -738,6 +738,7 @@ class App(QWidget):
                         pass
                     np.save(os.path.join(self.directory_cell.text(),self.daq.experiment_name, "data", f"{self.camera.file_index}.npy"), self.memory)
                     self.memory = None
+                    self.camera.file.index +=1
             time.sleep(0.01)
         
     def open_live_preview_thread(self):
