@@ -684,19 +684,25 @@ class App(QWidget):
         tree_item.setText(19, str(dictionary["canal2"]))
 
     def run(self):
-        self.deactivate_buttons(buttons=self.enabled_buttons)
-        #print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
-        self.master_block = self.create_blocks()
-        #print(str(time.time()-self.daq.start_runtime) + "to generate master block")
-        self.plot(item=self.stimulation_tree.invisibleRootItem())
-        #print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
-        self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
-        self.draw(root=True)
-        #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
-        #self.open_signal_preview_thread()
-        self.actualize_daq()
-        self.open_live_preview_thread()
-        self.open_start_experiment_thread()
+        if self.override_check():
+            self.deactivate_buttons(buttons=self.enabled_buttons)
+            self.master_block = self.create_blocks()
+            self.plot(item=self.stimulation_tree.invisibleRootItem())
+            self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
+            self.draw(root=True)
+            self.actualize_daq()
+            self.open_live_preview_thread()
+            self.open_start_experiment_thread()
+
+    def override_check(self):
+        if os.path.isfile(os.path.join(self.directory_cell, f"{self.experiment_name}-signal_data.npy")):
+            button = QMessageBox.question(self, "Files already exist", "Do you want to override the existing files?")
+            if button == QMessageBox.Yes:
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def open_start_experiment_thread(self):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
