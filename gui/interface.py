@@ -330,6 +330,9 @@ class App(QWidget):
 
 
 
+        self.baseline_check = QCheckBox("Baseline")
+        self.baseline_check.stateChanged.connect(self.deactivate_channels)
+        self.canal_window.addWidget(self.baseline_check)
         self.first_signal_first_canal_check = QCheckBox()
         self.first_signal_first_canal_check.stateChanged.connect(self.canals_to_tree)
         self.first_signal_first_canal_check.setText("Canal 1")
@@ -621,6 +624,12 @@ class App(QWidget):
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
+
+    def deactivate_channels(self):
+        if self.baseline_check.isChecked():
+            self.deactivate_buttons([self.first_signal_first_canal_check, self.first_signal_second_canal_check])
+        else:
+            self.activate_buttons([self.first_signal_first_canal_check, self.first_signal_second_canal_check])
     
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
@@ -1121,6 +1130,7 @@ class App(QWidget):
         self.canal_running = False
 
     def canals_to_tree(self, int=0, first=False):
+        self.baseline_check.setEnabled(True)
         if not self.canal_running:
             if first:
                 self.stimulation_tree.currentItem().setText(18, "False")
@@ -1130,10 +1140,12 @@ class App(QWidget):
             else:
                 self.stimulation_tree.currentItem().setText(18, str(self.first_signal_first_canal_check.isChecked()))
                 if self.first_signal_first_canal_check.isChecked():
+                    self.baseline_check.setEnabled(False)
                     self.activate_buttons(self.canal1buttons)
                 else:
                     self.deactivate_buttons(self.canal1buttons)
                 if self.first_signal_second_canal_check.isChecked():
+                    self.baseline_check.setEnabled(False)
                     self.activate_buttons(self.canal2buttons)
                 else:
                     self.deactivate_buttons(self.canal2buttons)

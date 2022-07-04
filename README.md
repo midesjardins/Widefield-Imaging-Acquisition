@@ -28,8 +28,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/othneildrew/Best-README-Template">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+  <a >
+    <img src="gui/logo.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">Widefield Imaging Acquisition</h3>
@@ -94,26 +94,24 @@ You can download the program by following the instructions below. Some indicatio
 
 Frameworks and libraries used:
 
-* [Python](https://nextjs.org/)
-* [PyQt5](https://reactjs.org/)
-* [Numpy](https://vuejs.org/)
-* [Scipy](https://getbootstrap.com)
-* [Matplotlib](https://angular.io/)
-* [PySerial]()
-* [NIDAQMX](https://svelte.dev/)
-* [Pylablib](https://laravel.com)
+* [Python](https://www.python.org/)
+* [PyQt5](https://riverbankcomputing.com/software/pyqt/)
+* [Numpy](https://numpy.org/)
+* [Scipy](https://scipy.org/)
+* [Matplotlib](https://matplotlib.org//)
+* [NIDAQMX](https://nidaqmx-python.readthedocs.io/en/latest/)
+* [Pylablib](https://pylablib.readthedocs.io/en/latest/)
 
 Physical devices used for testing:
-* [DAQ (DAQ)](https://nextjs.org/)
-* [Dalsa 1M60 (Camera)](https://nextjs.org/)
-* [Framegrabber (Framegrabber)](https://nextjs.org/)
+* [USB X SERIES Multifunction DAQ](https://nextjs.org/)
+* [Dalsa 1M60 (Camera)](https://www.adept.net.au/cameras/dalsa/Pantera1M60.shtml)
+* [NI PCIe-1427 (Framegrabber)](https://www.apexwaves.com/pdf/manuals/PCIe-1427/ni-pcie-1427-user-manual.pdf)
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
 
 <!-- GETTING STARTED -->
 ## Getting Started
-
 
 ### Prerequisites
 
@@ -174,10 +172,10 @@ Project Link: [https://github.com/your_username/repo_name](https://github.com/yo
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
+This project was made possible with the help of these people and ressources:
 
-* [Tabler Icons](https://choosealicense.com)
-* [Pylablib Creator](https://choosealicense.com)
+* [Tabler Icons](https://tabler-icons.io/)
+* [Alexey Shkarin](hhttps://github.com/AlexShkarin)
 * [Creator of README]()
 
 
