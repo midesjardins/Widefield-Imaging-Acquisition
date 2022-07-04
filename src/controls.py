@@ -82,7 +82,10 @@ class Camera(Instrument):
         """
         if extents:
             self.frames = shrink_array(self.frames, extents)
-        np.save(os.path.join(directory,self.daq.experiment_name, "data", f"{self.camera.file_index}.npy"), self.frames)
+        if self.is_saving:
+            while self.is_saving:
+                pass
+        np.save(os.path.join(directory, "data", f"{self.file_index}.npy"), self.frames)
 
 
         
