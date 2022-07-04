@@ -12,7 +12,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary
+from src.data_handling import get_dictionary, shrink_array
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -691,6 +691,7 @@ class App(QWidget):
             self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
             self.draw(root=True)
             self.actualize_daq()
+            self.open_live_saving_thread()
             self.open_live_preview_thread()
             self.open_start_experiment_thread()
 
@@ -712,11 +713,47 @@ class App(QWidget):
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
-        try:
-            self.experiment.save(self.files_saved, self.roi_extent)
-        except Exception:
-            self.experiment.save(self.directory_save_files_checkbox.isChecked())
+        if self.daq.stop_signal and not self.save_files_after_stop:
+            pass
+        else:
+            try:
+                self.experiment.save(self.files_saved, self.roi_extent)
+            except Exception:
+                self.experiment.save(self.directory_save_files_checkbox.isChecked())
         self.stop()
+
+    def open_live_saving_thread(self):
+        self.live_save_thread = Thread(target=self.live_save)
+        self.live_save_thread.start()
+    
+    def live_save(self):
+        self.camera.file_index = 0
+        self.camera.is_saving = False
+        if self.directory_save_files_checkbox.isChecked():
+            try:
+                os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text()))
+                os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), "data"))
+            except Exception as err:
+                print(err)
+        while self.camera.video_running is False:
+                time.sleep(0.01)
+                pass
+        while self.camera.video_running is True: 
+            print(len(self.camera.frames))
+            if len(self.camera.frames) > 1200:
+                self.memory = self.camera.frames[:1200]
+                self.camera.frames = self.camera.frames[1200:]
+                if self.directory_save_files_checkbox.isChecked():
+                    try:
+                        self.memory = shrink_array(self.memory, self.roi_extent)
+                    except Exception:
+                        pass
+                    self.camera.is_saving = True
+                    np.save(os.path.join(self.directory_cell.text(),self.experiment_name_cell.text(), "data", f"{self.camera.file_index}.npy"), self.memory)
+                    self.memory = None
+                    self.camera.file_index +=1
+                    self.camera.is_saving = False
+            time.sleep(0.01)
         
     def open_live_preview_thread(self):
         self.live_preview_thread = Thread(target=self.start_live)
@@ -724,6 +761,7 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
+        self.memory = []
         try: 
             while self.camera.video_running is False:
                 time.sleep(0.01)
@@ -863,16 +901,17 @@ class App(QWidget):
             pass
 
     def stop_while_running(self):
-        self.stop()
         if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
+        self.stop()
+        
 
     def stop_stimulation_dialog(self):
         button = QMessageBox.question(self, "Save Files", "Do you want to save the current files?")
         if button == QMessageBox.Yes:
-            print("Yes!")
+            self.save_files_after_stop = True
         else:
-            print("No!")
+            self.save_files_after_stop = False
 
 
     def show_buttons(self, buttons):
