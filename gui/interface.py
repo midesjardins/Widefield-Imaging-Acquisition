@@ -12,7 +12,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary
+from src.data_handling import get_dictionary, shrink_array
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -718,6 +718,11 @@ class App(QWidget):
         self.live_save_thread.start()
     
     def live_save(self):
+        self.camera.live_index = 0
+        try:
+            os.mkdir(os.path.join(self.directory_cell.text(), "data"))
+        except Exception:
+            pass
         while self.camera.video_running is False:
                 time.sleep(0.01)
                 pass
@@ -727,7 +732,12 @@ class App(QWidget):
                 self.memory = self.camera.frames[:1199]
                 self.camera.frames = self.camera.frames[1200:]
                 if self.directory_save_files_checkbox.isChecked():
-                    np.save(f"data\\{time.time()}", self.memory)
+                    try:
+                        self.memory = shrink_array(self.memory, self.roi_extent)
+                    except Exception:
+                        pass
+                    np.save(os.path.join(self.directory_cell.text(),self.daq.experiment_name, "data", f"{self.camera.file_index}.npy"), self.memory)
+                    self.memory = None
             time.sleep(0.01)
         
     def open_live_preview_thread(self):
