@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import json
+import scipy.signal as signal
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames"""
@@ -83,6 +84,33 @@ def extract_from_path(path):
             vector = get_array(os.path.join(path, file_name))
     return (lights, frames, vector)
 
+def frames_acquired_from_camera_signal(camera_signal):
+    dy = np.diff(camera_signal)
+    indices = np.where(abs(dy) > 0)[0][:-1:2]
+    y_values = np.zeros(len(camera_signal))
+    for index in indices:
+        y_values[index:] += 1
+    return y_values
+
+def get_baseline_frame_indices(baseline_indices, frames_acquired):
+    list_of_indices = []
+    for index in baseline_indices:
+        list_of_indices.append([frames_acquired[index[0]]+1,frames_acquired[index[1]]-1])
+    return list_of_indices
+
+def map_activation(frames, baseline):
+    return frames - baseline*len(frames)
+
+x = np.linspace(0, 10, 1000)
+y = signal.square(10*np.pi*x,duty=0.3).clip(min=0)
+
+baseline = [[250, 750]]
+new_y = frames_acquired_from_camera_signal(y)
+baseline_indices = get_baseline_frame_indices(baseline, new_y)
+print(baseline_indices)
+plt.plot(x, y)
+plt.plot(x, new_y)
+plt.show()
 #lights = ["ir", "red", "green", "blue"]
 #frames = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]],[[19,20,21],[21,22,23],[24,25,26]]])
 #reduced_stack = np.array([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])
