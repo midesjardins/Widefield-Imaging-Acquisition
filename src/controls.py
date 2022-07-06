@@ -11,7 +11,7 @@ from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 class Instrument:
     def __init__(self, port, name):
         """A class used to represent a analog or digital instrument controlled by a DAQ
@@ -33,6 +33,7 @@ class Camera(Instrument):
         """
         super().__init__(port, name)
         self.frames = []
+        self.baseline_frames = None
         self.frames_read = 0
         self.video_running = False
         try:
@@ -40,7 +41,7 @@ class Camera(Instrument):
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
-            print(err)
+            #print(err)
             pass
 
     def initialize(self, daq):
@@ -71,12 +72,17 @@ class Camera(Instrument):
                 self.frames_read += len(new_frames)
                 self.frames += new_frames
                 self.video_running = True
-                if self.camera.adding_frames:
-                    self.camera.adding_frames += new_frames
-                if self.camera.completed_baseline:
-                    self.baseline_frames += map_activation(new_frames, self.average_baseline)
+                if self.adding_frames:
+                    self.baseline_data += new_frames
+                if self.completed_baseline:
+                    if self.baseline_frames is None:
+                        print(np.array(new_frames).shape, self.average_baseline.shape)
+                        self.baseline_frames = map_activation(new_frames, self.average_baseline)
+                    else:
+                        self.baseline_frames = np.concatenate((self.baseline_frames, map_activation(new_frames, self.average_baseline)))
             except Exception as err:
                 print(err)
+                pass
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
     

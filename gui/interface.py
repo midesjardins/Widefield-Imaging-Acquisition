@@ -12,7 +12,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary, shrink_array, frames_acquired_from_camera_signal, get_baseline_frame_indices, map_activation
+from src.data_handling import get_dictionary, shrink_array, frames_acquired_from_camera_signal, get_baseline_frame_indices, map_activation, average_baseline
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -77,6 +77,7 @@ class App(QWidget):
         self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
         self.baseline_values = []
@@ -728,20 +729,29 @@ class App(QWidget):
         self.baseline_check_thread.start()
 
     def check_baseline(self):
-        self.camera.adding_frames = True
+        self.camera.baseline_data = []
+        self.camera.adding_frames = False
         self.camera.completed_baseline = False
+        while self.daq.camera_signal is None:
+            pass
         frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
         baseline_indices = get_baseline_frame_indices(self.baseline_values, frames_acquired)
         for baseline_pair in baseline_indices:
-            while True:
-                if not self.camera.adding_frames and self.camera.frames_read >= baseline_pair[0]:
-                    self.camera.adding_frames = True
-                elif self.camera.adding_frames and self.camera.frames_read >= baseline_pair[1]:
-                    self.camera.adding_frames = False
-                    self.camera.completed_baseline = True
-                    self.camera.average_baseline = np.mean(self.camera.baseline_frames)
-                    self.camera.baseline_frames = []
-                    break
+            while not self.daq.stop_signal:
+                try:
+                    if not self.camera.adding_frames and self.camera.frames_read >= baseline_pair[0]:
+                        self.camera.adding_frames = True
+                    elif self.camera.adding_frames and self.camera.frames_read >= baseline_pair[1]:
+                        print("about to average")
+                        self.camera.average_baseline = average_baseline(self.camera.baseline_data)
+                        self.camera.adding_frames = False
+                        self.camera.baseline_completed = True
+                        self.camera.baseline_data = []
+                        break
+                except Exception as err:
+                    print(err)
+                    pass
+                time.sleep(0.01)
 
     def open_start_experiment_thread(self):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
@@ -777,7 +787,7 @@ class App(QWidget):
                 time.sleep(0.01)
                 pass
         while self.camera.video_running is True: 
-            print(len(self.camera.frames))
+            #print(len(self.camera.frames))
             if len(self.camera.frames) > 1200:
                 self.memory = self.camera.frames[:1200]
                 self.camera.frames = self.camera.frames[1200:]
@@ -810,8 +820,10 @@ class App(QWidget):
                     if not self.camera.baseline_completed:
                         self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
                     else:
+                        print(self.camera.baseline_frames)
                         self.plot_image.set(array=self.camera.baseline_frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
-                except Exception:
+                except Exception as err:
+                    print(err)
                     pass
                 time.sleep(0.001)
         except Exception as err:
@@ -937,6 +949,7 @@ class App(QWidget):
     def stop(self):
         self.stop_live()
         self.activate_buttons(buttons = self.enabled_buttons)
+        self.deactivate_buttons([self.add_child_branch_button, self.add_brother_branch_button])
         try:
             self.daq.stop_signal = True
         except Exception:
@@ -1050,6 +1063,7 @@ class App(QWidget):
 
 
     def actualize_window(self):
+        self.activate_buttons([self.add_child_branch_button, self.add_brother_branch_button])
         if self.stimulation_tree.currentItem():
             self.stimulation_tree_switch_window.setCurrentIndex(0)
         else:
