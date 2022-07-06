@@ -654,6 +654,13 @@ class App(QWidget):
             print(err)
 
     def recursive_print(self, block, parent = None):
+        """
+        Recursive function to print the blocks in the tree
+
+        Args:
+            block (_type_): The block to print
+            parent (_type_, optional): The parent of the block to print. Defaults to None.
+        """
         if block["type"] == "Block":
             if block["name"] == "root":
                 tree_item = self.stimulation_tree.invisibleRootItem()
@@ -955,6 +962,7 @@ class App(QWidget):
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(folder)
+
 
     def enable_directory(self):
         self.files_saved = self.directory_save_files_checkbox.isChecked()

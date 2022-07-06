@@ -6,7 +6,7 @@ from nidaqmx.constants import AcquisitionType
 import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import digital_square
-from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
+from src.data_handling import extend_light_signal, shrink_array, find_rising_indices, create_complete_stack, reduce_stack
 from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
@@ -125,6 +125,7 @@ class DAQ:
         self.generate_stim_wave()
         self.generate_light_wave()
         self.generate_camera_wave()
+        self.extend_light_wave()
         self.write_waveforms()
     
     def set_trigger(self, port):
@@ -160,6 +161,9 @@ class DAQ:
         except ValueError:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+
+    def extend_light_wave(self):
+        self.stacked_lights = extend_light_signal(self.stacked_lights, self.camera_signal)
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""

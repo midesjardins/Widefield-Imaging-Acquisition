@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import json
+from signal_generator import digital_square
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames"""
@@ -82,6 +83,35 @@ def extract_from_path(path):
         if "-signal_data" in file_name:
             vector = get_array(os.path.join(path, file_name))
     return (lights, frames, vector)
+
+
+def extend_light_signal(lights, camera):
+    camera_dy = np.diff(camera)
+    camera_indices = np.where(abs(camera_dy) > 0)[0]
+    difference = camera_indices[1] - camera_indices[0]
+    extend = round(0.4*difference)
+    signal_list = []
+    for signal in lights:
+        dy = np.diff(signal)
+        differential_indices = np.where(abs(dy) > 0)[0]
+        new_signal = np.copy(signal)
+        for index in differential_indices:
+            new_signal[index-extend:index+extend] = True
+        signal_list.append(new_signal)
+    return np.stack(signal_list)
+
+"""x = np.linspace(0,10,1000)
+red = digital_square(x, 1, 0.2, 0)
+green = digital_square(x, 1, 0.2, 50)
+camera  = np.max(np.vstack([red, green]), axis=0)
+plt.plot(x, red)
+plt.plot(x, green)
+plt.plot(x, camera, alpha=0.5)
+signals = extend_light_signal([red, green], camera)
+for signal in signals:
+    plt.plot(x, signal)
+plt.show()"""
+
 
 #lights = ["ir", "red", "green", "blue"]
 #frames = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]],[[19,20,21],[21,22,23],[24,25,26]]])
