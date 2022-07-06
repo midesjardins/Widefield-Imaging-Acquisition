@@ -5,14 +5,14 @@ import os
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QLocale
 import numpy as np
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QGridLayout, QLabel, QHBoxLayout, QLineEdit, QCheckBox, QPushButton, QStackedLayout, QTreeWidget, QComboBox, QMessageBox, QFileDialog, QTreeWidgetItem, QApplication, QAction, QMenuBar, QSlider
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector 
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary
+from src.data_handling import get_dictionary, shrink_array
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -78,6 +78,7 @@ class App(QWidget):
         self.elapsed_time = 0
         self.files_saved = False
         self.roi_extent = None
+        self.max_exposure = 4096
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
@@ -236,6 +237,12 @@ class App(QWidget):
         self.roi_buttons.addWidget(self.roi_layout2_container)
 
         self.image_settings_main_window.addLayout(self.roi_buttons)
+
+        self.exposure_slider = QSlider(Qt.Horizontal, self)
+        self.exposure_slider.setRange(0, 4096)
+        self.exposure_slider.setValue(4096)
+        self.exposure_slider.valueChanged.connect(self.adjust_exposure)
+        self.image_settings_main_window.addWidget(self.exposure_slider)
         self.image_settings_main_window.addStretch()
 
         self.activate_live_preview_button = QPushButton()
@@ -621,6 +628,10 @@ class App(QWidget):
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
+
+    def adjust_exposure(self):
+        self.max_exposure = self.exposure_slider.value()
+        print(self.max_exposure)
     
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
@@ -684,19 +695,26 @@ class App(QWidget):
         tree_item.setText(19, str(dictionary["canal2"]))
 
     def run(self):
-        self.deactivate_buttons(buttons=self.enabled_buttons)
-        #print(str(time.time()-self.daq.start_runtime) + "to deactivate buttons")
-        self.master_block = self.create_blocks()
-        #print(str(time.time()-self.daq.start_runtime) + "to generate master block")
-        self.plot(item=self.stimulation_tree.invisibleRootItem())
-        #print(str(time.time()-self.daq.start_runtime) + "to plot the signal")
-        self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
-        self.draw(root=True)
-        #print(str(time.time()-self.daq.start_runtime) + "to draw the signal")
-        #self.open_signal_preview_thread()
-        self.actualize_daq()
-        self.open_live_preview_thread()
-        self.open_start_experiment_thread()
+        if self.override_check():
+            self.deactivate_buttons(buttons=self.enabled_buttons)
+            self.master_block = self.create_blocks()
+            self.plot(item=self.stimulation_tree.invisibleRootItem())
+            self.root_time, self.root_signal = self.plot_x_values, [self.plot_stim1_values, self.plot_stim2_values]
+            self.draw(root=True)
+            self.actualize_daq()
+            self.open_live_saving_thread()
+            self.open_live_preview_thread()
+            self.open_start_experiment_thread()
+
+    def override_check(self):
+        if os.path.isfile(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), f"{self.experiment_name_cell.text()}-signal_data.npy")):
+            button = QMessageBox.question(self, "Files already exist", "Files already exist. \n Do you want to override the existing files?")
+            if button == QMessageBox.Yes:
+                return True
+            else:
+                return False
+        else:
+            return True
 
     def open_start_experiment_thread(self):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
@@ -706,11 +724,47 @@ class App(QWidget):
         self.experiment = Experiment(self.master_block, int(self.framerate_cell.text()), int(self.exposure_cell.text(
         )), self.mouse_id_cell.text(), self.directory_cell.text(), self.daq, name=self.experiment_name_cell.text())
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
-        try:
-            self.experiment.save(self.files_saved, self.roi_extent)
-        except Exception:
-            self.experiment.save(self.directory_save_files_checkbox.isChecked())
+        if self.daq.stop_signal and not self.save_files_after_stop:
+            pass
+        else:
+            try:
+                self.experiment.save(self.files_saved, self.roi_extent)
+            except Exception:
+                self.experiment.save(self.directory_save_files_checkbox.isChecked())
         self.stop()
+
+    def open_live_saving_thread(self):
+        self.live_save_thread = Thread(target=self.live_save)
+        self.live_save_thread.start()
+    
+    def live_save(self):
+        self.camera.file_index = 0
+        self.camera.is_saving = False
+        if self.directory_save_files_checkbox.isChecked():
+            try:
+                os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text()))
+                os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), "data"))
+            except Exception as err:
+                print(err)
+        while self.camera.video_running is False:
+                time.sleep(0.01)
+                pass
+        while self.camera.video_running is True: 
+            print(len(self.camera.frames))
+            if len(self.camera.frames) > 1200:
+                self.memory = self.camera.frames[:1200]
+                self.camera.frames = self.camera.frames[1200:]
+                if self.directory_save_files_checkbox.isChecked():
+                    try:
+                        self.memory = shrink_array(self.memory, self.roi_extent)
+                    except Exception:
+                        pass
+                    self.camera.is_saving = True
+                    np.save(os.path.join(self.directory_cell.text(),self.experiment_name_cell.text(), "data", f"{self.camera.file_index}.npy"), self.memory)
+                    self.memory = None
+                    self.camera.file_index +=1
+                    self.camera.is_saving = False
+            time.sleep(0.01)
         
     def open_live_preview_thread(self):
         self.live_preview_thread = Thread(target=self.start_live)
@@ -718,13 +772,14 @@ class App(QWidget):
 
     def start_live(self):
         plt.ion()
+        self.memory = []
         try: 
             while self.camera.video_running is False:
                 time.sleep(0.01)
                 pass
             while self.camera.video_running is True: 
                 try:
-                    self.plot_image.set_array(self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1])
+                    self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
                 except Exception:
                     pass
                 time.sleep(0.001)
@@ -857,16 +912,17 @@ class App(QWidget):
             pass
 
     def stop_while_running(self):
-        self.stop()
         if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
+        self.stop()
+        
 
     def stop_stimulation_dialog(self):
         button = QMessageBox.question(self, "Save Files", "Do you want to save the current files?")
         if button == QMessageBox.Yes:
-            print("Yes!")
+            self.save_files_after_stop = True
         else:
-            print("No!")
+            self.save_files_after_stop = False
 
 
     def show_buttons(self, buttons):
