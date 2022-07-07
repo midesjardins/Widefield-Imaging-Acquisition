@@ -707,7 +707,7 @@ class App(QWidget):
             self.open_start_experiment_thread()
 
     def override_check(self):
-        if os.path.isfile(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), f"{self.experiment_name_cell.text()}-signal_data.npy")):
+        if os.path.isfile(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), f"{self.experiment_name_cell.text()}-light_signal.npy")):
             button = QMessageBox.question(self, "Files already exist", "Files already exist. \n Do you want to override the existing files?")
             if button == QMessageBox.Yes:
                 return True
