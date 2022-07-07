@@ -107,8 +107,8 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
         list_of_indices.append([frames_acquired[index[0]],frames_acquired[index[1]]])
     return list_of_indices
 
-def map_activation(frame, baseline):
-    return frame - baseline
+def map_activation(frames, baseline):
+    return np.array(frames) - np.array([baseline])
 """
 x = np.linspace(0, 10, 1000)
 y = signal.square(10*np.pi*x,duty=0.3).clip(min=0)
