@@ -74,12 +74,8 @@ class Camera(Instrument):
                 self.video_running = True
                 if self.adding_frames:
                     self.baseline_data += new_frames
-                if self.completed_baseline:
-                    if self.baseline_frames is None:
-                        print(np.array(new_frames).shape, self.average_baseline.shape)
-                        self.baseline_frames = map_activation(new_frames, self.average_baseline)
-                    else:
-                        self.baseline_frames = np.concatenate((self.baseline_frames, map_activation(new_frames, self.average_baseline)))
+                elif self.completed_baseline:
+                    self.baseline_frames += new_frames
             except Exception as err:
                 print(err)
                 pass

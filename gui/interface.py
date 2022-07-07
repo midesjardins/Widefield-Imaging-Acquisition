@@ -820,12 +820,12 @@ class App(QWidget):
                     if not self.camera.baseline_completed:
                         self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
                     else:
-                        print(self.camera.baseline_frames)
-                        self.plot_image.set(array=self.camera.baseline_frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
+                        activation_map = self.camera.baseline_frames[self.live_preview_light_index::len(self.daq.lights)][-1] -  self.average_baseline
+                        self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
                 except Exception as err:
                     print(err)
                     pass
-                time.sleep(0.001)
+                time.sleep(0.01)
         except Exception as err:
             print(err)
             pass
