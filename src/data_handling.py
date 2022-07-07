@@ -66,7 +66,6 @@ def extract_from_path(path):
             lights = get_dictionary(os.path.join(path, file_name))["Lights"]
     return (lights, frames)
 
-
 def separate_vectors(lights, vector):
     separated_vectors = []
     for index in range(len(lights)):
@@ -86,7 +85,7 @@ def extract_from_path(path):
 
 def frames_acquired_from_camera_signal(camera_signal):
     dy = np.diff(camera_signal)
-    indices = np.where(abs(dy) > 0)[0][::2]
+    indices = np.where(abs(dy) > 0)[0][1::2]
     y_values = np.zeros(len(camera_signal))
     try:
         for index in indices:
@@ -109,7 +108,7 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
     return list_of_indices
 
 def map_activation(frames, baseline):
-    return np.array(frames) - np.array([baseline])*len(frames)
+    return np.array(frames) - np.array([baseline])
 """
 x = np.linspace(0, 10, 1000)
 y = signal.square(10*np.pi*x,duty=0.3).clip(min=0)
