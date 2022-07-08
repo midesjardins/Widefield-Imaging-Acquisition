@@ -191,9 +191,12 @@ class App(QWidget):
         self.preview_light_combo.setEnabled(False)
         self.preview_light_combo.currentIndexChanged.connect(self.change_preview_light_channel)
         self.light_channel_layout.addWidget(self.preview_light_combo)
+        self.activation_map_checkbox = QCheckBox("Show Activation Map")
+
 
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         self.image_settings_main_window.addLayout(self.light_channel_layout)
+        self.image_settings_main_window.addWidget(self.activation_map_checkbox)
 
         self.roi_buttons = QStackedLayout()
 
@@ -820,18 +823,19 @@ class App(QWidget):
                 pass
             while self.camera.video_running is True: 
                 try:
-                    if not self.camera.baseline_completed:
-                        self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
+                    if not self.camera.baseline_completed or not self.activation_map_checkbox.isChecked():
+                        self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure), cmap="binary_r")
                     else:
                         start_index = (self.camera.baseline_read_list[0] + self.live_preview_light_index)%len(self.daq.lights)
-                        activation_map = self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] -  self.camera.average_baseline[self.live_preview_light_index]
-                        self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
+                        #activation_map = self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] -  self.camera.average_baseline[self.live_preview_light_index]
+                        #self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
+                        activation_map = (self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] - self.camera.average_baseline[self.live_preview_light_index])/self.camera.average_baseline[self.live_preview_light_index]
+                        self.plot_image.set(array=activation_map, clim=(-10,10), cmap="seismic")
                 except Exception as err:
+                    print(err)
                     pass
                 time.sleep(0.01)
         except Exception as err:
-            print("big err")
-            print(err)
             pass
 
     def stop_live(self):
@@ -882,7 +886,6 @@ class App(QWidget):
             self.camera.frames = []
             self.daq.stop_signal = False
         except Exception as err:
-            print(err)
             pass
 
         # TODO divide by 1000

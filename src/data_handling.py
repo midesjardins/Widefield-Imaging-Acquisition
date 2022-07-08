@@ -105,6 +105,8 @@ def average_baseline(frame_list, light_count=1, start_index=0):
     return baselines
 
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
+    print(baseline_indices)
+    print(len(frames_acquired))
     list_of_indices = []
     for index in baseline_indices:
         list_of_indices.append([frames_acquired[index[0]],frames_acquired[index[1]]])
