@@ -33,7 +33,7 @@ class Camera(Instrument):
         """
         super().__init__(port, name)
         self.frames = []
-        self.baseline_frames = None
+        self.baseline_frames = []
         self.frames_read = 0
         self.video_running = False
         try:
@@ -74,9 +74,10 @@ class Camera(Instrument):
                 self.video_running = True
                 if self.adding_frames:
                     self.baseline_data += new_frames
-                elif self.completed_baseline:
+                elif self.baseline_completed:
                     self.baseline_frames += new_frames
             except Exception as err:
+                print("cam err")
                 print(err)
                 pass
         self.frames += self.cam.read_multiple_images()
