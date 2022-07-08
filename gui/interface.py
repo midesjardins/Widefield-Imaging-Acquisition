@@ -12,7 +12,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary, shrink_array, frames_acquired_from_camera_signal, get_baseline_frame_indices, map_activation, average_baseline
+from src.data_handling import get_dictionary, shrink_array, frames_acquired_from_camera_signal, get_baseline_frame_indices, map_activation, average_baseline, find_similar_frame
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -736,6 +736,7 @@ class App(QWidget):
             pass
         frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
         baseline_indices = get_baseline_frame_indices(self.baseline_values, frames_acquired)
+        print(baseline_indices)
         for baseline_pair in baseline_indices:
             while not self.daq.stop_signal:
                 try:
@@ -743,13 +744,15 @@ class App(QWidget):
                         self.camera.adding_frames = True
                     elif self.camera.adding_frames and self.camera.frames_read >= baseline_pair[1]:
                         print("about to average")
-                        self.camera.average_baseline = average_baseline(self.camera.baseline_data)
+                        self.camera.baseline_read_list = []
+                        self.camera.average_baseline = average_baseline(self.camera.baseline_data, len(self.daq.lights), self.camera.frames_read_list[0]%len(self.daq.lights))
                         self.camera.adding_frames = False
+                        self.camera.baseline_frames = []
                         self.camera.baseline_completed = True
-                        self.camera.baseline_data = []
+                        self.camera.frames_read_list = []  
                         break
                 except Exception as err:
-                    #print(err)
+                    print(err)
                     pass
                 time.sleep(0.01)
 
@@ -820,12 +823,10 @@ class App(QWidget):
                     if not self.camera.baseline_completed:
                         self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
                     else:
-                        activation_map = self.camera.baseline_frames[self.live_preview_light_index::len(self.daq.lights)][-1] -  self.camera.average_baseline
-                        #self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
-                        self.plot_image.set(array=activation_map)
+                        start_index = (self.camera.baseline_read_list[0] + self.live_preview_light_index)%len(self.daq.lights)
+                        activation_map = self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] -  self.camera.average_baseline[self.live_preview_light_index]
+                        self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
                 except Exception as err:
-                    print("small err")
-                    print(err)
                     pass
                 time.sleep(0.01)
         except Exception as err:
@@ -1059,6 +1060,7 @@ class App(QWidget):
 
 
     def style_tree_item(self, item):
+        item.setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
         item.setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
         item.setIcon(0, QIcon(os.path.join("gui","icons","wave-square.png")))

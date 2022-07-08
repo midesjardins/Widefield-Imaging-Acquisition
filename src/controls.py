@@ -53,6 +53,8 @@ class Camera(Instrument):
         self.daq = daq
         self.daq.stop_signal = False
         self.frames = []
+        self.frames_read_list = []
+        self.baseline_read_list = []
         self.frames_read = 0
 
     def delete_frames(self):
@@ -69,13 +71,15 @@ class Camera(Instrument):
             try:
                 self.cam.wait_for_frame(timeout=0.1)
                 new_frames = self.cam.read_multiple_images()
-                self.frames_read += len(new_frames)
                 self.frames += new_frames
                 self.video_running = True
                 if self.adding_frames:
                     self.baseline_data += new_frames
-                elif self.baseline_completed:
+                    self.frames_read_list.append(self.frames_read)
+                if self.baseline_completed:
                     self.baseline_frames += new_frames
+                    self.baseline_read_list.append(self.frames_read)
+                self.frames_read += len(new_frames)
             except Exception as err:
                 print("cam err")
                 print(err)

@@ -94,12 +94,15 @@ def frames_acquired_from_camera_signal(camera_signal):
         pass
     return y_values
 
-def average_baseline(frame_list):
+def average_baseline(frame_list, light_count=1, start_index=0):
     try:
-        return np.mean(np.array(frame_list), axis=0)
+        baselines = []
+        for light_index in range(light_count):
+            baselines.append(np.mean(np.array(frame_list[(light_count-start_index)%light_count+light_index::light_count]), axis=0))
     except Exception as err:
-        print("average baseline err")
+        print("Baseline Error")
         print(err)
+    return baselines
 
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
     list_of_indices = []
@@ -109,6 +112,12 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
 
 def map_activation(frames, baseline):
     return np.array(frames) - np.array([baseline])
+
+def find_similar_frame(frame, baselines):
+    means = []
+    for baseline in self.camera.average_baseline:
+        means.append(np.mean(abs(frame-baseline)))
+    return means
 """
 x = np.linspace(0, 10, 1000)
 y = signal.square(10*np.pi*x,duty=0.3).clip(min=0)
