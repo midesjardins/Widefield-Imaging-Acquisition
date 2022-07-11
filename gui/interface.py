@@ -30,6 +30,7 @@ class PlotWindow(QDialog):
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
+        self.vertical_lines = []
 
     def get_data(self, time_values, pulses, jitter, width=0.2):
         y_values = random_square(time_values, pulses, width, jitter)
@@ -40,11 +41,14 @@ class PlotWindow(QDialog):
         plt.ion()
         self.axis[0].clear()
         self.axis[1].clear()
+        self.vertical_lines = []
 
     def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
         plt.figure(self.figure.number)
         plt.ion()
         self.axis[index].plot(x, y)
+        if root:
+            self.vertical_lines.append(self.axis[index].axvline(x=1, color="red"))
        # plt.plot(x,y, color=color)
 
 
