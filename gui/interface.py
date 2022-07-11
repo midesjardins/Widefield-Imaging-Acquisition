@@ -342,6 +342,9 @@ class App(QWidget):
 
 
 
+        self.baseline_check = QCheckBox("Baseline")
+        self.baseline_check.stateChanged.connect(self.deactivate_channels)
+        self.canal_window.addWidget(self.baseline_check)
         self.first_signal_first_canal_check = QCheckBox()
         self.first_signal_first_canal_check.stateChanged.connect(self.canals_to_tree)
         self.first_signal_first_canal_check.setText("Canal 1")
@@ -639,9 +642,15 @@ class App(QWidget):
         self.initialize_buttons()
         self.show()
 
+
+    def deactivate_channels(self):
+        if self.baseline_check.isChecked():
+            self.deactivate_buttons([self.first_signal_first_canal_check, self.first_signal_second_canal_check])
+        else:
+            self.activate_buttons([self.first_signal_first_canal_check, self.first_signal_second_canal_check])
+
     def adjust_exposure(self):
         self.max_exposure = self.exposure_slider.value()
-        print(self.max_exposure)
     
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
@@ -1244,6 +1253,7 @@ class App(QWidget):
         self.canal_running = False
 
     def canals_to_tree(self, int=0, first=False):
+        self.baseline_check.setEnabled(True)
         if not self.canal_running:
             if first:
                 self.stimulation_tree.currentItem().setText(17, "False")
@@ -1259,10 +1269,12 @@ class App(QWidget):
                     self.activate_buttons(self.canal1buttons+[self.first_signal_first_canal_check])
                     self.activate_buttons(self.canal2buttons+[self.first_signal_second_canal_check])
                 if self.first_signal_first_canal_check.isChecked():
+                    self.baseline_check.setEnabled(False)
                     self.activate_buttons(self.canal1buttons)
                 else:
                     self.deactivate_buttons(self.canal1buttons)
                 if self.first_signal_second_canal_check.isChecked():
+                    self.baseline_check.setEnabled(False)
                     self.activate_buttons(self.canal2buttons)
                 else:
                     self.deactivate_buttons(self.canal2buttons)
