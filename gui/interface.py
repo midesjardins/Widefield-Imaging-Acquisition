@@ -891,7 +891,6 @@ class App(QWidget):
     def get_tree_item_attributes(self, item, canal=1):
         if canal ==1:
             sign_type = item.text(4)
-            duration = float(item.text(6))
             try:
                 pulses = int(item.text(5))
                 jitter = float(item.text(7))
@@ -901,13 +900,13 @@ class App(QWidget):
             try:
                 frequency = float(item.text(9))
                 duty = float(item.text(10))/100
+                heigth = float(item.text(21))
             except Exception:
-                frequency, duty = 0, 0
-            return [sign_type, pulses, jitter, width, frequency, duty]
+                frequency, duty, heigth = 0, 0, 0
+            return [sign_type, pulses, jitter, width, frequency, duty, heigth]
 
         elif canal ==2:
             sign_type = item.text(11)
-            duration = float(item.text(6))
             try:
                 pulses = int(item.text(12))
                 jitter = float(item.text(13))
@@ -917,9 +916,10 @@ class App(QWidget):
             try:
                 frequency = float(item.text(15))
                 duty = float(item.text(16))/100
+                heigth = float(item.text(22))
             except Exception:
-                frequency, duty = 0, 0
-            return [sign_type, pulses, jitter, width, frequency, duty]
+                frequency, duty, heigth = 0, 0, 0
+            return [sign_type, pulses, jitter, width, frequency, duty, heigth]
 
     def stop(self):
         self.stop_live()
@@ -1272,7 +1272,7 @@ class App(QWidget):
             valid = False
 
         if item.text(18) == "True":
-            if item.text(4) == "square" and item.text(9) != "" and item.text(10) != "":
+            if item.text(4) == "square" and item.text(9) != "" and item.text(10) != "" and item.text(21) != "":
                 pass
             elif item.text(4) == "random-square" and item.text(5) != "" and item.text(7) != "" and item.text(8) != "":
                 pass
@@ -1280,7 +1280,7 @@ class App(QWidget):
                 valid = False
 
         if item.text(19) == "True":
-            if item.text(11) == "square" and item.text(15) != "" and item.text(16) != "":
+            if item.text(11) == "square" and item.text(15) != "" and item.text(16) != "" and item.text(22) != "":
                 pass
             elif item.text(11) == "random-square" and item.text(12) != "" and item.text(13) != "" and item.text(4) != "":
                 pass
@@ -1349,15 +1349,15 @@ class App(QWidget):
                 duration = float(item.text(6))
                 time_values = np.linspace(0, duration, int(round(duration*3000)))
                 if item.text(18) == "True":
-                    sign_type, pulses, jitter, width, frequency, duty = self.get_tree_item_attributes(item, canal=1)
-                    data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty)
+                    sign_type, pulses, jitter, width, frequency, duty, heigth = self.get_tree_item_attributes(item, canal=1)
+                    data = make_signal(time_values, sign_type, width, pulses, jitter, frequency, duty, heigth)
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, data))
                 else:
                     self.plot_stim1_values = np.concatenate((self.plot_stim1_values, np.zeros(len(time_values))))
 
                 if item.text(19) == "True":
-                    sign_type2, pulses2, jitter2, width2, frequency2, duty2 = self.get_tree_item_attributes(item, canal=2)
-                    data2 = make_signal(time_values, sign_type2, width2, pulses2, jitter2, frequency2, duty2)
+                    sign_type2, pulses2, jitter2, width2, frequency2, duty2, heigth2 = self.get_tree_item_attributes(item, canal=2)
+                    data2 = make_signal(time_values, sign_type2, width2, pulses2, jitter2, frequency2, duty2, heigth2)
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data2))
                 else:
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
