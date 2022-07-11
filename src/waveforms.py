@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.signal import square
 
-def square_signal(time, frequency, duty, delay=0):
+def square_signal(time, frequency, duty, heigth, delay=0):
     """Generate a square signal
 
     Args:
@@ -13,7 +13,7 @@ def square_signal(time, frequency, duty, delay=0):
     Returns:
         array of float: The generated signal
     """
-    pulses = 5*np.array(square(2 * np.pi * frequency * time, duty)).clip(min=0)
+    pulses = heigth*np.array(square(2 * np.pi * frequency * time, duty)).clip(min=0)
     if delay == 0:
         return pulses
     return np.concatenate((np.zeros(delay), pulses))[:-delay]
@@ -56,7 +56,7 @@ def random_square(time, pulses, width, jitter):
         pulse_signal[(time>value-width/2) & (time<value+width/2)] = 5
     return pulse_signal
 
-def make_signal(time, pulse_type, width, pulses, jitter, frequency, duty):
+def make_signal(time, pulse_type, width, pulses, jitter, frequency, duty, heigth):
     """" Generate a signal based on the given pulse type
 
     Args:
@@ -72,6 +72,6 @@ def make_signal(time, pulse_type, width, pulses, jitter, frequency, duty):
         array of float: The generated signal
     """
     if pulse_type == 'square':
-        return square_signal(time, frequency, duty)
+        return square_signal(time, frequency, duty, heigth)
     if pulse_type == 'random-square':
         return random_square(time, pulses, width, jitter)

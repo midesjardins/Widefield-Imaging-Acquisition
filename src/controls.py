@@ -4,9 +4,9 @@ import sys
 import os
 from nidaqmx.constants import AcquisitionType
 import numpy as np
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.signal_generator import digital_square
+#sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.data_handling import extend_light_signal, shrink_array, find_rising_indices, create_complete_stack, reduce_stack, map_activation
+from src.waveforms import digital_square
 from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
