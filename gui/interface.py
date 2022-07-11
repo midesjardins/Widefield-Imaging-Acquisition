@@ -277,12 +277,12 @@ class App(QWidget):
         self.stimulation_tree_window = QVBoxLayout()
         self.stimulation_tree = QTreeWidget()
         self.stimulation_tree.setHeaderLabels(["0 Name", "1 Iterations", "2 Delay", "3 Jitter", "4 Type", "5 Pulses",
-                                              "6 Duration", "7 Jitter", "8 Width", "9 Frequency", "10 Duty", "11 Type2", "12 Pulses 2", "13 Jitter 2", "14 Width 2", "15 Frequency 2", "16 Duty 2", "17 Blank", "18 Canal 1", "19 Canal 2", "20 Valid"])
+                                              "6 Duration", "7 Jitter", "8 Width", "9 Frequency", "10 Duty", "11 Type2", "12 Pulses 2", "13 Jitter 2", "14 Width 2", "15 Frequency 2", "16 Duty 2", "17 Blank", "18 Canal 1", "19 Canal 2", "20 Valid", "21 Heigth", "22 Heigth 2"])
         for i in range(19):
-            self.stimulation_tree.header().hideSection(i+1)
+            #self.stimulation_tree.header().hideSection(i+1)
             pass
-        self.stimulation_tree.setHeaderHidden(True)
-        self.stimulation_tree.setColumnWidth(0, 330)
+        #self.stimulation_tree.setHeaderHidden(True)
+        #self.stimulation_tree.setColumnWidth(0, 330)
         self.stimulation_tree.currentItemChanged.connect(self.actualize_window)
         self.stimulation_tree_window.addWidget(self.stimulation_tree)
 
@@ -492,6 +492,22 @@ class App(QWidget):
         self.second_signal_type_window2.setContentsMargins(0, 0, 0, 0)
         self.second_signal_type_container2.setLayout(self.second_signal_type_window2)
 
+        self.second_signal_heigth_window = QHBoxLayout()
+        self.second_signal_type_heigth_label = QLabel("Heigth (V)")
+        self.second_signal_heigth_window.addWidget(self.second_signal_type_heigth_label)
+        self.second_signal_type_heigth_cell = QLineEdit()
+        self.second_signal_type_heigth_cell.setValidator(self.onlyFloat)
+        self.second_signal_type_heigth_cell.textEdited.connect(self.signal_to_tree)
+        self.second_signal_heigth_window.addWidget(self.second_signal_type_heigth_cell)
+
+        self.second_signal_heigth_window2 = QHBoxLayout()
+        self.second_signal_type_heigth_label2 = QLabel("Heigth (V)")
+        self.second_signal_heigth_window2.addWidget(self.second_signal_type_heigth_label2)
+        self.second_signal_type_heigth_cell2 = QLineEdit()
+        self.second_signal_type_heigth_cell2.setValidator(self.onlyFloat)
+        self.second_signal_type_heigth_cell2.textEdited.connect(self.signal_to_tree)
+        self.second_signal_heigth_window2.addWidget(self.second_signal_type_heigth_cell2)
+
         self.second_signal_frequency_window = QHBoxLayout()
         self.second_signal_type_frequency_label = QLabel("Frequency (Hz)")
         self.second_signal_frequency_window.addWidget(self.second_signal_type_frequency_label)
@@ -524,9 +540,11 @@ class App(QWidget):
         self.second_signal_type_duty_cell2.textEdited.connect(self.signal_to_tree)
         self.second_signal_duty_window2.addWidget(self.second_signal_type_duty_cell2)
 
+        self.second_signal_type_window.addLayout(self.second_signal_heigth_window)
         self.second_signal_type_window.addLayout(self.second_signal_frequency_window)
         self.second_signal_type_window.addLayout(self.second_signal_duty_window)
 
+        self.second_signal_type_window2.addLayout(self.second_signal_heigth_window2)
         self.second_signal_type_window2.addLayout(self.second_signal_frequency_window2)
         self.second_signal_type_window2.addLayout(self.second_signal_duty_window2)
 
@@ -1112,12 +1130,15 @@ class App(QWidget):
         self.stimulation_tree.currentItem().setText(8, self.first_signal_type_width_cell.text())
         self.stimulation_tree.currentItem().setText(9, self.second_signal_type_frequency_cell.text())
         self.stimulation_tree.currentItem().setText(10, self.second_signal_type_duty_cell.text())
+        self.stimulation_tree.currentItem().setText(21, self.second_signal_type_heigth_cell.text())
 
         self.stimulation_tree.currentItem().setText(12, self.first_signal_type_pulses_cell2.text())
         self.stimulation_tree.currentItem().setText(13, self.first_signal_type_jitter_cell2.text())
         self.stimulation_tree.currentItem().setText(14, self.first_signal_type_width_cell2.text())
         self.stimulation_tree.currentItem().setText(15, self.second_signal_type_frequency_cell2.text())
         self.stimulation_tree.currentItem().setText(16, self.second_signal_type_duty_cell2.text())
+        self.stimulation_tree.currentItem().setText(22, self.second_signal_type_heigth_cell2.text())
+        
 
 
         self.check_global_validity()
@@ -1133,11 +1154,13 @@ class App(QWidget):
             self.first_signal_type_jitter_cell.setText(self.stimulation_tree.currentItem().text(7))
             self.first_signal_type_width_cell.setText(self.stimulation_tree.currentItem().text(8))
             self.second_signal_type_frequency_cell.setText(self.stimulation_tree.currentItem().text(9))
+            self.second_signal_type_heigth_cell.setText(self.stimulation_tree.currentItem().text(21))
             self.second_signal_type_duty_cell.setText(self.stimulation_tree.currentItem().text(10))
             self.first_signal_type_pulses_cell2.setText(self.stimulation_tree.currentItem().text(12))
             self.first_signal_type_jitter_cell2.setText(self.stimulation_tree.currentItem().text(13))
             self.first_signal_type_width_cell2.setText(self.stimulation_tree.currentItem().text(14))
             self.second_signal_type_frequency_cell2.setText(self.stimulation_tree.currentItem().text(15))
+            self.second_signal_type_heigth_cell2.setText(self.stimulation_tree.currentItem().text(22))
             self.second_signal_type_duty_cell2.setText(self.stimulation_tree.currentItem().text(16))
         except Exception as err:
             pass
@@ -1458,13 +1481,12 @@ class App(QWidget):
             print(err)
 
     def initialize_buttons(self):
-        self.canal1buttons = [self.stimulation_type_label, self.stimulation_type_cell, self.first_signal_type_pulses_label, self.first_signal_type_pulses_cell, self.first_signal_type_width_label, self.first_signal_type_width_cell, self.first_signal_type_jitter_label, self.first_signal_type_jitter_cell, self.second_signal_type_frequency_label, self.second_signal_type_frequency_cell, self.second_signal_type_duty_label, self.second_signal_type_duty_cell]
-        self.canal2buttons = [self.stimulation_type_label2, self.stimulation_type_cell2, self.first_signal_type_pulses_label2, self.first_signal_type_pulses_cell2, self.first_signal_type_width_label2, self.first_signal_type_width_cell2, self.first_signal_type_jitter_label2, self.first_signal_type_jitter_cell2, self.second_signal_type_frequency_label2, self.second_signal_type_frequency_cell2, self.second_signal_type_duty_label2, self.second_signal_type_duty_cell2]
+        self.canal1buttons = [self.stimulation_type_label, self.stimulation_type_cell, self.first_signal_type_pulses_label, self.first_signal_type_pulses_cell, self.first_signal_type_width_label, self.first_signal_type_width_cell, self.first_signal_type_jitter_label, self.first_signal_type_jitter_cell, self.second_signal_type_frequency_label, self.second_signal_type_frequency_cell, self.second_signal_type_duty_label, self.second_signal_type_duty_cell, self.second_signal_type_heigth_cell, self.second_signal_type_heigth_label]
+        self.canal2buttons = [self.stimulation_type_label2, self.stimulation_type_cell2, self.first_signal_type_pulses_label2, self.first_signal_type_pulses_cell2, self.first_signal_type_width_label2, self.first_signal_type_width_cell2, self.first_signal_type_jitter_label2, self.first_signal_type_jitter_cell2, self.second_signal_type_frequency_label2, self.second_signal_type_frequency_cell2, self.second_signal_type_duty_label2, self.second_signal_type_duty_cell2, self.second_signal_type_heigth_cell2, self.second_signal_type_heigth_label2]
         self.enabled_buttons = [
             self.run_button,
             self.experiment_name_cell,
             self.mouse_id_cell,
-            #self.directory_save_files_checkbox,
             self.directory_choose_button,
             self.set_roi_button,
             self.reset_roi_button,
@@ -1500,6 +1522,8 @@ class App(QWidget):
             self.first_signal_type_jitter_cell,
             self.second_signal_type_frequency_label,
             self.second_signal_type_frequency_cell,
+            self.second_signal_type_heigth_label,
+            self.second_signal_type_heigth_cell,
             self.second_signal_type_duty_label,
             self.second_signal_type_duty_cell,
             self.first_signal_type_pulses_label2,
@@ -1510,6 +1534,8 @@ class App(QWidget):
             self.first_signal_type_jitter_cell2,
             self.second_signal_type_frequency_label2,
             self.second_signal_type_frequency_cell2,
+            self.second_signal_type_heigth_label2,
+            self.second_signal_type_heigth_cell2,
             self.second_signal_type_duty_label2,
             self.second_signal_type_duty_cell2,
             self.block_iterations_label,
