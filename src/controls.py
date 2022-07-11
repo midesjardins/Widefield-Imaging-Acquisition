@@ -232,7 +232,7 @@ class DAQ:
                         self.start([s_task])
 
         else:
-            time.sleep(20)
+            time.sleep(2)
             self.stop_signal = True
             pass
 
