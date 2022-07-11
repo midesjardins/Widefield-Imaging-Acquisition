@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import json
-from signal_generator import digital_square
+from src.signal_generator import digital_square
 import scipy.signal as signal
 
 def shrink_array(array, extents):
@@ -134,6 +134,6 @@ def map_activation(frames, baseline):
 
 def find_similar_frame(frame, baselines):
     means = []
-    for baseline in self.camera.average_baseline:
+    for baseline in baselines:
         means.append(np.mean(abs(frame-baseline)))
     return means
