@@ -232,7 +232,8 @@ class DAQ:
                         self.start([s_task])
 
         else:
-            time.sleep(2)
+            time.sleep(20)
+            self.stop_signal = True
             pass
 
     def return_lights(self):
