@@ -63,6 +63,7 @@ class App(QWidget):
         self.width = 640
         self.height = 480
         self.initUI()
+        self.ports = get_dictionary("config.json")["Ports"]
 
     def closeEvent(self, *args, **kwargs):
         self.video_running = False
@@ -674,7 +675,7 @@ class App(QWidget):
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
             self.run_button.setText("Run at Trigger")
-            self.daq.set_trigger("port1/line0")
+            self.daq.set_trigger(self.ports["trigger"])
             # TODO (to be changed)
         else:
             self.run_button.setText("Run")
@@ -904,7 +905,7 @@ class App(QWidget):
 
     def generate_daq(self):
         try:
-            self.camera = Camera('port0/line4', 'name')
+            self.camera = Camera(self.ports["camera"], 'name')
         except Exception:
             self.camera =None
         self.stimuli = [Instrument('ao0', 'air-pump'), Instrument('ao1', 'air-pump2')]
@@ -913,13 +914,13 @@ class App(QWidget):
         try:
             lights = []
             if self.ir_checkbox.isChecked():
-                lights.append(Instrument('port0/line3', 'ir'))
+                lights.append(Instrument(self.ports["infrared"], 'ir'))
             if self.red_checkbox.isChecked():
-                lights.append( Instrument('port0/line0', 'red'))
+                lights.append( Instrument(self.ports["red"], 'red'))
             if self.green_checkbox.isChecked():
-                lights.append(Instrument('port0/line2', 'green'))
+                lights.append(Instrument(self.ports["green"], 'green'))
             if self.fluorescence_checkbox.isChecked():
-                lights.append(Instrument('port0/line1', 'blue'))
+                lights.append(Instrument(self.ports["blue"], 'blue'))
             self.daq.lights = lights
             self.daq.framerate = int(self.framerate_cell.text())
             self.daq.exposure = int(self.exposure_cell.text())/1000

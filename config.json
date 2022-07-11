@@ -1,0 +1,11 @@
+{"Ports":
+    {"infrared": "port0/line3",
+    "red": "port0/line0",
+    "green": "port0/line2",
+    "blue": "port0/line1",
+    "camera": "port0/line4",
+    "trigger": "port1/line0",
+    "analog0":"ao0",
+    "analog1":"ao1",
+    "analog2":""}
+}

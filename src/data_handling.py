@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import json
-from src.signal_generator import digital_square
-import scipy.signal as signal
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames"""
