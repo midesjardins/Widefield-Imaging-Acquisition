@@ -6,7 +6,7 @@ from nidaqmx.constants import AcquisitionType
 import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import digital_square
-from src.data_handling import shrink_array, find_rising_indices, create_complete_stack, reduce_stack
+from src.data_handling import extend_light_signal, shrink_array, find_rising_indices, create_complete_stack, reduce_stack, map_activation
 from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
@@ -33,13 +33,15 @@ class Camera(Instrument):
         """
         super().__init__(port, name)
         self.frames = []
+        self.baseline_frames = []
+        self.frames_read = 0
         self.video_running = False
         try:
             self.cam = IMAQ.IMAQCamera("img0")
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
-            print(err)
+            #print(err)
             pass
 
     def initialize(self, daq):
@@ -51,6 +53,9 @@ class Camera(Instrument):
         self.daq = daq
         self.daq.stop_signal = False
         self.frames = []
+        self.frames_read_list = []
+        self.baseline_read_list = []
+        self.frames_read = 0
 
     def delete_frames(self):
         self.cam.read_multiple_images()
@@ -65,10 +70,20 @@ class Camera(Instrument):
         while task.is_task_done() is False and self.daq.stop_signal is False:
             try:
                 self.cam.wait_for_frame(timeout=0.1)
-                self.frames += self.cam.read_multiple_images()
+                new_frames = self.cam.read_multiple_images()
+                self.frames += new_frames
                 self.video_running = True
+                if self.adding_frames:
+                    self.baseline_data += new_frames
+                    self.frames_read_list.append(self.frames_read)
+                if self.baseline_completed:
+                    self.baseline_frames += new_frames
+                    self.baseline_read_list.append(self.frames_read)
+                self.frames_read += len(new_frames)
             except Exception as err:
+                print("cam err")
                 print(err)
+                pass
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
     
@@ -82,7 +97,10 @@ class Camera(Instrument):
         """
         if extents:
             self.frames = shrink_array(self.frames, extents)
-        np.save(f"{directory}/{self.daq.experiment_name}-data", self.frames)
+        if self.is_saving:
+            while self.is_saving:
+                pass
+        np.save(os.path.join(directory, "data", f"{self.file_index}.npy"), self.frames)
 
 
         
@@ -122,6 +140,7 @@ class DAQ:
         self.generate_stim_wave()
         self.generate_light_wave()
         self.generate_camera_wave()
+        self.extend_light_wave()
         self.write_waveforms()
     
     def set_trigger(self, port):
@@ -157,6 +176,9 @@ class DAQ:
         except ValueError:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+
+    def extend_light_wave(self):
+        self.stacked_lights = extend_light_signal(self.stacked_lights, self.camera_signal)
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
@@ -225,10 +247,10 @@ class DAQ:
             directory (str): The directory in which to save the NPY file
         """
 
-        stack = create_complete_stack(self.all_signals, self.stim_signal)
         indices = find_rising_indices(self.all_signals[-1])
-        reduced_stack = reduce_stack(stack, indices)
-        np.save(f"{directory}/{self.experiment_name}-signal_data", reduced_stack)
+        reduced_stack = reduce_stack(self.all_signals, indices)
+        np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
+        np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
     
     def reset_daq(self):
         """Reset the DAQ parameters

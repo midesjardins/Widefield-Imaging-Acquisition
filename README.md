@@ -175,8 +175,8 @@ Project Link: [https://github.com/your_username/repo_name](https://github.com/yo
 This project was made possible with the help of these people and ressources:
 
 * [Tabler Icons](https://tabler-icons.io/)
-* [Alexey Shkarin](hhttps://github.com/AlexShkarin)
-* [Creator of README]()
+* [Alexey Shkarin -  creator of Pylablib](hhttps://github.com/AlexShkarin)
+* [Othneil Drew - Creator of Best-README-Template](https://github.com/othneildrew)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
