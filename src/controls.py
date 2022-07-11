@@ -11,7 +11,7 @@ from pylablib.devices import IMAQ
 import warnings
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 class Instrument:
     def __init__(self, port, name):
         """A class used to represent a analog or digital instrument controlled by a DAQ
@@ -138,9 +138,10 @@ class DAQ:
         self.time_values = time_values
         self.stim_values = stim_values
         self.generate_stim_wave()
-        self.generate_light_wave()
-        self.generate_camera_wave()
-        self.extend_light_wave()
+        if len(self.lights) > 0:
+            self.generate_light_wave()
+            self.generate_camera_wave()
+            self.extend_light_wave()
         self.write_waveforms()
     
     def set_trigger(self, port):
@@ -232,6 +233,7 @@ class DAQ:
 
         else:
             time.sleep(2)
+            self.stop_signal = True
             pass
 
     def return_lights(self):

@@ -30,6 +30,7 @@ class PlotWindow(QDialog):
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
+        self.vertical_lines = []
 
     def get_data(self, time_values, pulses, jitter, width=0.2):
         y_values = random_square(time_values, pulses, width, jitter)
@@ -40,11 +41,14 @@ class PlotWindow(QDialog):
         plt.ion()
         self.axis[0].clear()
         self.axis[1].clear()
+        self.vertical_lines = []
 
     def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
         plt.figure(self.figure.number)
         plt.ion()
         self.axis[index].plot(x, y)
+        if root:
+            self.vertical_lines.append(self.axis[index].axvline(x=1, color="red"))
        # plt.plot(x,y, color=color)
 
 
@@ -64,9 +68,11 @@ class App(QWidget):
         try:
             self.daq.stop_signal = True
             self.daq.camera.cam.stop_acquisition()
-        except Exception:
+            print("Closed")
+        except Exception as err:
+            print(err)
             pass
-        print("Closed")
+        self.check_if_thread_is_alive()
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -743,6 +749,7 @@ class App(QWidget):
             self.open_live_saving_thread()
             self.open_live_preview_thread()
             self.open_baseline_check_thread()
+            self.open_signal_preview_thread()
             self.open_start_experiment_thread()
 
     def override_check(self):
@@ -760,32 +767,33 @@ class App(QWidget):
         self.baseline_check_thread.start()
 
     def check_baseline(self):
-        self.camera.baseline_data = []
-        self.camera.adding_frames = False
-        self.camera.completed_baseline = False
-        while self.daq.camera_signal is None:
-            pass
-        frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
-        baseline_indices = get_baseline_frame_indices(self.baseline_values, frames_acquired)
-        print(baseline_indices)
-        for baseline_pair in baseline_indices:
-            while not self.daq.stop_signal:
-                try:
-                    if not self.camera.adding_frames and self.camera.frames_read >= baseline_pair[0]:
-                        self.camera.adding_frames = True
-                    elif self.camera.adding_frames and self.camera.frames_read >= baseline_pair[1]:
-                        print("about to average")
-                        self.camera.baseline_read_list = []
-                        self.camera.average_baseline = average_baseline(self.camera.baseline_data, len(self.daq.lights), self.camera.frames_read_list[0]%len(self.daq.lights))
-                        self.camera.adding_frames = False
-                        self.camera.baseline_frames = []
-                        self.camera.baseline_completed = True
-                        self.camera.frames_read_list = []  
-                        break
-                except Exception as err:
-                    print(err)
-                    pass
-                time.sleep(0.01)
+        if len(self.daq.lights) > 0:
+            self.camera.baseline_data = []
+            self.camera.adding_frames = False
+            self.camera.completed_baseline = False
+            while self.daq.camera_signal is None:
+                pass
+            frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
+            baseline_indices = get_baseline_frame_indices(self.baseline_values, frames_acquired)
+            print(baseline_indices)
+            for baseline_pair in baseline_indices:
+                while not self.daq.stop_signal:
+                    try:
+                        if not self.camera.adding_frames and self.camera.frames_read >= baseline_pair[0]:
+                            self.camera.adding_frames = True
+                        elif self.camera.adding_frames and self.camera.frames_read >= baseline_pair[1]:
+                            print("about to average")
+                            self.camera.baseline_read_list = []
+                            self.camera.average_baseline = average_baseline(self.camera.baseline_data, len(self.daq.lights), self.camera.frames_read_list[0]%len(self.daq.lights))
+                            self.camera.adding_frames = False
+                            self.camera.baseline_frames = []
+                            self.camera.baseline_completed = True
+                            self.camera.frames_read_list = []  
+                            break
+                    except Exception as err:
+                        print(err)
+                        pass
+                    time.sleep(0.01)
 
     def open_start_experiment_thread(self):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
@@ -817,25 +825,25 @@ class App(QWidget):
                 os.mkdir(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), "data"))
             except Exception as err:
                 print(err)
-        while self.camera.video_running is False:
+            while self.camera.video_running is False:
+                    time.sleep(0.01)
+                    pass
+            while self.camera.video_running is True: 
+                #print(len(self.camera.frames))
+                if len(self.camera.frames) > 1200:
+                    self.memory = self.camera.frames[:1200]
+                    self.camera.frames = self.camera.frames[1200:]
+                    if self.directory_save_files_checkbox.isChecked():
+                        try:
+                            self.memory = shrink_array(self.memory, self.roi_extent)
+                        except Exception:
+                            pass
+                        self.camera.is_saving = True
+                        np.save(os.path.join(self.directory_cell.text(),self.experiment_name_cell.text(), "data", f"{self.camera.file_index}.npy"), self.memory)
+                        self.memory = None
+                        self.camera.file_index +=1
+                        self.camera.is_saving = False
                 time.sleep(0.01)
-                pass
-        while self.camera.video_running is True: 
-            #print(len(self.camera.frames))
-            if len(self.camera.frames) > 1200:
-                self.memory = self.camera.frames[:1200]
-                self.camera.frames = self.camera.frames[1200:]
-                if self.directory_save_files_checkbox.isChecked():
-                    try:
-                        self.memory = shrink_array(self.memory, self.roi_extent)
-                    except Exception:
-                        pass
-                    self.camera.is_saving = True
-                    np.save(os.path.join(self.directory_cell.text(),self.experiment_name_cell.text(), "data", f"{self.camera.file_index}.npy"), self.memory)
-                    self.memory = None
-                    self.camera.file_index +=1
-                    self.camera.is_saving = False
-            time.sleep(0.01)
         
     def open_live_preview_thread(self):
         self.live_preview_thread = Thread(target=self.start_live)
@@ -845,26 +853,27 @@ class App(QWidget):
         plt.ion()
         self.memory = []
         self.camera.baseline_completed = False
-        try: 
-            while self.camera.video_running is False:
-                time.sleep(0.01)
-                pass
-            while self.camera.video_running is True: 
-                try:
-                    if not self.camera.baseline_completed or not self.activation_map_checkbox.isChecked():
-                        self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure), cmap="binary_r")
-                    else:
-                        start_index = (self.camera.baseline_read_list[0] + self.live_preview_light_index)%len(self.daq.lights)
-                        #activation_map = self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] -  self.camera.average_baseline[self.live_preview_light_index]
-                        #self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
-                        activation_map = (self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] - self.camera.average_baseline[self.live_preview_light_index])/self.camera.average_baseline[self.live_preview_light_index]
-                        self.plot_image.set(array=activation_map, clim=(-10,10), cmap="seismic")
-                except Exception as err:
-                    print(err)
+        if len(self.daq.lights) > 0:
+            try: 
+                while self.camera.video_running is False:
+                    time.sleep(0.01)
                     pass
-                time.sleep(0.01)
-        except Exception as err:
-            pass
+                while self.camera.video_running is True: 
+                    try:
+                        if not self.camera.baseline_completed or not self.activation_map_checkbox.isChecked():
+                            self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure), cmap="binary_r")
+                        else:
+                            start_index = (self.camera.baseline_read_list[0] + self.live_preview_light_index)%len(self.daq.lights)
+                            #activation_map = self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] -  self.camera.average_baseline[self.live_preview_light_index]
+                            #self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
+                            activation_map = (self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] - self.camera.average_baseline[self.live_preview_light_index])/self.camera.average_baseline[self.live_preview_light_index]
+                            self.plot_image.set(array=activation_map, clim=(-10,10), cmap="seismic")
+                    except Exception as err:
+                        print(err)
+                        pass
+                    time.sleep(0.01)
+            except Exception as err:
+                pass
 
     def stop_live(self):
         self.camera.video_running = False
@@ -875,12 +884,14 @@ class App(QWidget):
 
     def preview_signal(self):
         plt.ion()
-        while self.stop_signal is False and self.daq.control_task.is_task_done() is False:
+        i=0
+        while self.daq.stop_signal is False:
             try:
-                self.plot_window.vertical_line.set_xdata([self.daq.current_signal_time,self.daq.current_signal_time])
-                time.sleep(0.5)
+                self.plot_window.vertical_lines[0].set_xdata(self.camera.frames_read/int(self.framerate_cell.text()))
+                self.plot_window.vertical_lines[1].set_xdata(self.camera.frames_read/int(self.framerate_cell.text()))
+                time.sleep(0.2)
             except Exception:
-                time.sleep(0.5)
+                time.sleep(0.2)
                 pass
 
     def change_preview_light_channel(self):
@@ -1572,6 +1583,21 @@ class App(QWidget):
         except Exception as err:
             print(err)
 
+        try:
+            if self.live_save_thread.is_alive():
+                print("Live Save thread is alive")
+            else:
+                print("Live Save thread is dead")
+        except Exception as err:
+            print(err)
+
+        try:
+            if self.baseline_check_thread.is_alive():
+                print("Baseline check thread is alive")
+            else:
+                print("Baseline check thread is dead")
+        except Exception as err:
+            print(err)
     def initialize_buttons(self):
         self.canal1buttons = [self.stimulation_type_label, self.stimulation_type_cell, self.first_signal_type_pulses_label, self.first_signal_type_pulses_cell, self.first_signal_type_width_label, self.first_signal_type_width_cell, self.first_signal_type_jitter_label, self.first_signal_type_jitter_cell, self.second_signal_type_frequency_label, self.second_signal_type_frequency_cell, self.second_signal_type_duty_label, self.second_signal_type_duty_cell, self.second_signal_type_heigth_cell, self.second_signal_type_heigth_label]
         self.canal2buttons = [self.stimulation_type_label2, self.stimulation_type_cell2, self.first_signal_type_pulses_label2, self.first_signal_type_pulses_cell2, self.first_signal_type_width_label2, self.first_signal_type_width_cell2, self.first_signal_type_jitter_label2, self.first_signal_type_jitter_cell2, self.second_signal_type_frequency_label2, self.second_signal_type_frequency_cell2, self.second_signal_type_duty_label2, self.second_signal_type_duty_cell2, self.second_signal_type_heigth_cell2, self.second_signal_type_heigth_label2]
