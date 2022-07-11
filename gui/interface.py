@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, Q
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector 
 from threading import Thread
+print(sys.path)
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
 from src.data_handling import get_dictionary, shrink_array, frames_acquired_from_camera_signal, get_baseline_frame_indices, map_activation, average_baseline, find_similar_frame

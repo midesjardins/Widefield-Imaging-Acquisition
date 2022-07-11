@@ -1,10 +1,4 @@
-import time
-import numpy as np
-import sys
-import os
 import json
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.signal_generator import make_signal
 
 class Stimulation:
     def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0, width2=0, pulses2=0, jitter2=0, frequency2=0, duty2=0, pulse_type1='square', pulse_type2="square", name="", canal1=False, canal2=False):
