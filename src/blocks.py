@@ -39,7 +39,7 @@ class Stimulation:
         return_value.append("***")
         return "\n".join(return_value)
 
-    def toJSON(self):
+    def to_json(self):
         dictionary = {
             "type": "Stimulation",
             "name": self.name,
@@ -77,10 +77,10 @@ class Block:
                 stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
 
-    def toJSON(self):
+    def to_json(self):
         data_list = []
         for item in self.data:
-            data_list.append(item.toJSON())
+            data_list.append(item.to_json())
         dictionary = {
             "type": "Block",
             "name": self.name,
@@ -110,7 +110,7 @@ class Experiment:
                 file.write(f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
             
             dictionary = {
-                "Blocks": self.blocks.toJSON(),
+                "Blocks": self.blocks.to_json(),
                 "Lights": self.daq.return_lights(),
                 "Framerate": self.framerate,
                 "Exposition": self.exposition,
