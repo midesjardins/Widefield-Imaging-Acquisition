@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import json
 from signal_generator import digital_square
+import scipy.signal as signal
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames"""
@@ -66,7 +67,6 @@ def extract_from_path(path):
             lights = get_dictionary(os.path.join(path, file_name))["Lights"]
     return (lights, frames)
 
-
 def separate_vectors(lights, vector):
     separated_vectors = []
     for index in range(len(lights)):
@@ -100,32 +100,40 @@ def extend_light_signal(lights, camera):
         signal_list.append(new_signal)
     return np.stack(signal_list)
 
-"""x = np.linspace(0,10,1000)
-red = digital_square(x, 1, 0.2, 0)
-green = digital_square(x, 1, 0.2, 50)
-camera  = np.max(np.vstack([red, green]), axis=0)
-plt.plot(x, red)
-plt.plot(x, green)
-plt.plot(x, camera, alpha=0.5)
-signals = extend_light_signal([red, green], camera)
-for signal in signals:
-    plt.plot(x, signal)
-plt.show()"""
+def frames_acquired_from_camera_signal(camera_signal):
+    dy = np.diff(camera_signal)
+    indices = np.where(abs(dy) > 0)[0][1::2]
+    y_values = np.zeros(len(camera_signal))
+    try:
+        for index in indices:
+            y_values[index:] += 1
+    except Exception:
+        pass
+    return y_values
 
+def average_baseline(frame_list, light_count=1, start_index=0):
+    try:
+        baselines = []
+        for light_index in range(light_count):
+            baselines.append(np.mean(np.array(frame_list[(light_count-start_index)%light_count+light_index::light_count]), axis=0))
+    except Exception as err:
+        print("Baseline Error")
+        print(err)
+    return baselines
 
-#lights = ["ir", "red", "green", "blue"]
-#frames = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]],[[19,20,21],[21,22,23],[24,25,26]]])
-#reduced_stack = np.array([[1,2,3],[4,5,6],[7,8,9],[10,11,12]])
+def get_baseline_frame_indices(baseline_indices, frames_acquired):
+    print(baseline_indices)
+    print(len(frames_acquired))
+    list_of_indices = []
+    for index in baseline_indices:
+        list_of_indices.append([frames_acquired[index[0]],frames_acquired[index[1]]])
+    return list_of_indices
 
-#print(separate_images(lights, frames, reduced_stack))
+def map_activation(frames, baseline):
+    return np.array(frames) - np.array([baseline])
 
-#plot_multiple_arrays(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy"))
-#indices = find_rising_indices(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy")[-1])
-#stack = create_complete_stack(np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/all_signals.npy"), np.load("/Users/maxence/chul/Widefield-Imaging-Acquisition/stim_signal.npy"))
-#print(len(stack[0]))
-#reduced_stack = reduce_stack(stack, indices)
-#print(len(reduced_stack[0]))
-
-#array = get_array("C:\\Users\\ioi\\Documents\\GitHub\\Widefield-Imaging-Acquisition\\data\\First Real Test\\1654112346.2327678-data.npy")
-#figure = init()
-#animate(array, figure)
+def find_similar_frame(frame, baselines):
+    means = []
+    for baseline in self.camera.average_baseline:
+        means.append(np.mean(abs(frame-baseline)))
+    return means
