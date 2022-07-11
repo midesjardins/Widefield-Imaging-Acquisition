@@ -243,10 +243,10 @@ class DAQ:
             directory (str): The directory in which to save the NPY file
         """
 
-        stack = create_complete_stack(self.all_signals, self.stim_signal)
         indices = find_rising_indices(self.all_signals[-1])
-        reduced_stack = reduce_stack(stack, indices)
-        np.save(f"{directory}/{self.experiment_name}-signal_data", reduced_stack)
+        reduced_stack = reduce_stack(self.all_signals, indices)
+        np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
+        np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
     
     def reset_daq(self):
         """Reset the DAQ parameters
