@@ -12,7 +12,7 @@ from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.signal_generator import make_signal, random_square
-from src.data_handling import get_dictionary, shrink_array
+from src.data_handling import get_dictionary, shrink_array, frames_acquired_from_camera_signal, get_baseline_frame_indices, map_activation, average_baseline, find_similar_frame
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 
@@ -77,8 +77,10 @@ class App(QWidget):
         self.plot_stim2_values = []
         self.elapsed_time = 0
         self.files_saved = False
+        self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
+        self.baseline_values = []
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         locale = QLocale(QLocale.English, QLocale.UnitedStates)
         self.onlyInt = QIntValidator()
@@ -189,9 +191,12 @@ class App(QWidget):
         self.preview_light_combo.setEnabled(False)
         self.preview_light_combo.currentIndexChanged.connect(self.change_preview_light_channel)
         self.light_channel_layout.addWidget(self.preview_light_combo)
+        self.activation_map_checkbox = QCheckBox("Show Activation Map")
+
 
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         self.image_settings_main_window.addLayout(self.light_channel_layout)
+        self.image_settings_main_window.addWidget(self.activation_map_checkbox)
 
         self.roi_buttons = QStackedLayout()
 
@@ -276,8 +281,7 @@ class App(QWidget):
 
         self.stimulation_tree_window = QVBoxLayout()
         self.stimulation_tree = QTreeWidget()
-        self.stimulation_tree.setHeaderLabels(["0 Name", "1 Iterations", "2 Delay", "3 Jitter", "4 Type", "5 Pulses",
-                                              "6 Duration", "7 Jitter", "8 Width", "9 Frequency", "10 Duty", "11 Type2", "12 Pulses 2", "13 Jitter 2", "14 Width 2", "15 Frequency 2", "16 Duty 2", "17 Blank", "18 Canal 1", "19 Canal 2", "20 Valid", "21 Heigth", "22 Heigth 2"])
+        self.stimulation_tree.setHeaderLabels(["0 Name", "1 Iterations", "2 Delay", "3 Jitter", "4 Type", "5 Pulses", "6 Duration", "7 Jitter", "8 Width", "9 Frequency", "10 Duty", "11 Type2", "12 Pulses 2", "13 Jitter 2", "14 Width 2", "15 Frequency 2", "16 Duty 2", "17 Baseline", "18 Canal 1", "19 Canal 2", "20 Valid", "21 Heigth", "22 Heigth 2"])
         for i in range(19):
             #self.stimulation_tree.header().hideSection(i+1)
             pass
@@ -337,6 +341,9 @@ class App(QWidget):
 
 
 
+        self.baseline_check = QCheckBox("Baseline")
+        self.baseline_check.stateChanged.connect(self.deactivate_channels)
+        self.canal_window.addWidget(self.baseline_check)
         self.first_signal_first_canal_check = QCheckBox()
         self.first_signal_first_canal_check.stateChanged.connect(self.canals_to_tree)
         self.first_signal_first_canal_check.setText("Canal 1")
@@ -393,6 +400,11 @@ class App(QWidget):
         self.first_signal_type_duration_cell.setValidator(self.onlyFloat)
         self.first_signal_type_duration_cell.textEdited.connect(self.signal_to_tree)
         self.stimulation_edit_layout.addLayout(self.first_signal_duration_window)
+
+
+        self.baseline_checkbox = QCheckBox("Baseline")
+        self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
+        self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
 
         #self.stimulation_edit_layout.addLayout(self.stimulation_type_window)
         self.stimulation_edit_layout.addLayout(self.canal_window)
@@ -647,9 +659,15 @@ class App(QWidget):
         self.initialize_buttons()
         self.show()
 
+
+    def deactivate_channels(self):
+        if self.baseline_check.isChecked():
+            self.deactivate_buttons([self.first_signal_first_canal_check, self.first_signal_second_canal_check])
+        else:
+            self.activate_buttons([self.first_signal_first_canal_check, self.first_signal_second_canal_check])
+
     def adjust_exposure(self):
         self.max_exposure = self.exposure_slider.value()
-        print(self.max_exposure)
     
     def set_trigger(self):
         if self.trigger_checkbox.isChecked():
@@ -672,6 +690,13 @@ class App(QWidget):
             print(err)
 
     def recursive_print(self, block, parent = None):
+        """
+        Recursive function to print the blocks in the tree
+
+        Args:
+            block (_type_): The block to print
+            parent (_type_, optional): The parent of the block to print. Defaults to None.
+        """
         if block["type"] == "Block":
             if block["name"] == "root":
                 tree_item = self.stimulation_tree.invisibleRootItem()
@@ -722,10 +747,11 @@ class App(QWidget):
             self.actualize_daq()
             self.open_live_saving_thread()
             self.open_live_preview_thread()
+            self.open_baseline_check_thread()
             self.open_start_experiment_thread()
 
     def override_check(self):
-        if os.path.isfile(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), f"{self.experiment_name_cell.text()}-signal_data.npy")):
+        if os.path.isfile(os.path.join(self.directory_cell.text(), self.experiment_name_cell.text(), f"{self.experiment_name_cell.text()}-light_signal.npy")):
             button = QMessageBox.question(self, "Files already exist", "Files already exist. \n Do you want to override the existing files?")
             if button == QMessageBox.Yes:
                 return True
@@ -733,6 +759,38 @@ class App(QWidget):
                 return False
         else:
             return True
+
+    def open_baseline_check_thread(self):
+        self.baseline_check_thread = Thread(target=self.check_baseline)
+        self.baseline_check_thread.start()
+
+    def check_baseline(self):
+        self.camera.baseline_data = []
+        self.camera.adding_frames = False
+        self.camera.completed_baseline = False
+        while self.daq.camera_signal is None:
+            pass
+        frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
+        baseline_indices = get_baseline_frame_indices(self.baseline_values, frames_acquired)
+        print(baseline_indices)
+        for baseline_pair in baseline_indices:
+            while not self.daq.stop_signal:
+                try:
+                    if not self.camera.adding_frames and self.camera.frames_read >= baseline_pair[0]:
+                        self.camera.adding_frames = True
+                    elif self.camera.adding_frames and self.camera.frames_read >= baseline_pair[1]:
+                        print("about to average")
+                        self.camera.baseline_read_list = []
+                        self.camera.average_baseline = average_baseline(self.camera.baseline_data, len(self.daq.lights), self.camera.frames_read_list[0]%len(self.daq.lights))
+                        self.camera.adding_frames = False
+                        self.camera.baseline_frames = []
+                        self.camera.baseline_completed = True
+                        self.camera.frames_read_list = []  
+                        break
+                except Exception as err:
+                    print(err)
+                    pass
+                time.sleep(0.01)
 
     def open_start_experiment_thread(self):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
@@ -768,7 +826,7 @@ class App(QWidget):
                 time.sleep(0.01)
                 pass
         while self.camera.video_running is True: 
-            print(len(self.camera.frames))
+            #print(len(self.camera.frames))
             if len(self.camera.frames) > 1200:
                 self.memory = self.camera.frames[:1200]
                 self.camera.frames = self.camera.frames[1200:]
@@ -791,18 +849,26 @@ class App(QWidget):
     def start_live(self):
         plt.ion()
         self.memory = []
+        self.camera.baseline_completed = False
         try: 
             while self.camera.video_running is False:
                 time.sleep(0.01)
                 pass
             while self.camera.video_running is True: 
                 try:
-                    self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure))
-                except Exception:
+                    if not self.camera.baseline_completed or not self.activation_map_checkbox.isChecked():
+                        self.plot_image.set(array=self.camera.frames[self.live_preview_light_index::len(self.daq.lights)][-1], clim=(0, self.max_exposure), cmap="binary_r")
+                    else:
+                        start_index = (self.camera.baseline_read_list[0] + self.live_preview_light_index)%len(self.daq.lights)
+                        #activation_map = self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] -  self.camera.average_baseline[self.live_preview_light_index]
+                        #self.plot_image.set(array=activation_map, clim=(-4096, self.max_exposure))
+                        activation_map = (self.camera.baseline_frames[start_index:: len(self.daq.lights)][-1] - self.camera.average_baseline[self.live_preview_light_index])/self.camera.average_baseline[self.live_preview_light_index]
+                        self.plot_image.set(array=activation_map, clim=(-10,10), cmap="seismic")
+                except Exception as err:
+                    print(err)
                     pass
-                time.sleep(0.001)
+                time.sleep(0.01)
         except Exception as err:
-            print(err)
             pass
 
     def stop_live(self):
@@ -853,7 +919,6 @@ class App(QWidget):
             self.camera.frames = []
             self.daq.stop_signal = False
         except Exception as err:
-            print(err)
             pass
 
         # TODO divide by 1000
@@ -924,6 +989,7 @@ class App(QWidget):
     def stop(self):
         self.stop_live()
         self.activate_buttons(buttons = self.enabled_buttons)
+        self.deactivate_buttons([self.add_child_branch_button, self.add_brother_branch_button])
         try:
             self.daq.stop_signal = True
         except Exception:
@@ -973,6 +1039,7 @@ class App(QWidget):
     def choose_directory(self):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(folder)
+
 
     def enable_directory(self):
         self.files_saved = self.directory_save_files_checkbox.isChecked()
@@ -1031,12 +1098,14 @@ class App(QWidget):
 
     def style_tree_item(self, item):
         item.setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
+        item.setIcon(20, QIcon(os.path.join("gui","icons","alert-triangle.png")))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
         item.setIcon(0, QIcon(os.path.join("gui","icons","wave-square.png")))
         item.setText(0, "No Name")
 
 
     def actualize_window(self):
+        self.activate_buttons([self.add_child_branch_button, self.add_brother_branch_button])
         if self.stimulation_tree.currentItem():
             self.stimulation_tree_switch_window.setCurrentIndex(0)
         else:
@@ -1185,10 +1254,16 @@ class App(QWidget):
     def tree_to_canal(self):
         self.canal_running = True
         try:
+            self.baseline_checkbox.setChecked(self.boolean(self.stimulation_tree.currentItem().text(17)))
             self.first_signal_first_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(18)))
             self.first_signal_second_canal_check.setChecked(self.boolean(self.stimulation_tree.currentItem().text(19)))
+            if self.baseline_checkbox.isChecked():
+                self.deactivate_buttons(self.canal1buttons+[self.first_signal_first_canal_check])
+                self.deactivate_buttons(self.canal2buttons+[self.first_signal_second_canal_check])
+            else:
+                self.activate_buttons([self.first_signal_first_canal_check + self.first_signal_second_canal_check])
             if self.first_signal_first_canal_check.isChecked():
-                    self.activate_buttons(self.canal1buttons)
+                self.activate_buttons(self.canal1buttons)
             else:
                 self.deactivate_buttons(self.canal1buttons)
             if self.first_signal_second_canal_check.isChecked():
@@ -1200,24 +1275,39 @@ class App(QWidget):
         self.canal_running = False
 
     def canals_to_tree(self, int=0, first=False):
+        self.baseline_check.setEnabled(True)
         if not self.canal_running:
             if first:
+                self.stimulation_tree.currentItem().setText(17, "False")
                 self.stimulation_tree.currentItem().setText(18, "False")
                 self.stimulation_tree.currentItem().setText(19, "False")
                 self.deactivate_buttons(self.canal1buttons)
                 self.deactivate_buttons(self.canal2buttons)
             else:
-                self.stimulation_tree.currentItem().setText(18, str(self.first_signal_first_canal_check.isChecked()))
+                if self.baseline_checkbox.isChecked():
+                    self.deactivate_buttons(self.canal1buttons+[self.first_signal_first_canal_check])
+                    self.deactivate_buttons(self.canal2buttons+[self.first_signal_second_canal_check])
+                else:
+                    self.activate_buttons(self.canal1buttons+[self.first_signal_first_canal_check])
+                    self.activate_buttons(self.canal2buttons+[self.first_signal_second_canal_check])
                 if self.first_signal_first_canal_check.isChecked():
+                    self.baseline_check.setEnabled(False)
                     self.activate_buttons(self.canal1buttons)
                 else:
                     self.deactivate_buttons(self.canal1buttons)
                 if self.first_signal_second_canal_check.isChecked():
+                    self.baseline_check.setEnabled(False)
                     self.activate_buttons(self.canal2buttons)
                 else:
                     self.deactivate_buttons(self.canal2buttons)
+                if self.first_signal_first_canal_check.isChecked() or self.first_signal_second_canal_check.isChecked():
+                    self.deactivate_buttons([self.baseline_checkbox])
+                else:
+                    self.activate_buttons([self.baseline_checkbox])
+                self.stimulation_tree.currentItem().setText(17, str(self.baseline_checkbox.isChecked()))
+                self.stimulation_tree.currentItem().setText(18, str(self.first_signal_first_canal_check.isChecked()))
                 self.stimulation_tree.currentItem().setText(19, str(self.first_signal_second_canal_check.isChecked()))
-                self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
+                #self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
                 self.check_global_validity()
                 self.clear_plot()
                 self.plot()
@@ -1328,6 +1418,7 @@ class App(QWidget):
                 item = self.stimulation_tree.currentItem()
             if item.childCount() > 0:
                 if item == self.stimulation_tree.invisibleRootItem():
+                    self.baseline_values = []
                     jitter, block_delay, iterations_number = 0, 0, 1
                 else:
                     jitter = float(item.text(3))
@@ -1361,6 +1452,11 @@ class App(QWidget):
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, data2))
                 else:
                     self.plot_stim2_values = np.concatenate((self.plot_stim2_values, np.zeros(len(time_values))))
+
+                if item.text(18) == "False" and item.text(19) == "False" and item.text(17) == "True": #TODO Change 20 for real value
+                    baseline_start_index = len(self.plot_x_values)
+                    baseline_stop_index = len(self.plot_x_values) + len(time_values)
+                    self.baseline_values.append([baseline_start_index, baseline_stop_index])
                 time_values += self.elapsed_time
                 self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
                 self.elapsed_time += duration
