@@ -890,16 +890,26 @@ class App(QWidget):
         tree_item.setText(6, str(dictionary["duration"]))
         tree_item.setText(7, str(dictionary["jitter"]))
         tree_item.setText(8, str(dictionary["width"]))
+        tree_item.setText(21, str(dictionary["heigth"]))
         tree_item.setText(9, str(dictionary["freq"]))
         tree_item.setText(10, str(dictionary["duty"]))
         tree_item.setText(11, str(dictionary["type2"]))
         tree_item.setText(12, str(dictionary["pulses2"]))
         tree_item.setText(13, str(dictionary["jitter2"]))
         tree_item.setText(14, str(dictionary["width2"]))
+        tree_item.setText(22, str(dictionary["heigth2"]))
         tree_item.setText(15, str(dictionary["freq2"]))
         tree_item.setText(16, str(dictionary["duty2"]))
+        tree_item.setText(23, str(dictionary["type3"]))
+        tree_item.setText(24, str(dictionary["pulses3"]))
+        tree_item.setText(25, str(dictionary["jitter3"]))
+        tree_item.setText(26, str(dictionary["width3"]))
+        tree_item.setText(29, str(dictionary["heigth3"]))
+        tree_item.setText(27, str(dictionary["freq3"]))
+        tree_item.setText(28, str(dictionary["duty3"]))
         tree_item.setText(18, str(dictionary["canal1"]))
         tree_item.setText(19, str(dictionary["canal2"]))
+        tree_item.setText(30, str(dictionary["canal3"]))
 
     def run(self):
         if self.check_override():
@@ -998,6 +1008,7 @@ class App(QWidget):
             self.daq,
             name=self.experiment_name_cell.text(),
         )
+        self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         if self.daq.stop_signal and not self.save_files_after_stop:
             pass
@@ -1200,11 +1211,11 @@ class App(QWidget):
                         jitter,
                         width,
                         frequency,
-                        duty,
+                        duty, heigth
                     ) = self.tree.get_attributes(item, canal=1)
                 else:
                     canal1 = False
-                    sign_type, pulses, jitter, width, frequency, duty = 0, 0, 0, 0, 0, 0
+                    sign_type, pulses, jitter, width, frequency, duty, heigth = "", 0, 0, 0, 0, 0, 0
 
                 if item.text(19) == "True":
                     canal2 = True
@@ -1214,37 +1225,71 @@ class App(QWidget):
                         jitter2,
                         width2,
                         frequency2,
-                        duty2,
+                        duty2, heigth2
                     ) = self.tree.get_attributes(item, canal=2)
                 else:
-                    sign_type2, pulses2, jitter2, width2, frequency2, duty2 = (
+                    sign_type2, pulses2, jitter2, width2, frequency2, duty2, heigth2 = (
+                        "",
                         0,
                         0,
                         0,
                         0,
                         0,
-                        0,
+                        0
                     )
                     canal2 = False
-                return Stimulation(
-                    self.daq,
-                    duration,
-                    canal1=canal1,
-                    canal2=canal2,
-                    pulses=pulses,
-                    pulses2=pulses2,
-                    jitter=jitter,
-                    jitter2=jitter2,
-                    width=width,
-                    width2=width2,
-                    frequency=frequency,
-                    frequency2=frequency2,
-                    duty=duty,
-                    duty2=duty2,
-                    pulse_type1=sign_type,
-                    pulse_type2=sign_type2,
-                    name=item.text(0),
-                )
+
+                if item.text(30) == "True":
+                    canal3 = True
+                    (
+                        sign_type3,
+                        pulses3,
+                        jitter3,
+                        width3,
+                        frequency3,
+                        duty3, heigth3
+                    ) = self.tree.get_attributes(item, canal=3)
+                else:
+                    sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
+                        "",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    )
+                    canal2 = False
+                dictionary = {
+                    "type": "Stimulation",
+                    "name": item.text(0),
+                    "duration": duration,
+                    "canal1": canal1,
+                    "canal2": canal2,
+                    "canal3": canal3,
+                    "type1": sign_type,
+                    "pulses": pulses,
+                    "jitter": jitter,
+                    "width": width,
+                    "freq": frequency,
+                    "duty": duty,
+                    "heigth": heigth,
+                    "type2": sign_type2,
+                    "pulses2": pulses2,
+                    "jitter2": jitter2,
+                    "width2": width2,
+                    "freq2": frequency2,
+                    "duty2": duty2,
+                    "heigth2": heigth2,
+                    "type3": sign_type3,
+                    "pulses3": pulses3,
+                    "jitter3": jitter3,
+                    "width3": width3,
+                    "freq3": frequency3,
+                    "duty3": duty3,
+                    "heigth3": heigth3
+                }
+                return Stimulation(dictionary)
         except Exception as err:
             pass
 

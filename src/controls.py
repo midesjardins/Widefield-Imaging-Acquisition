@@ -248,10 +248,12 @@ class DAQ:
         Args:
             directory (str): The directory in which to save the NPY file
         """
-
-        indices = find_rising_indices(self.all_signals[-1])
-        reduced_stack = reduce_stack(self.all_signals, indices)
-        np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
+        try:
+            indices = find_rising_indices(self.all_signals[-1])
+            reduced_stack = reduce_stack(self.all_signals, indices)
+            np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
+        except Exception as err:
+            print(err)
         np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
     
     def reset_daq(self):
