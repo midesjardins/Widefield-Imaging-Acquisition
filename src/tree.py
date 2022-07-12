@@ -80,6 +80,7 @@ class Tree(QTreeWidget):
                 self.plot_x_values = []
                 self.plot_stim1_values = []
                 self.plot_stim2_values = []
+                self.plot_stim3_values = []
                 self.baseline_values = []
             if item.childCount() > 0:
                 if item == self.invisibleRootItem():
@@ -168,11 +169,40 @@ class Tree(QTreeWidget):
                         (self.plot_stim2_values, np.zeros(len(time_values)))
                     )
 
+                if item.text(30) == "True":
+                    (
+                        sign_type3,
+                        pulses3,
+                        jitter3,
+                        width3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    ) = self.get_attributes(item, canal=3)
+                    data3 = make_signal(
+                        time_values,
+                        sign_type3,
+                        width3,
+                        pulses3,
+                        jitter3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    )
+                    self.plot_stim3_values = np.concatenate(
+                        (self.plot_stim3_values, data3)
+                    )
+                else:
+                    self.plot_stim3_values = np.concatenate(
+                        (self.plot_stim3_values, np.zeros(len(time_values)))
+                    )
+
                 if (
                     item.text(18) == "False"
                     and item.text(19) == "False"
+                    and item.text(30) == "False"
                     and item.text(17) == "True"
-                ):  # TODO Change 20 for real value
+                ):
                     baseline_start_index = len(self.plot_x_values)
                     baseline_stop_index = len(self.plot_x_values) + len(time_values)
                     self.baseline_values.append(
@@ -186,6 +216,7 @@ class Tree(QTreeWidget):
             self.plot_x_values = []
             self.plot_stim1_values = []
             self.plot_stim2_values = []
+            self.plot_stim3_values = []
             self.elapsed_time = 0
 
     def check_global_validity(self, item=None):
@@ -245,6 +276,23 @@ class Tree(QTreeWidget):
                 pass
             else:
                 valid = False
+        if item.text(30) == "True":
+            if (
+                item.text(23) == "square"
+                and item.text(27) != ""
+                and item.text(28) != ""
+                and item.text(29) != ""
+            ):
+                pass
+            elif (
+                item.text(23) == "random-square"
+                and item.text(24) != ""
+                and item.text(25) != ""
+                and item.text(26) != ""
+            ):
+                pass
+            else:
+                valid = False
         return valid
 
     def check_block_validity(self, item=None):
@@ -292,6 +340,22 @@ class Tree(QTreeWidget):
                 frequency = float(item.text(15))
                 duty = float(item.text(16)) / 100
                 heigth = float(item.text(22))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+        elif canal == 3:
+            sign_type = item.text(23)
+            try:
+                pulses = int(item.text(23))
+                jitter = float(item.text(25))
+                width = float(item.text(26))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(27))
+                duty = float(item.text(28)) / 100
+                heigth = float(item.text(29))
             except Exception:
                 frequency, duty, heigth = 0, 0, 0
             return (sign_type, pulses, jitter, width, frequency, duty, heigth)

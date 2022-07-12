@@ -1758,13 +1758,19 @@ class App(QWidget):
                 self.tree.plot_x_values,
                 self.tree.plot_stim2_values,
                 root,
-                color="#FFE51C",
                 index=1,
+            )
+            self.plot_window.plot(
+                self.tree.plot_x_values,
+                self.tree.plot_stim3_values,
+                root,
+                index=2,
             )
             # print(f"plot time:{time.time()-time_start}")
             self.tree.plot_x_values = []
             self.tree.plot_stim1_values = []
             self.tree.plot_stim2_values = []
+            self.tree.plot_stim3_values = []
             self.elapsed_time = 0
         except Exception as err:
             print(err)
