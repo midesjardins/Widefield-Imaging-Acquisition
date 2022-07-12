@@ -305,6 +305,14 @@ class App(QWidget):
                 "20 Valid",
                 "21 Heigth",
                 "22 Heigth 2",
+                "23 Type 3",
+                "24 Pulses 3",
+                "25 Jitter 3",
+                "26 Width 3",
+                "27 Frequency 3",
+                "28 Duty 3",
+                "29 Heigth 3",
+                "30 Canal 3"
             ]
         )
         for i in range(19):
@@ -1359,6 +1367,7 @@ class App(QWidget):
         if first is True:
             self.stimulation_type_cell.setCurrentIndex(0)
             self.stimulation_type_cell2.setCurrentIndex(0)
+            self.stimulation_type_cell3.setCurrentIndex(0)
         else:
             self.tree.check_global_validity()
         self.different_signals_window.setCurrentIndex(
@@ -1366,6 +1375,9 @@ class App(QWidget):
         )
         self.different_signals_window2.setCurrentIndex(
             self.stimulation_type_cell2.currentIndex()
+        )
+        self.different_signals_window3.setCurrentIndex(
+            self.stimulation_type_cell3.currentIndex()
         )
         # self.check_stim_validity()
         try:
@@ -1377,6 +1389,12 @@ class App(QWidget):
         try:
             self.tree.currentItem().setText(
                 11, str(self.stimulation_type_cell2.currentText())
+            )
+        except Exception:
+            pass
+        try:
+            self.tree.currentItem().setText(
+                23, str(self.stimulation_type_cell3.currentText())
             )
         except Exception:
             pass
@@ -1402,6 +1420,13 @@ class App(QWidget):
             )
         except Exception:
             self.stimulation_type_cell2.setCurrentIndex(0)
+
+        try:
+            self.stimulation_type_cell3.setCurrentIndex(
+                dico[self.tree.currentItem().text(23)]
+            )
+        except Exception:
+            self.stimulation_type_cell3.setCurrentIndex(0)
 
     def signal_to_tree(self):
         self.tree.currentItem().setText(
@@ -1445,7 +1470,24 @@ class App(QWidget):
         self.tree.currentItem().setText(
             22, self.second_signal_type_heigth_cell2.text()
         )
-
+        self.tree.currentItem().setText(
+            24, self.first_signal_type_pulses_cell3.text()
+        )
+        self.tree.currentItem().setText(
+            25, self.first_signal_type_jitter_cell3.text()
+        )
+        self.tree.currentItem().setText(
+            26, self.first_signal_type_width_cell3.text()
+        )
+        self.tree.currentItem().setText(
+            27, self.second_signal_type_frequency_cell3.text()
+        )
+        self.tree.currentItem().setText(
+            28, self.second_signal_type_duty_cell3.text()
+        )
+        self.tree.currentItem().setText(
+            29, self.second_signal_type_heigth_cell3.text()
+        )
         self.tree.check_global_validity()
         self.clear_plot()
         self.tree.graph(self.tree.currentItem())
@@ -1492,6 +1534,24 @@ class App(QWidget):
             self.second_signal_type_duty_cell2.setText(
                 self.tree.currentItem().text(16)
             )
+            self.first_signal_type_pulses_cell3.setText(
+                self.tree.currentItem().text(24)
+            )
+            self.first_signal_type_jitter_cell3.setText(
+                self.tree.currentItem().text(25)
+            )
+            self.first_signal_type_width_cell3.setText(
+                self.tree.currentItem().text(26)
+            )
+            self.second_signal_type_frequency_cell3.setText(
+                self.tree.currentItem().text(27)
+            )
+            self.second_signal_type_duty_cell3.setText(
+                self.tree.currentItem().text(28)
+            )
+            self.second_signal_type_heigth_cell3.setText(
+                self.tree.currentItem().text(29)
+            )
         except Exception as err:
             pass
 
@@ -1528,6 +1588,9 @@ class App(QWidget):
             self.first_signal_second_canal_check.setChecked(
                 self.boolean(self.tree.currentItem().text(19))
             )
+            self.first_signal_third_canal_check.setChecked(
+                self.boolean(self.tree.currentItem().text(30))
+            )
             if self.baseline_checkbox.isChecked():
                 self.deactivate_buttons(
                     self.canal1buttons + [self.first_signal_first_canal_check]
@@ -1535,11 +1598,15 @@ class App(QWidget):
                 self.deactivate_buttons(
                     self.canal2buttons + [self.first_signal_second_canal_check]
                 )
+                self.deactivate_buttons(
+                    self.canal3buttons + [self.first_signal_third_canal_check]
+                )
             else:
                 self.activate_buttons(
                     [
                         self.first_signal_first_canal_check,
                         self.first_signal_second_canal_check,
+                        self.first_signal_third_canal_check
                     ]
                 )
             if self.first_signal_first_canal_check.isChecked():
@@ -1550,6 +1617,10 @@ class App(QWidget):
                 self.activate_buttons(self.canal2buttons)
             else:
                 self.deactivate_buttons(self.canal2buttons)
+            if self.first_signal_third_canal_check.isChecked():
+                self.activate_buttons(self.canal3buttons)
+            else:
+                self.deactivate_buttons(self.canal3buttons)
         except Exception as err:
             print(err)
             pass
@@ -1562,8 +1633,10 @@ class App(QWidget):
                 self.tree.currentItem().setText(17, "False")
                 self.tree.currentItem().setText(18, "False")
                 self.tree.currentItem().setText(19, "False")
+                self.tree.currentItem().setText(30, "False")
                 self.deactivate_buttons(self.canal1buttons)
                 self.deactivate_buttons(self.canal2buttons)
+                self.deactivate_buttons(self.canal3buttons)
             else:
                 if self.baseline_checkbox.isChecked():
                     self.deactivate_buttons(
@@ -1572,12 +1645,18 @@ class App(QWidget):
                     self.deactivate_buttons(
                         self.canal2buttons + [self.first_signal_second_canal_check]
                     )
+                    self.deactivate_buttons(
+                        self.canal3buttons + [self.first_signal_third_canal_check]
+                    )
                 else:
                     self.activate_buttons(
                         self.canal1buttons + [self.first_signal_first_canal_check]
                     )
                     self.activate_buttons(
                         self.canal2buttons + [self.first_signal_second_canal_check]
+                    )
+                    self.activate_buttons(
+                        self.canal3buttons + [self.first_signal_third_canal_check]
                     )
                 if self.first_signal_first_canal_check.isChecked():
                     self.baseline_checkbox.setEnabled(False)
@@ -1589,9 +1668,14 @@ class App(QWidget):
                     self.activate_buttons(self.canal2buttons)
                 else:
                     self.deactivate_buttons(self.canal2buttons)
+                if self.first_signal_third_canal_check.isChecked():
+                    self.baseline_checkbox.setEnabled(False)
+                    self.activate_buttons(self.canal3buttons)
+                else:
+                    self.deactivate_buttons(self.canal3buttons)
                 if (
                     self.first_signal_first_canal_check.isChecked()
-                    or self.first_signal_second_canal_check.isChecked()
+                    or self.first_signal_second_canal_check.isChecked() or self.first_signal_third_canal_check.isChecked()
                 ):
                     self.deactivate_buttons([self.baseline_checkbox])
                 else:
@@ -1604,6 +1688,9 @@ class App(QWidget):
                 )
                 self.tree.currentItem().setText(
                     19, str(self.first_signal_second_canal_check.isChecked())
+                )
+                self.tree.currentItem().setText(
+                    30, str(self.first_signal_third_canal_check.isChecked())
                 )
                 # self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
                 self.tree.check_global_validity()
@@ -1825,6 +1912,22 @@ class App(QWidget):
             self.second_signal_type_heigth_cell2,
             self.second_signal_type_heigth_label2,
         ]
+        self.canal3buttons = [
+            self.stimulation_type_label3,
+            self.stimulation_type_cell3,
+            self.first_signal_type_pulses_label3,
+            self.first_signal_type_pulses_cell3,
+            self.first_signal_type_width_label3,
+            self.first_signal_type_width_cell3,
+            self.first_signal_type_jitter_label3,
+            self.first_signal_type_jitter_cell3,
+            self.second_signal_type_frequency_label3,
+            self.second_signal_type_frequency_cell3,
+            self.second_signal_type_duty_label3,
+            self.second_signal_type_duty_cell3,
+            self.second_signal_type_heigth_cell3,
+            self.second_signal_type_heigth_label3,
+        ]
         self.enabled_buttons = [
             self.run_button,
             self.experiment_name_cell,
@@ -1880,6 +1983,21 @@ class App(QWidget):
             self.second_signal_type_heigth_cell2,
             self.second_signal_type_duty_label2,
             self.second_signal_type_duty_cell2,
+            self.first_signal_third_canal_check,
+            self.stimulation_type_label3,
+            self.stimulation_type_cell3,
+            self.first_signal_type_pulses_label3,
+            self.first_signal_type_pulses_cell3,
+            self.first_signal_type_width_label3,
+            self.first_signal_type_width_cell3,
+            self.first_signal_type_jitter_label3,
+            self.first_signal_type_jitter_cell3,
+            self.second_signal_type_frequency_label3,
+            self.second_signal_type_frequency_cell3,
+            self.second_signal_type_duty_label3,
+            self.second_signal_type_duty_cell3,
+            self.second_signal_type_heigth_cell3,
+            self.second_signal_type_heigth_label3,
             self.block_iterations_label,
             self.block_iterations_cell,
             self.block_delay_label,
