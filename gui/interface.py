@@ -385,59 +385,59 @@ class App(QWidget):
         self.canal_window.setAlignment(Qt.AlignTop)
         self.canal_window.setContentsMargins(0, 0, 0, 0)
 
-        self.first_signal_first_canal_check = QCheckBox()
-        self.first_signal_first_canal_check.stateChanged.connect(self.canals_to_tree)
-        self.first_signal_first_canal_check.setText("Canal 1")
+        self.first_canal_check = QCheckBox()
+        self.first_canal_check.stateChanged.connect(self.canals_to_tree)
+        self.first_canal_check.setText("Canal 1")
 
-        self.stimulation_type_label = QLabel("Type")
-        self.stimulation_type_cell = QComboBox()
-        self.stimulation_type_cell.addItem("square")
-        self.stimulation_type_cell.addItem("random-square")
-        self.stimulation_type_cell.addItem("Third")
-        self.stimulation_type_cell.currentIndexChanged.connect(self.type_to_tree)
+        self.stim_type_label = QLabel("Type")
+        self.stim_type_cell = QComboBox()
+        self.stim_type_cell.addItem("square")
+        self.stim_type_cell.addItem("random-square")
+        self.stim_type_cell.addItem("Third")
+        self.stim_type_cell.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window = QHBoxLayout()
-        self.stimulation_type_window.addWidget(self.first_signal_first_canal_check)
-        self.stimulation_type_window.addWidget(self.stimulation_type_label)
-        self.stimulation_type_window.addWidget(self.stimulation_type_cell)
+        self.stimulation_type_window.addWidget(self.first_canal_check)
+        self.stimulation_type_window.addWidget(self.stim_type_label)
+        self.stimulation_type_window.addWidget(self.stim_type_cell)
         self.canal_window.addLayout(self.stimulation_type_window)
 
         self.different_signals_window = QStackedLayout()
         self.canal_window.addLayout(self.different_signals_window)
 
-        self.first_signal_second_canal_check = QCheckBox()
-        self.first_signal_second_canal_check.stateChanged.connect(self.canals_to_tree)
-        self.first_signal_second_canal_check.setText("Canal 2")
+        self.second_canal_check = QCheckBox()
+        self.second_canal_check.stateChanged.connect(self.canals_to_tree)
+        self.second_canal_check.setText("Canal 2")
 
-        self.stimulation_type_label2 = QLabel("Type")
-        self.stimulation_type_cell2 = QComboBox()
-        self.stimulation_type_cell2.addItem("square")
-        self.stimulation_type_cell2.addItem("random-square")
-        self.stimulation_type_cell2.addItem("Third")
-        self.stimulation_type_cell2.currentIndexChanged.connect(self.type_to_tree)
+        self.stim_type_label2 = QLabel("Type")
+        self.stim_type_cell2 = QComboBox()
+        self.stim_type_cell2.addItem("square")
+        self.stim_type_cell2.addItem("random-square")
+        self.stim_type_cell2.addItem("Third")
+        self.stim_type_cell2.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window2 = QHBoxLayout()
-        self.stimulation_type_window2.addWidget(self.first_signal_second_canal_check)
-        self.stimulation_type_window2.addWidget(self.stimulation_type_label2)
-        self.stimulation_type_window2.addWidget(self.stimulation_type_cell2)
+        self.stimulation_type_window2.addWidget(self.second_canal_check)
+        self.stimulation_type_window2.addWidget(self.stim_type_label2)
+        self.stimulation_type_window2.addWidget(self.stim_type_cell2)
         self.canal_window.addLayout(self.stimulation_type_window2)
 
         self.different_signals_window2 = QStackedLayout()
         self.canal_window.addLayout(self.different_signals_window2)
 
-        self.first_signal_third_canal_check = QCheckBox()
-        self.first_signal_third_canal_check.stateChanged.connect(self.canals_to_tree)
-        self.first_signal_third_canal_check.setText("Canal 3")
-        # self.canal_window.addWidget(self.first_signal_third_canal_check)
+        self.third_canal_check = QCheckBox()
+        self.third_canal_check.stateChanged.connect(self.canals_to_tree)
+        self.third_canal_check.setText("Canal 3")
+        # self.canal_window.addWidget(self.third_canal_check)
 
-        self.stimulation_type_label3 = QLabel("Type")
-        self.stimulation_type_cell3 = QComboBox()
-        self.stimulation_type_cell3.addItem("square")
-        self.stimulation_type_cell3.addItem("random-square")
-        self.stimulation_type_cell3.addItem("Third")
-        self.stimulation_type_cell3.currentIndexChanged.connect(self.type_to_tree)
+        self.stim_type_label3 = QLabel("Type")
+        self.stim_type_cell3 = QComboBox()
+        self.stim_type_cell3.addItem("square")
+        self.stim_type_cell3.addItem("random-square")
+        self.stim_type_cell3.addItem("Third")
+        self.stim_type_cell3.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window3 = QHBoxLayout()
-        self.stimulation_type_window3.addWidget(self.first_signal_third_canal_check)
-        self.stimulation_type_window3.addWidget(self.stimulation_type_label3)
-        self.stimulation_type_window3.addWidget(self.stimulation_type_cell3)
+        self.stimulation_type_window3.addWidget(self.third_canal_check)
+        self.stimulation_type_window3.addWidget(self.stim_type_label3)
+        self.stimulation_type_window3.addWidget(self.stim_type_cell3)
         self.canal_window.addLayout(self.stimulation_type_window3)
 
         self.different_signals_window3 = QStackedLayout()
@@ -451,18 +451,16 @@ class App(QWidget):
         self.stimulation_name_window.addWidget(self.stimulation_name_cell)
         self.stimulation_edit_layout.addLayout(self.stimulation_name_window)
 
-        self.first_signal_duration_window = QHBoxLayout()
+        self.duration_window = QHBoxLayout()
         self.first_signal_type_duration_label = QLabel("Duration (s)")
-        self.first_signal_duration_window.addWidget(
+        self.duration_window.addWidget(
             self.first_signal_type_duration_label
         )
-        self.first_signal_type_duration_cell = QLineEdit()
-        self.first_signal_duration_window.addWidget(
-            self.first_signal_type_duration_cell
-        )
-        self.first_signal_type_duration_cell.setValidator(self.onlyFloat)
-        self.first_signal_type_duration_cell.textEdited.connect(self.signal_to_tree)
-        self.stimulation_edit_layout.addLayout(self.first_signal_duration_window)
+        self.duration_cell = QLineEdit()
+        self.duration_window.addWidget(self.duration_cell)
+        self.duration_cell.setValidator(self.onlyFloat)
+        self.duration_cell.textEdited.connect(self.signal_to_tree)
+        self.stimulation_edit_layout.addLayout(self.duration_window)
 
         self.baseline_checkbox = QCheckBox("Baseline")
         self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
@@ -492,97 +490,97 @@ class App(QWidget):
         self.first_signal_type_container3 = QWidget()
         self.first_signal_type_container3.setLayout(self.first_signal_type_window3)
 
-        self.first_signal_pulses_window = QHBoxLayout()
-        self.first_signal_type_pulses_label = QLabel("Pulses")
-        self.first_signal_pulses_window.addWidget(self.first_signal_type_pulses_label)
-        self.first_signal_type_pulses_cell = QLineEdit()
-        self.first_signal_type_pulses_cell.setValidator(QIntValidator())
-        self.first_signal_type_pulses_cell.textEdited.connect(self.signal_to_tree)
-        self.first_signal_pulses_window.addWidget(self.first_signal_type_pulses_cell)
+        self.pulses_window = QHBoxLayout()
+        self.pulses_label = QLabel("Pulses")
+        self.pulses_window.addWidget(self.pulses_label)
+        self.pulses_cell = QLineEdit()
+        self.pulses_cell.setValidator(QIntValidator())
+        self.pulses_cell.textEdited.connect(self.signal_to_tree)
+        self.pulses_window.addWidget(self.pulses_cell)
 
-        self.first_signal_pulses_window2 = QHBoxLayout()
-        self.first_signal_type_pulses_label2 = QLabel("Pulses")
-        self.first_signal_pulses_window2.addWidget(self.first_signal_type_pulses_label2)
-        self.first_signal_type_pulses_cell2 = QLineEdit()
-        self.first_signal_type_pulses_cell2.setValidator(QIntValidator())
-        self.first_signal_type_pulses_cell2.textEdited.connect(self.signal_to_tree)
-        self.first_signal_pulses_window2.addWidget(self.first_signal_type_pulses_cell2)
+        self.pulses_window2 = QHBoxLayout()
+        self.pulses_label2 = QLabel("Pulses")
+        self.pulses_window2.addWidget(self.pulses_label2)
+        self.pulses_cell2 = QLineEdit()
+        self.pulses_cell2.setValidator(QIntValidator())
+        self.pulses_cell2.textEdited.connect(self.signal_to_tree)
+        self.pulses_window2.addWidget(self.pulses_cell2)
 
-        self.first_signal_pulses_window3 = QHBoxLayout()
-        self.first_signal_type_pulses_label3 = QLabel("Pulses")
-        self.first_signal_pulses_window3.addWidget(self.first_signal_type_pulses_label3)
-        self.first_signal_type_pulses_cell3 = QLineEdit()
-        self.first_signal_type_pulses_cell3.setValidator(QIntValidator())
-        self.first_signal_type_pulses_cell3.textEdited.connect(self.signal_to_tree)
-        self.first_signal_pulses_window3.addWidget(self.first_signal_type_pulses_cell3)
+        self.pulses_window3 = QHBoxLayout()
+        self.pulses_label3 = QLabel("Pulses")
+        self.pulses_window3.addWidget(self.pulses_label3)
+        self.pulses_cell3 = QLineEdit()
+        self.pulses_cell3.setValidator(QIntValidator())
+        self.pulses_cell3.textEdited.connect(self.signal_to_tree)
+        self.pulses_window3.addWidget(self.pulses_cell3)
 
-        self.first_signal_jitter_window = QHBoxLayout()
-        self.first_signal_type_jitter_label = QLabel("Jitter (s)")
-        self.first_signal_jitter_window.addWidget(self.first_signal_type_jitter_label)
-        self.first_signal_type_jitter_cell = QLineEdit()
-        self.first_signal_type_jitter_cell.setValidator(self.onlyFloat)
-        self.first_signal_type_jitter_cell.setText("0")
-        self.first_signal_type_jitter_cell.textEdited.connect(self.signal_to_tree)
-        self.first_signal_jitter_window.addWidget(self.first_signal_type_jitter_cell)
+        self.jitter_window = QHBoxLayout()
+        self.jitter_label = QLabel("Jitter (s)")
+        self.jitter_window.addWidget(self.jitter_label)
+        self.jitter_cell = QLineEdit()
+        self.jitter_cell.setValidator(self.onlyFloat)
+        self.jitter_cell.setText("0")
+        self.jitter_cell.textEdited.connect(self.signal_to_tree)
+        self.jitter_window.addWidget(self.jitter_cell)
 
-        self.first_signal_jitter_window2 = QHBoxLayout()
-        self.first_signal_jitter_window2 = QHBoxLayout()
-        self.first_signal_type_jitter_label2 = QLabel("Jitter (s)")
-        self.first_signal_jitter_window2.addWidget(self.first_signal_type_jitter_label2)
-        self.first_signal_type_jitter_cell2 = QLineEdit()
-        self.first_signal_type_jitter_cell2.setValidator(self.onlyFloat)
-        self.first_signal_type_jitter_cell2.setText("0")
-        self.first_signal_type_jitter_cell2.textEdited.connect(self.signal_to_tree)
-        self.first_signal_jitter_window2.addWidget(self.first_signal_type_jitter_cell2)
+        self.jitter_window2 = QHBoxLayout()
+        self.jitter_window2 = QHBoxLayout()
+        self.jitter_label2 = QLabel("Jitter (s)")
+        self.jitter_window2.addWidget(self.jitter_label2)
+        self.jitter_cell2 = QLineEdit()
+        self.jitter_cell2.setValidator(self.onlyFloat)
+        self.jitter_cell2.setText("0")
+        self.jitter_cell2.textEdited.connect(self.signal_to_tree)
+        self.jitter_window2.addWidget(self.jitter_cell2)
 
-        self.first_signal_jitter_window3 = QHBoxLayout()
-        self.first_signal_jitter_window3 = QHBoxLayout()
-        self.first_signal_type_jitter_label3 = QLabel("Jitter (s)")
-        self.first_signal_jitter_window3.addWidget(self.first_signal_type_jitter_label3)
-        self.first_signal_type_jitter_cell3 = QLineEdit()
-        self.first_signal_type_jitter_cell3.setValidator(self.onlyFloat)
-        self.first_signal_type_jitter_cell3.setText("0")
-        self.first_signal_type_jitter_cell3.textEdited.connect(self.signal_to_tree)
-        self.first_signal_jitter_window3.addWidget(self.first_signal_type_jitter_cell3)
+        self.jitter_window3 = QHBoxLayout()
+        self.jitter_window3 = QHBoxLayout()
+        self.jitter_label3 = QLabel("Jitter (s)")
+        self.jitter_window3.addWidget(self.jitter_label3)
+        self.jitter_cell3 = QLineEdit()
+        self.jitter_cell3.setValidator(self.onlyFloat)
+        self.jitter_cell3.setText("0")
+        self.jitter_cell3.textEdited.connect(self.signal_to_tree)
+        self.jitter_window3.addWidget(self.jitter_cell3)
 
-        self.first_signal_width_window = QHBoxLayout()
-        self.first_signal_type_width_label = QLabel("Width (s)")
-        self.first_signal_width_window.addWidget(self.first_signal_type_width_label)
-        self.first_signal_type_width_cell = QLineEdit()
-        self.first_signal_type_width_cell.setValidator(self.onlyFloat)
-        self.first_signal_type_width_cell.setText("0")
-        self.first_signal_type_width_cell.textEdited.connect(self.signal_to_tree)
-        self.first_signal_width_window.addWidget(self.first_signal_type_width_cell)
+        self.width_window = QHBoxLayout()
+        self.width_label = QLabel("Width (s)")
+        self.width_window.addWidget(self.width_label)
+        self.width_cell = QLineEdit()
+        self.width_cell.setValidator(self.onlyFloat)
+        self.width_cell.setText("0")
+        self.width_cell.textEdited.connect(self.signal_to_tree)
+        self.width_window.addWidget(self.width_cell)
 
-        self.first_signal_width_window2 = QHBoxLayout()
-        self.first_signal_type_width_label2 = QLabel("Width (s)")
-        self.first_signal_width_window2.addWidget(self.first_signal_type_width_label2)
-        self.first_signal_type_width_cell2 = QLineEdit()
-        self.first_signal_type_width_cell2.setValidator(self.onlyFloat)
-        self.first_signal_type_width_cell2.setText("0")
-        self.first_signal_type_width_cell2.textEdited.connect(self.signal_to_tree)
-        self.first_signal_width_window2.addWidget(self.first_signal_type_width_cell2)
+        self.width_window2 = QHBoxLayout()
+        self.width_label2 = QLabel("Width (s)")
+        self.width_window2.addWidget(self.width_label2)
+        self.width_cell2 = QLineEdit()
+        self.width_cell2.setValidator(self.onlyFloat)
+        self.width_cell2.setText("0")
+        self.width_cell2.textEdited.connect(self.signal_to_tree)
+        self.width_window2.addWidget(self.width_cell2)
 
-        self.first_signal_width_window3 = QHBoxLayout()
-        self.first_signal_type_width_label3 = QLabel("Width (s)")
-        self.first_signal_width_window3.addWidget(self.first_signal_type_width_label3)
-        self.first_signal_type_width_cell3 = QLineEdit()
-        self.first_signal_type_width_cell3.setValidator(self.onlyFloat)
-        self.first_signal_type_width_cell3.setText("0")
-        self.first_signal_type_width_cell3.textEdited.connect(self.signal_to_tree)
-        self.first_signal_width_window3.addWidget(self.first_signal_type_width_cell3)
+        self.width_window3 = QHBoxLayout()
+        self.width_label3 = QLabel("Width (s)")
+        self.width_window3.addWidget(self.width_label3)
+        self.width_cell3 = QLineEdit()
+        self.width_cell3.setValidator(self.onlyFloat)
+        self.width_cell3.setText("0")
+        self.width_cell3.textEdited.connect(self.signal_to_tree)
+        self.width_window3.addWidget(self.width_cell3)
 
-        self.first_signal_type_window.addLayout(self.first_signal_pulses_window)
-        self.first_signal_type_window.addLayout(self.first_signal_width_window)
-        self.first_signal_type_window.addLayout(self.first_signal_jitter_window)
+        self.first_signal_type_window.addLayout(self.pulses_window)
+        self.first_signal_type_window.addLayout(self.width_window)
+        self.first_signal_type_window.addLayout(self.jitter_window)
 
-        self.first_signal_type_window2.addLayout(self.first_signal_pulses_window2)
-        self.first_signal_type_window2.addLayout(self.first_signal_width_window2)
-        self.first_signal_type_window2.addLayout(self.first_signal_jitter_window2)
+        self.first_signal_type_window2.addLayout(self.pulses_window2)
+        self.first_signal_type_window2.addLayout(self.width_window2)
+        self.first_signal_type_window2.addLayout(self.jitter_window2)
 
-        self.first_signal_type_window3.addLayout(self.first_signal_pulses_window3)
-        self.first_signal_type_window3.addLayout(self.first_signal_width_window3)
-        self.first_signal_type_window3.addLayout(self.first_signal_jitter_window3)
+        self.first_signal_type_window3.addLayout(self.pulses_window3)
+        self.first_signal_type_window3.addLayout(self.width_window3)
+        self.first_signal_type_window3.addLayout(self.jitter_window3)
         # -------------------
 
         self.second_signal_type_window = QVBoxLayout()
@@ -607,109 +605,89 @@ class App(QWidget):
         self.second_signal_type_window3.setContentsMargins(0, 0, 0, 0)
         self.second_signal_type_container3.setLayout(self.second_signal_type_window3)
 
-        self.second_signal_heigth_window = QHBoxLayout()
-        self.second_signal_type_heigth_label = QLabel("Heigth (V)")
-        self.second_signal_heigth_window.addWidget(self.second_signal_type_heigth_label)
-        self.second_signal_type_heigth_cell = QLineEdit()
-        self.second_signal_type_heigth_cell.setValidator(self.onlyFloat)
-        self.second_signal_type_heigth_cell.textEdited.connect(self.signal_to_tree)
-        self.second_signal_heigth_window.addWidget(self.second_signal_type_heigth_cell)
+        self.heigth_window = QHBoxLayout()
+        self.heigth_label = QLabel("Heigth (V)")
+        self.heigth_window.addWidget(self.heigth_label)
+        self.heigth_cell = QLineEdit()
+        self.heigth_cell.setValidator(self.onlyFloat)
+        self.heigth_cell.textEdited.connect(self.signal_to_tree)
+        self.heigth_window.addWidget(self.heigth_cell)
 
-        self.second_signal_heigth_window2 = QHBoxLayout()
-        self.second_signal_type_heigth_label2 = QLabel("Heigth (V)")
-        self.second_signal_heigth_window2.addWidget(
-            self.second_signal_type_heigth_label2
-        )
-        self.second_signal_type_heigth_cell2 = QLineEdit()
-        self.second_signal_type_heigth_cell2.setValidator(self.onlyFloat)
-        self.second_signal_type_heigth_cell2.textEdited.connect(self.signal_to_tree)
-        self.second_signal_heigth_window2.addWidget(
-            self.second_signal_type_heigth_cell2
-        )
+        self.heigth_window2 = QHBoxLayout()
+        self.heigth_label2 = QLabel("Heigth (V)")
+        self.heigth_window2.addWidget(self.heigth_label2)
+        self.heigth_cell2 = QLineEdit()
+        self.heigth_cell2.setValidator(self.onlyFloat)
+        self.heigth_cell2.textEdited.connect(self.signal_to_tree)
+        self.heigth_window2.addWidget(self.heigth_cell2)
 
-        self.second_signal_heigth_window3 = QHBoxLayout()
-        self.second_signal_type_heigth_label3 = QLabel("Heigth (V)")
-        self.second_signal_heigth_window3.addWidget(
-            self.second_signal_type_heigth_label3
-        )
-        self.second_signal_type_heigth_cell3 = QLineEdit()
-        self.second_signal_type_heigth_cell3.setValidator(self.onlyFloat)
-        self.second_signal_type_heigth_cell3.textEdited.connect(self.signal_to_tree)
-        self.second_signal_heigth_window3.addWidget(
-            self.second_signal_type_heigth_cell3
-        )
+        self.heigth_window3 = QHBoxLayout()
+        self.heigth_label3 = QLabel("Heigth (V)")
+        self.heigth_window3.addWidget(self.heigth_label3)
+        self.heigth_cell3 = QLineEdit()
+        self.heigth_cell3.setValidator(self.onlyFloat)
+        self.heigth_cell3.textEdited.connect(self.signal_to_tree)
+        self.heigth_window3.addWidget(self.heigth_cell3)
 
-        self.second_signal_frequency_window = QHBoxLayout()
-        self.second_signal_type_frequency_label = QLabel("Frequency (Hz)")
-        self.second_signal_frequency_window.addWidget(
-            self.second_signal_type_frequency_label
-        )
-        self.second_signal_type_frequency_cell = QLineEdit()
-        self.second_signal_type_frequency_cell.setValidator(self.onlyFloat)
-        self.second_signal_type_frequency_cell.textEdited.connect(self.signal_to_tree)
-        self.second_signal_frequency_window.addWidget(
-            self.second_signal_type_frequency_cell
-        )
+        self.frequency_window = QHBoxLayout()
+        self.frequency_label = QLabel("Frequency (Hz)")
+        self.frequency_window.addWidget(self.frequency_label)
+        self.frequency_cell = QLineEdit()
+        self.frequency_cell.setValidator(self.onlyFloat)
+        self.frequency_cell.textEdited.connect(self.signal_to_tree)
+        self.frequency_window.addWidget(self.frequency_cell)
 
-        self.second_signal_frequency_window2 = QHBoxLayout()
-        self.second_signal_type_frequency_label2 = QLabel("Frequency (Hz)")
-        self.second_signal_frequency_window2.addWidget(
-            self.second_signal_type_frequency_label2
-        )
-        self.second_signal_type_frequency_cell2 = QLineEdit()
-        self.second_signal_type_frequency_cell2.setValidator(self.onlyFloat)
-        self.second_signal_type_frequency_cell2.textEdited.connect(self.signal_to_tree)
-        self.second_signal_frequency_window2.addWidget(
-            self.second_signal_type_frequency_cell2
-        )
+        self.frequency_window2 = QHBoxLayout()
+        self.frequency_label2 = QLabel("Frequency (Hz)")
+        self.frequency_window2.addWidget(self.frequency_label2)
+        self.frequency_cell2 = QLineEdit()
+        self.frequency_cell2.setValidator(self.onlyFloat)
+        self.frequency_cell2.textEdited.connect(self.signal_to_tree)
+        self.frequency_window2.addWidget(self.frequency_cell2)
 
-        self.second_signal_frequency_window3 = QHBoxLayout()
-        self.second_signal_type_frequency_label3 = QLabel("Frequency (Hz)")
-        self.second_signal_frequency_window3.addWidget(
-            self.second_signal_type_frequency_label3
-        )
-        self.second_signal_type_frequency_cell3 = QLineEdit()
-        self.second_signal_type_frequency_cell3.setValidator(self.onlyFloat)
-        self.second_signal_type_frequency_cell3.textEdited.connect(self.signal_to_tree)
-        self.second_signal_frequency_window3.addWidget(
-            self.second_signal_type_frequency_cell3
-        )
+        self.frequency_window3 = QHBoxLayout()
+        self.frequency_label3 = QLabel("Frequency (Hz)")
+        self.frequency_window3.addWidget(self.frequency_label3)
+        self.frequency_cell3 = QLineEdit()
+        self.frequency_cell3.setValidator(self.onlyFloat)
+        self.frequency_cell3.textEdited.connect(self.signal_to_tree)
+        self.frequency_window3.addWidget(self.frequency_cell3)
 
-        self.second_signal_duty_window = QHBoxLayout()
-        self.second_signal_type_duty_label = QLabel("Duty (%)")
-        self.second_signal_duty_window.addWidget(self.second_signal_type_duty_label)
-        self.second_signal_type_duty_cell = QLineEdit()
-        self.second_signal_type_duty_cell.setValidator(self.onlyFloat)
-        self.second_signal_type_duty_cell.textEdited.connect(self.signal_to_tree)
-        self.second_signal_duty_window.addWidget(self.second_signal_type_duty_cell)
+        self.duty_window = QHBoxLayout()
+        self.duty_label = QLabel("Duty (%)")
+        self.duty_window.addWidget(self.duty_label)
+        self.duty_cell = QLineEdit()
+        self.duty_cell.setValidator(self.onlyFloat)
+        self.duty_cell.textEdited.connect(self.signal_to_tree)
+        self.duty_window.addWidget(self.duty_cell)
 
-        self.second_signal_duty_window2 = QHBoxLayout()
-        self.second_signal_type_duty_label2 = QLabel("Duty (%)")
-        self.second_signal_duty_window2.addWidget(self.second_signal_type_duty_label2)
-        self.second_signal_type_duty_cell2 = QLineEdit()
-        self.second_signal_type_duty_cell2.setValidator(self.onlyFloat)
-        self.second_signal_type_duty_cell2.textEdited.connect(self.signal_to_tree)
-        self.second_signal_duty_window2.addWidget(self.second_signal_type_duty_cell2)
+        self.duty_window2 = QHBoxLayout()
+        self.duty_label2 = QLabel("Duty (%)")
+        self.duty_window2.addWidget(self.duty_label2)
+        self.duty_cell2 = QLineEdit()
+        self.duty_cell2.setValidator(self.onlyFloat)
+        self.duty_cell2.textEdited.connect(self.signal_to_tree)
+        self.duty_window2.addWidget(self.duty_cell2)
 
-        self.second_signal_duty_window3 = QHBoxLayout()
-        self.second_signal_type_duty_label3 = QLabel("Duty (%)")
-        self.second_signal_duty_window3.addWidget(self.second_signal_type_duty_label3)
-        self.second_signal_type_duty_cell3 = QLineEdit()
-        self.second_signal_type_duty_cell3.setValidator(self.onlyFloat)
-        self.second_signal_type_duty_cell3.textEdited.connect(self.signal_to_tree)
-        self.second_signal_duty_window3.addWidget(self.second_signal_type_duty_cell3)
+        self.duty_window3 = QHBoxLayout()
+        self.duty_label3 = QLabel("Duty (%)")
+        self.duty_window3.addWidget(self.duty_label3)
+        self.duty_cell3 = QLineEdit()
+        self.duty_cell3.setValidator(self.onlyFloat)
+        self.duty_cell3.textEdited.connect(self.signal_to_tree)
+        self.duty_window3.addWidget(self.duty_cell3)
 
-        self.second_signal_type_window.addLayout(self.second_signal_heigth_window)
-        self.second_signal_type_window.addLayout(self.second_signal_frequency_window)
-        self.second_signal_type_window.addLayout(self.second_signal_duty_window)
+        self.second_signal_type_window.addLayout(self.heigth_window)
+        self.second_signal_type_window.addLayout(self.frequency_window)
+        self.second_signal_type_window.addLayout(self.duty_window)
 
-        self.second_signal_type_window2.addLayout(self.second_signal_heigth_window2)
-        self.second_signal_type_window2.addLayout(self.second_signal_frequency_window2)
-        self.second_signal_type_window2.addLayout(self.second_signal_duty_window2)
+        self.second_signal_type_window2.addLayout(self.heigth_window2)
+        self.second_signal_type_window2.addLayout(self.frequency_window2)
+        self.second_signal_type_window2.addLayout(self.duty_window2)
 
-        self.second_signal_type_window3.addLayout(self.second_signal_heigth_window3)
-        self.second_signal_type_window3.addLayout(self.second_signal_frequency_window3)
-        self.second_signal_type_window3.addLayout(self.second_signal_duty_window3)
+        self.second_signal_type_window3.addLayout(self.heigth_window3)
+        self.second_signal_type_window3.addLayout(self.frequency_window3)
+        self.second_signal_type_window3.addLayout(self.duty_window3)
 
         # -------------------
 
@@ -827,17 +805,11 @@ class App(QWidget):
     def deactivate_channels(self):
         if self.baseline_checkbox.isChecked():
             self.deactivate_buttons(
-                [
-                    self.first_signal_first_canal_check,
-                    self.first_signal_second_canal_check,
-                ]
+                [self.first_canal_check, self.second_canal_check,]
             )
         else:
             self.activate_buttons(
-                [
-                    self.first_signal_first_canal_check,
-                    self.first_signal_second_canal_check,
-                ]
+                [self.first_canal_check, self.second_canal_check,]
             )
 
     def adjust_exposure(self):
@@ -960,9 +932,7 @@ class App(QWidget):
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
-        if self.daq.stop_signal and not self.save_files_after_stop:
-            pass
-        else:
+        if not self.daq.stop_signal and self.save_files_after_stop:
             try:
                 self.experiment.save(self.files_saved, self.roi_extent)
             except Exception:
@@ -1086,12 +1056,9 @@ class App(QWidget):
         plt.ion()
         while self.daq.stop_signal is False:
             try:
-                self.plot_window.vertical_lines[0].set_xdata(
-                    self.camera.frames_read / int(self.framerate_cell.text())
-                )
-                self.plot_window.vertical_lines[1].set_xdata(
-                    self.camera.frames_read / int(self.framerate_cell.text())
-                )
+                position = self.camera.frames_read / int(self.framerate_cell.text())
+                self.plot_window.vertical_lines[0].set_xdata(position)
+                self.plot_window.vertical_lines[1].set_xdata(position)
                 time.sleep(0.2)
             except Exception:
                 time.sleep(0.2)
@@ -1367,30 +1334,24 @@ class App(QWidget):
     def type_to_tree(self):
         self.tree.check_global_validity()
         self.different_signals_window.setCurrentIndex(
-            self.stimulation_type_cell.currentIndex()
+            self.stim_type_cell.currentIndex()
         )
         self.different_signals_window2.setCurrentIndex(
-            self.stimulation_type_cell2.currentIndex()
+            self.stim_type_cell2.currentIndex()
         )
         self.different_signals_window3.setCurrentIndex(
-            self.stimulation_type_cell3.currentIndex()
+            self.stim_type_cell3.currentIndex()
         )
         try:
-            self.tree.currentItem().setText(
-                4, str(self.stimulation_type_cell.currentText())
-            )
+            self.tree.currentItem().setText(4, str(self.stim_type_cell.currentText()))
         except Exception:
             pass
         try:
-            self.tree.currentItem().setText(
-                11, str(self.stimulation_type_cell2.currentText())
-            )
+            self.tree.currentItem().setText(11, str(self.stim_type_cell2.currentText()))
         except Exception:
             pass
         try:
-            self.tree.currentItem().setText(
-                23, str(self.stimulation_type_cell3.currentText())
-            )
+            self.tree.currentItem().setText(23, str(self.stim_type_cell3.currentText()))
         except Exception:
             pass
         try:
@@ -1402,101 +1363,65 @@ class App(QWidget):
     def tree_to_type(self):
         dico = {"square": 0, "random-square": 1, "Third": 2}
         try:
-            self.stimulation_type_cell.setCurrentIndex(
-                dico[self.tree.currentItem().text(4)]
-            )
+            self.stim_type_cell.setCurrentIndex(dico[self.tree.currentItem().text(4)])
         except Exception:
-            self.stimulation_type_cell.setCurrentIndex(0)
+            self.stim_type_cell.setCurrentIndex(0)
 
         try:
-            self.stimulation_type_cell2.setCurrentIndex(
-                dico[self.tree.currentItem().text(11)]
-            )
+            self.stim_type_cell2.setCurrentIndex(dico[self.tree.currentItem().text(11)])
         except Exception:
-            self.stimulation_type_cell2.setCurrentIndex(0)
+            self.stim_type_cell2.setCurrentIndex(0)
 
         try:
-            self.stimulation_type_cell3.setCurrentIndex(
-                dico[self.tree.currentItem().text(23)]
-            )
+            self.stim_type_cell3.setCurrentIndex(dico[self.tree.currentItem().text(23)])
         except Exception:
-            self.stimulation_type_cell3.setCurrentIndex(0)
+            self.stim_type_cell3.setCurrentIndex(0)
 
     def signal_to_tree(self):
-        self.tree.currentItem().setText(6, self.first_signal_type_duration_cell.text())
-
-        self.tree.currentItem().setText(5, self.first_signal_type_pulses_cell.text())
-        self.tree.currentItem().setText(7, self.first_signal_type_jitter_cell.text())
-        self.tree.currentItem().setText(8, self.first_signal_type_width_cell.text())
-        self.tree.currentItem().setText(
-            9, self.second_signal_type_frequency_cell.text()
-        )
-        self.tree.currentItem().setText(10, self.second_signal_type_duty_cell.text())
-        self.tree.currentItem().setText(21, self.second_signal_type_heigth_cell.text())
-
-        self.tree.currentItem().setText(12, self.first_signal_type_pulses_cell2.text())
-        self.tree.currentItem().setText(13, self.first_signal_type_jitter_cell2.text())
-        self.tree.currentItem().setText(14, self.first_signal_type_width_cell2.text())
-        self.tree.currentItem().setText(
-            15, self.second_signal_type_frequency_cell2.text()
-        )
-        self.tree.currentItem().setText(16, self.second_signal_type_duty_cell2.text())
-        self.tree.currentItem().setText(22, self.second_signal_type_heigth_cell2.text())
-        self.tree.currentItem().setText(24, self.first_signal_type_pulses_cell3.text())
-        self.tree.currentItem().setText(25, self.first_signal_type_jitter_cell3.text())
-        self.tree.currentItem().setText(26, self.first_signal_type_width_cell3.text())
-        self.tree.currentItem().setText(
-            27, self.second_signal_type_frequency_cell3.text()
-        )
-        self.tree.currentItem().setText(28, self.second_signal_type_duty_cell3.text())
-        self.tree.currentItem().setText(29, self.second_signal_type_heigth_cell3.text())
+        self.tree.currentItem().setText(6, self.duration_cell.text())
+        self.tree.currentItem().setText(5, self.pulses_cell.text())
+        self.tree.currentItem().setText(7, self.jitter_cell.text())
+        self.tree.currentItem().setText(8, self.width_cell.text())
+        self.tree.currentItem().setText(9, self.frequency_cell.text())
+        self.tree.currentItem().setText(10, self.duty_cell.text())
+        self.tree.currentItem().setText(21, self.heigth_cell.text())
+        self.tree.currentItem().setText(12, self.pulses_cell2.text())
+        self.tree.currentItem().setText(13, self.jitter_cell2.text())
+        self.tree.currentItem().setText(14, self.width_cell2.text())
+        self.tree.currentItem().setText(15, self.frequency_cell2.text())
+        self.tree.currentItem().setText(16, self.duty_cell2.text())
+        self.tree.currentItem().setText(22, self.heigth_cell2.text())
+        self.tree.currentItem().setText(24, self.pulses_cell3.text())
+        self.tree.currentItem().setText(25, self.jitter_cell3.text())
+        self.tree.currentItem().setText(26, self.width_cell3.text())
+        self.tree.currentItem().setText(27, self.frequency_cell3.text())
+        self.tree.currentItem().setText(28, self.duty_cell3.text())
+        self.tree.currentItem().setText(29, self.heigth_cell3.text())
         self.tree.check_global_validity()
         self.tree.graph(self.tree.currentItem())
         self.draw()
 
     def tree_to_signal(self):
         try:
-            self.first_signal_type_pulses_cell.setText(self.tree.currentItem().text(5))
-            self.first_signal_type_duration_cell.setText(
-                self.tree.currentItem().text(6)
-            )
-            self.first_signal_type_jitter_cell.setText(self.tree.currentItem().text(7))
-            self.first_signal_type_width_cell.setText(self.tree.currentItem().text(8))
-            self.second_signal_type_frequency_cell.setText(
-                self.tree.currentItem().text(9)
-            )
-            self.second_signal_type_heigth_cell.setText(
-                self.tree.currentItem().text(21)
-            )
-            self.second_signal_type_duty_cell.setText(self.tree.currentItem().text(10))
-            self.first_signal_type_pulses_cell2.setText(
-                self.tree.currentItem().text(12)
-            )
-            self.first_signal_type_jitter_cell2.setText(
-                self.tree.currentItem().text(13)
-            )
-            self.first_signal_type_width_cell2.setText(self.tree.currentItem().text(14))
-            self.second_signal_type_frequency_cell2.setText(
-                self.tree.currentItem().text(15)
-            )
-            self.second_signal_type_heigth_cell2.setText(
-                self.tree.currentItem().text(22)
-            )
-            self.second_signal_type_duty_cell2.setText(self.tree.currentItem().text(16))
-            self.first_signal_type_pulses_cell3.setText(
-                self.tree.currentItem().text(24)
-            )
-            self.first_signal_type_jitter_cell3.setText(
-                self.tree.currentItem().text(25)
-            )
-            self.first_signal_type_width_cell3.setText(self.tree.currentItem().text(26))
-            self.second_signal_type_frequency_cell3.setText(
-                self.tree.currentItem().text(27)
-            )
-            self.second_signal_type_duty_cell3.setText(self.tree.currentItem().text(28))
-            self.second_signal_type_heigth_cell3.setText(
-                self.tree.currentItem().text(29)
-            )
+            self.pulses_cell.setText(self.tree.currentItem().text(5))
+            self.duration_cell.setText(self.tree.currentItem().text(6))
+            self.jitter_cell.setText(self.tree.currentItem().text(7))
+            self.width_cell.setText(self.tree.currentItem().text(8))
+            self.frequency_cell.setText(self.tree.currentItem().text(9))
+            self.heigth_cell.setText(self.tree.currentItem().text(21))
+            self.duty_cell.setText(self.tree.currentItem().text(10))
+            self.pulses_cell2.setText(self.tree.currentItem().text(12))
+            self.jitter_cell2.setText(self.tree.currentItem().text(13))
+            self.width_cell2.setText(self.tree.currentItem().text(14))
+            self.frequency_cell2.setText(self.tree.currentItem().text(15))
+            self.heigth_cell2.setText(self.tree.currentItem().text(22))
+            self.duty_cell2.setText(self.tree.currentItem().text(16))
+            self.pulses_cell3.setText(self.tree.currentItem().text(24))
+            self.jitter_cell3.setText(self.tree.currentItem().text(25))
+            self.width_cell3.setText(self.tree.currentItem().text(26))
+            self.frequency_cell3.setText(self.tree.currentItem().text(27))
+            self.duty_cell3.setText(self.tree.currentItem().text(28))
+            self.heigth_cell3.setText(self.tree.currentItem().text(29))
         except Exception as err:
             pass
 
@@ -1522,42 +1447,36 @@ class App(QWidget):
             self.baseline_checkbox.setChecked(
                 self.boolean(self.tree.currentItem().text(17))
             )
-            self.first_signal_first_canal_check.setChecked(
+            self.first_canal_check.setChecked(
                 self.boolean(self.tree.currentItem().text(18))
             )
-            self.first_signal_second_canal_check.setChecked(
+            self.second_canal_check.setChecked(
                 self.boolean(self.tree.currentItem().text(19))
             )
-            self.first_signal_third_canal_check.setChecked(
+            self.third_canal_check.setChecked(
                 self.boolean(self.tree.currentItem().text(30))
             )
             if self.baseline_checkbox.isChecked():
-                self.deactivate_buttons(
-                    self.canal1buttons + [self.first_signal_first_canal_check]
-                )
-                self.deactivate_buttons(
-                    self.canal2buttons + [self.first_signal_second_canal_check]
-                )
-                self.deactivate_buttons(
-                    self.canal3buttons + [self.first_signal_third_canal_check]
-                )
+                self.deactivate_buttons(self.canal1buttons + [self.first_canal_check])
+                self.deactivate_buttons(self.canal2buttons + [self.second_canal_check])
+                self.deactivate_buttons(self.canal3buttons + [self.third_canal_check])
             else:
                 self.activate_buttons(
                     [
-                        self.first_signal_first_canal_check,
-                        self.first_signal_second_canal_check,
-                        self.first_signal_third_canal_check,
+                        self.first_canal_check,
+                        self.second_canal_check,
+                        self.third_canal_check,
                     ]
                 )
-            if self.first_signal_first_canal_check.isChecked():
+            if self.first_canal_check.isChecked():
                 self.activate_buttons(self.canal1buttons)
             else:
                 self.deactivate_buttons(self.canal1buttons)
-            if self.first_signal_second_canal_check.isChecked():
+            if self.second_canal_check.isChecked():
                 self.activate_buttons(self.canal2buttons)
             else:
                 self.deactivate_buttons(self.canal2buttons)
-            if self.first_signal_third_canal_check.isChecked():
+            if self.third_canal_check.isChecked():
                 self.activate_buttons(self.canal3buttons)
             else:
                 self.deactivate_buttons(self.canal3buttons)
@@ -1570,59 +1489,43 @@ class App(QWidget):
         self.baseline_checkbox.setEnabled(True)
         if not self.canal_running:
             if self.baseline_checkbox.isChecked():
-                self.deactivate_buttons(
-                    self.canal1buttons + [self.first_signal_first_canal_check]
-                )
-                self.deactivate_buttons(
-                    self.canal2buttons + [self.first_signal_second_canal_check]
-                )
-                self.deactivate_buttons(
-                    self.canal3buttons + [self.first_signal_third_canal_check]
-                )
+                self.deactivate_buttons(self.canal1buttons + [self.first_canal_check])
+                self.deactivate_buttons(self.canal2buttons + [self.second_canal_check])
+                self.deactivate_buttons(self.canal3buttons + [self.third_canal_check])
             else:
-                self.activate_buttons(
-                    self.canal1buttons + [self.first_signal_first_canal_check]
-                )
-                self.activate_buttons(
-                    self.canal2buttons + [self.first_signal_second_canal_check]
-                )
-                self.activate_buttons(
-                    self.canal3buttons + [self.first_signal_third_canal_check]
-                )
-            if self.first_signal_first_canal_check.isChecked():
+                self.activate_buttons(self.canal1buttons + [self.first_canal_check])
+                self.activate_buttons(self.canal2buttons + [self.second_canal_check])
+                self.activate_buttons(self.canal3buttons + [self.third_canal_check])
+            if self.first_canal_check.isChecked():
                 self.baseline_checkbox.setEnabled(False)
                 self.activate_buttons(self.canal1buttons)
             else:
                 self.deactivate_buttons(self.canal1buttons)
-            if self.first_signal_second_canal_check.isChecked():
+            if self.second_canal_check.isChecked():
                 self.baseline_checkbox.setEnabled(False)
                 self.activate_buttons(self.canal2buttons)
             else:
                 self.deactivate_buttons(self.canal2buttons)
-            if self.first_signal_third_canal_check.isChecked():
+            if self.third_canal_check.isChecked():
                 self.baseline_checkbox.setEnabled(False)
                 self.activate_buttons(self.canal3buttons)
             else:
                 self.deactivate_buttons(self.canal3buttons)
             if (
-                self.first_signal_first_canal_check.isChecked()
-                or self.first_signal_second_canal_check.isChecked()
-                or self.first_signal_third_canal_check.isChecked()
+                self.first_canal_check.isChecked()
+                or self.second_canal_check.isChecked()
+                or self.third_canal_check.isChecked()
             ):
                 self.deactivate_buttons([self.baseline_checkbox])
             else:
                 self.activate_buttons([self.baseline_checkbox])
             self.tree.currentItem().setText(17, str(self.baseline_checkbox.isChecked()))
+            self.tree.currentItem().setText(18, str(self.first_canal_check.isChecked()))
             self.tree.currentItem().setText(
-                18, str(self.first_signal_first_canal_check.isChecked())
+                19, str(self.second_canal_check.isChecked())
             )
-            self.tree.currentItem().setText(
-                19, str(self.first_signal_second_canal_check.isChecked())
-            )
-            self.tree.currentItem().setText(
-                30, str(self.first_signal_third_canal_check.isChecked())
-            )
-            # self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
+            self.tree.currentItem().setText(30, str(self.third_canal_check.isChecked()))
+            # self.pulses_cell2.setEnabled(self.second_canal_check.isChecked())
             self.tree.check_global_validity()
             self.tree.graph(self.tree.currentItem())
             self.draw()
@@ -1797,52 +1700,52 @@ class App(QWidget):
 
     def initialize_buttons(self):
         self.canal1buttons = [
-            self.stimulation_type_label,
-            self.stimulation_type_cell,
-            self.first_signal_type_pulses_label,
-            self.first_signal_type_pulses_cell,
-            self.first_signal_type_width_label,
-            self.first_signal_type_width_cell,
-            self.first_signal_type_jitter_label,
-            self.first_signal_type_jitter_cell,
-            self.second_signal_type_frequency_label,
-            self.second_signal_type_frequency_cell,
-            self.second_signal_type_duty_label,
-            self.second_signal_type_duty_cell,
-            self.second_signal_type_heigth_cell,
-            self.second_signal_type_heigth_label,
+            self.stim_type_label,
+            self.stim_type_cell,
+            self.pulses_label,
+            self.pulses_cell,
+            self.width_label,
+            self.width_cell,
+            self.jitter_label,
+            self.jitter_cell,
+            self.frequency_label,
+            self.frequency_cell,
+            self.duty_label,
+            self.duty_cell,
+            self.heigth_cell,
+            self.heigth_label,
         ]
         self.canal2buttons = [
-            self.stimulation_type_label2,
-            self.stimulation_type_cell2,
-            self.first_signal_type_pulses_label2,
-            self.first_signal_type_pulses_cell2,
-            self.first_signal_type_width_label2,
-            self.first_signal_type_width_cell2,
-            self.first_signal_type_jitter_label2,
-            self.first_signal_type_jitter_cell2,
-            self.second_signal_type_frequency_label2,
-            self.second_signal_type_frequency_cell2,
-            self.second_signal_type_duty_label2,
-            self.second_signal_type_duty_cell2,
-            self.second_signal_type_heigth_cell2,
-            self.second_signal_type_heigth_label2,
+            self.stim_type_label2,
+            self.stim_type_cell2,
+            self.pulses_label2,
+            self.pulses_cell2,
+            self.width_label2,
+            self.width_cell2,
+            self.jitter_label2,
+            self.jitter_cell2,
+            self.frequency_label2,
+            self.frequency_cell2,
+            self.duty_label2,
+            self.duty_cell2,
+            self.heigth_cell2,
+            self.heigth_label2,
         ]
         self.canal3buttons = [
-            self.stimulation_type_label3,
-            self.stimulation_type_cell3,
-            self.first_signal_type_pulses_label3,
-            self.first_signal_type_pulses_cell3,
-            self.first_signal_type_width_label3,
-            self.first_signal_type_width_cell3,
-            self.first_signal_type_jitter_label3,
-            self.first_signal_type_jitter_cell3,
-            self.second_signal_type_frequency_label3,
-            self.second_signal_type_frequency_cell3,
-            self.second_signal_type_duty_label3,
-            self.second_signal_type_duty_cell3,
-            self.second_signal_type_heigth_cell3,
-            self.second_signal_type_heigth_label3,
+            self.stim_type_label3,
+            self.stim_type_cell3,
+            self.pulses_label3,
+            self.pulses_cell3,
+            self.width_label3,
+            self.width_cell3,
+            self.jitter_label3,
+            self.jitter_cell3,
+            self.frequency_label3,
+            self.frequency_cell3,
+            self.duty_label3,
+            self.duty_cell3,
+            self.heigth_cell3,
+            self.heigth_label3,
         ]
         self.enabled_buttons = [
             self.run_button,
@@ -1867,53 +1770,53 @@ class App(QWidget):
             self.stimulation_name_label,
             self.directory_save_files_checkbox,
             self.stimulation_name_cell,
-            self.stimulation_type_label,
-            self.stimulation_type_cell,
-            self.stimulation_type_label2,
-            self.stimulation_type_cell2,
-            self.first_signal_first_canal_check,
-            self.first_signal_second_canal_check,
+            self.stim_type_label,
+            self.stim_type_cell,
+            self.stim_type_label2,
+            self.stim_type_cell2,
+            self.first_canal_check,
+            self.second_canal_check,
             self.first_signal_type_duration_label,
-            self.first_signal_type_duration_cell,
-            self.first_signal_type_pulses_label,
-            self.first_signal_type_pulses_cell,
-            self.first_signal_type_width_label,
-            self.first_signal_type_width_cell,
-            self.first_signal_type_jitter_label,
-            self.first_signal_type_jitter_cell,
-            self.second_signal_type_frequency_label,
-            self.second_signal_type_frequency_cell,
-            self.second_signal_type_heigth_label,
-            self.second_signal_type_heigth_cell,
-            self.second_signal_type_duty_label,
-            self.second_signal_type_duty_cell,
-            self.first_signal_type_pulses_label2,
-            self.first_signal_type_pulses_cell2,
-            self.first_signal_type_width_label2,
-            self.first_signal_type_width_cell2,
-            self.first_signal_type_jitter_label2,
-            self.first_signal_type_jitter_cell2,
-            self.second_signal_type_frequency_label2,
-            self.second_signal_type_frequency_cell2,
-            self.second_signal_type_heigth_label2,
-            self.second_signal_type_heigth_cell2,
-            self.second_signal_type_duty_label2,
-            self.second_signal_type_duty_cell2,
-            self.first_signal_third_canal_check,
-            self.stimulation_type_label3,
-            self.stimulation_type_cell3,
-            self.first_signal_type_pulses_label3,
-            self.first_signal_type_pulses_cell3,
-            self.first_signal_type_width_label3,
-            self.first_signal_type_width_cell3,
-            self.first_signal_type_jitter_label3,
-            self.first_signal_type_jitter_cell3,
-            self.second_signal_type_frequency_label3,
-            self.second_signal_type_frequency_cell3,
-            self.second_signal_type_duty_label3,
-            self.second_signal_type_duty_cell3,
-            self.second_signal_type_heigth_cell3,
-            self.second_signal_type_heigth_label3,
+            self.duration_cell,
+            self.pulses_label,
+            self.pulses_cell,
+            self.width_label,
+            self.width_cell,
+            self.jitter_label,
+            self.jitter_cell,
+            self.frequency_label,
+            self.frequency_cell,
+            self.heigth_label,
+            self.heigth_cell,
+            self.duty_label,
+            self.duty_cell,
+            self.pulses_label2,
+            self.pulses_cell2,
+            self.width_label2,
+            self.width_cell2,
+            self.jitter_label2,
+            self.jitter_cell2,
+            self.frequency_label2,
+            self.frequency_cell2,
+            self.heigth_label2,
+            self.heigth_cell2,
+            self.duty_label2,
+            self.duty_cell2,
+            self.third_canal_check,
+            self.stim_type_label3,
+            self.stim_type_cell3,
+            self.pulses_label3,
+            self.pulses_cell3,
+            self.width_label3,
+            self.width_cell3,
+            self.jitter_label3,
+            self.jitter_cell3,
+            self.frequency_label3,
+            self.frequency_cell3,
+            self.duty_label3,
+            self.duty_cell3,
+            self.heigth_cell3,
+            self.heigth_label3,
             self.block_iterations_label,
             self.block_iterations_cell,
             self.block_delay_label,
