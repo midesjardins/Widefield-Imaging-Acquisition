@@ -16,10 +16,11 @@ class Tree(QTreeWidget):
        pass
 
     def set_app(self, app):
+        """ Set the corresponding app instance"""
         self.app = app
 
     def first_stimulation(self):
-        # self.run_button.setEnabled(True)
+        """ Create the first stimulation in the tree """
         tree_item = QTreeWidgetItem()
         self.style_tree_item(tree_item)
         self.addTopLevelItem(tree_item)
@@ -29,11 +30,9 @@ class Tree(QTreeWidget):
                 tree_item.setText(i, "square")
         for i in [17, 18, 19, 30]:
             tree_item.setText(i, "False")
-        #self.app.canals_to_tree(first=True)
-        #self.app.type_to_tree(first=True)
-        #self.check_global_validity()
 
     def add_brother(self):
+        """ Add a brother to the current item in the tree"""
         if self.currentItem():
             tree_item = QTreeWidgetItem()
             self.style_tree_item(tree_item)
@@ -53,6 +52,7 @@ class Tree(QTreeWidget):
             #self.check_global_validity()
 
     def add_child(self):
+        """Add a child to the current item in the tree"""
         if self.currentItem():
             self.currentItem().setIcon(
                 0, QIcon(os.path.join("gui", "icons", "package.png"))
@@ -73,7 +73,8 @@ class Tree(QTreeWidget):
             #self.app.canals_to_tree(first=True)
             #self.check_global_validity()
 
-    def delete_branch(self):
+    def delete_item(self):
+        """ Delete the current item in the tree and its children"""
         try:
             parent = self.currentItem().parent()
             if parent.childCount() == 1:
@@ -88,10 +89,10 @@ class Tree(QTreeWidget):
 
     def create_tree_item(self, block, parent=None):
         """
-        Recursive function to create the items of a block dictionary in the tree
+        Recursively create the items in the block dictionary
 
         Args:
-            block (dict): The block to print
+            block (dict): The dictionary containing the blocks to create
             parent (Tree Item): The parent of the block to print. Defaults to None.
         """
         if block["type"] == "Block":
@@ -109,6 +110,12 @@ class Tree(QTreeWidget):
             self.set_stim_attributes(tree_item, block)
     
     def set_block_attributes(self, tree_item, dictionary):
+        """ Set the attributes of a block in the tree
+
+        Args:
+            tree_item (Tree Item): The tree item on which to apply the attributes
+            dictionary (dict): The dictionary containing the attributes
+        """
         tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "package.png")))
         tree_item.setText(0, dictionary["name"])
         tree_item.setText(1, str(dictionary["iterations"]))
@@ -116,6 +123,12 @@ class Tree(QTreeWidget):
         tree_item.setText(3, str(dictionary["jitter"]))
 
     def set_stim_attributes(self, tree_item, dictionary):
+        """ Set the attributes of a stimulation in the tree
+        
+        Args:
+            tree_item (Tree Item): The tree item on which to apply the attributes
+            dictionary (dict): The dictionary containing the attributes
+        """
         tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))
         tree_item.setText(0, dictionary["name"])
         tree_item.setText(4, str(dictionary["type1"]))
@@ -145,6 +158,12 @@ class Tree(QTreeWidget):
         tree_item.setText(30, str(dictionary["canal3"]))
 
     def graph(self, item=None):
+        """
+        Generate the x and y values for an item in the tree
+
+        Args:
+            item (Tree Item): The item to graph. Defaults to current item.
+        """
         try:
             if item == self.currentItem() or item == self.invisibleRootItem():
                 self.elapsed_time = 0
@@ -291,6 +310,12 @@ class Tree(QTreeWidget):
             self.elapsed_time = 0
 
     def check_global_validity(self, item=None):
+        """
+        Check if an item is a valid stimulation/block.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to the root item.
+        """
         if item is None:
             item = self.invisibleRootItem()
             if self.check_block_validity(item):
@@ -305,6 +330,12 @@ class Tree(QTreeWidget):
             self.check_global_validity(item.child(child_index))
 
     def check_stim_validity(self, item=None):
+        """
+        Check if a stimulation is valid.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to current item.
+        """
         valid = True
         if item is None:
             item == self.currentItem()
@@ -366,6 +397,12 @@ class Tree(QTreeWidget):
         return valid
 
     def check_block_validity(self, item=None):
+        """
+        Check if a block is valid.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to current item.
+        """
         valid = True
         if item is None:
             item = self.currentItem()
@@ -382,6 +419,13 @@ class Tree(QTreeWidget):
         return valid
 
     def get_attributes(self, item, canal=1):
+        """
+        Get the attributes of a stimulation.
+
+        Args:
+            item (Tree Item): The item to get the attributes from.
+            canal (int): The canal to get the attributes from. Defaults to 1.
+        """
         if canal == 1:
             sign_type = item.text(4)
             try:
@@ -431,6 +475,13 @@ class Tree(QTreeWidget):
             return (sign_type, pulses, jitter, width, frequency, duty, heigth)
 
     def set_icon(self, item, valid):
+        """
+        Set the icon of a tree item.
+
+        Args:
+            item (Tree Item): The item to set the icon for.
+            valid (bool): Whether the item is valid or not.
+        """
         try:
             if valid:
                 item.setIcon(
@@ -444,6 +495,7 @@ class Tree(QTreeWidget):
             pass
 
     def style_tree_item(self, item):
+        """Style a newly created tree item."""
         item.setIcon(20, QIcon(os.path.join("gui", "icons", "alert-triangle.png")))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
         item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))

@@ -330,12 +330,12 @@ class App(QWidget):
         self.tree_switch_window = QStackedLayout()
         self.tree_second_window = QHBoxLayout()
         self.stim_buttons_container = QWidget()
-        self.delete_branch_button = QPushButton("Delete")
-        self.delete_branch_button.setIcon(
+        self.delete_item_button = QPushButton("Delete")
+        self.delete_item_button.setIcon(
             QIcon(os.path.join(self.cwd, "gui", "icons", "trash.png"))
         )
-        self.delete_branch_button.clicked.connect(self.tree.delete_branch)
-        self.tree_second_window.addWidget(self.delete_branch_button)
+        self.delete_item_button.clicked.connect(self.tree.delete_item)
+        self.tree_second_window.addWidget(self.delete_item_button)
         self.tree.add_brother_branch_button = QPushButton("Add Sibling")
         self.tree.add_brother_branch_button.clicked.connect(self.tree.add_brother)
         self.tree.add_brother_branch_button.setIcon(
@@ -1751,7 +1751,7 @@ class App(QWidget):
             self.exposure_label,
             self.tree.add_brother_branch_button,
             self.add_child_branch_button,
-            self.delete_branch_button,
+            self.delete_item_button,
             self.red_checkbox,
             self.ir_checkbox,
             self.green_checkbox,
