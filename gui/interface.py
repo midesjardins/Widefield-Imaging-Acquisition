@@ -389,7 +389,6 @@ class App(QWidget):
         self.first_canal_check.stateChanged.connect(self.canals_to_tree)
         self.first_canal_check.setText("Canal 1")
 
-        self.stim_type_label = QLabel("Type")
         self.stim_type_cell = QComboBox()
         self.stim_type_cell.addItem("square")
         self.stim_type_cell.addItem("random-square")
@@ -397,7 +396,6 @@ class App(QWidget):
         self.stim_type_cell.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window = QHBoxLayout()
         self.stimulation_type_window.addWidget(self.first_canal_check)
-        self.stimulation_type_window.addWidget(self.stim_type_label)
         self.stimulation_type_window.addWidget(self.stim_type_cell)
         self.canal_window.addLayout(self.stimulation_type_window)
 
@@ -408,7 +406,6 @@ class App(QWidget):
         self.second_canal_check.stateChanged.connect(self.canals_to_tree)
         self.second_canal_check.setText("Canal 2")
 
-        self.stim_type_label2 = QLabel("Type")
         self.stim_type_cell2 = QComboBox()
         self.stim_type_cell2.addItem("square")
         self.stim_type_cell2.addItem("random-square")
@@ -416,7 +413,6 @@ class App(QWidget):
         self.stim_type_cell2.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window2 = QHBoxLayout()
         self.stimulation_type_window2.addWidget(self.second_canal_check)
-        self.stimulation_type_window2.addWidget(self.stim_type_label2)
         self.stimulation_type_window2.addWidget(self.stim_type_cell2)
         self.canal_window.addLayout(self.stimulation_type_window2)
 
@@ -428,7 +424,6 @@ class App(QWidget):
         self.third_canal_check.setText("Canal 3")
         # self.canal_window.addWidget(self.third_canal_check)
 
-        self.stim_type_label3 = QLabel("Type")
         self.stim_type_cell3 = QComboBox()
         self.stim_type_cell3.addItem("square")
         self.stim_type_cell3.addItem("random-square")
@@ -436,7 +431,6 @@ class App(QWidget):
         self.stim_type_cell3.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window3 = QHBoxLayout()
         self.stimulation_type_window3.addWidget(self.third_canal_check)
-        self.stimulation_type_window3.addWidget(self.stim_type_label3)
         self.stimulation_type_window3.addWidget(self.stim_type_cell3)
         self.canal_window.addLayout(self.stimulation_type_window3)
 
@@ -465,8 +459,6 @@ class App(QWidget):
         self.baseline_checkbox = QCheckBox("Baseline")
         self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
         self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
-
-        # self.stimulation_edit_layout.addLayout(self.stimulation_type_window)
         self.stimulation_edit_layout.addLayout(self.canal_window)
 
         self.first_signal_type_window = QVBoxLayout()
@@ -1700,7 +1692,6 @@ class App(QWidget):
 
     def initialize_buttons(self):
         self.canal1buttons = [
-            self.stim_type_label,
             self.stim_type_cell,
             self.pulses_label,
             self.pulses_cell,
@@ -1716,7 +1707,6 @@ class App(QWidget):
             self.heigth_label,
         ]
         self.canal2buttons = [
-            self.stim_type_label2,
             self.stim_type_cell2,
             self.pulses_label2,
             self.pulses_cell2,
@@ -1732,7 +1722,6 @@ class App(QWidget):
             self.heigth_label2,
         ]
         self.canal3buttons = [
-            self.stim_type_label3,
             self.stim_type_cell3,
             self.pulses_label3,
             self.pulses_cell3,
@@ -1770,9 +1759,7 @@ class App(QWidget):
             self.stimulation_name_label,
             self.directory_save_files_checkbox,
             self.stimulation_name_cell,
-            self.stim_type_label,
             self.stim_type_cell,
-            self.stim_type_label2,
             self.stim_type_cell2,
             self.first_canal_check,
             self.second_canal_check,
@@ -1803,7 +1790,6 @@ class App(QWidget):
             self.duty_label2,
             self.duty_cell2,
             self.third_canal_check,
-            self.stim_type_label3,
             self.stim_type_cell3,
             self.pulses_label3,
             self.pulses_cell3,
