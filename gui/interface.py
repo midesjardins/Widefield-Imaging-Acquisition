@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QLocale
 import numpy as np
 from PyQt5.QtWidgets import (
-    QDialog,
     QVBoxLayout,
     QWidget,
     QGridLayout,
@@ -16,7 +15,6 @@ from PyQt5.QtWidgets import (
     QCheckBox,
     QPushButton,
     QStackedLayout,
-    QTreeWidget,
     QComboBox,
     QMessageBox,
     QFileDialog,
@@ -25,7 +23,6 @@ from PyQt5.QtWidgets import (
     QSlider,
 )
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.widgets import RectangleSelector
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -33,6 +30,7 @@ from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
 from src.waveforms import make_signal, random_square
 from src.tree import Tree
+from src.plot import PlotWindow
 from src.data_handling import (
     get_dictionary,
     shrink_array,
@@ -40,37 +38,6 @@ from src.data_handling import (
     get_baseline_frame_indices,
     average_baseline
 )
-
-
-class PlotWindow(QDialog):
-    def __init__(self, subplots=False, parent=None):
-        super(PlotWindow, self).__init__(parent)
-        if subplots:
-            self.figure, self.axis = plt.subplots(2, sharex=True)
-            self.axis[0].get_yaxis().set_visible(False)
-            self.axis[1].get_yaxis().set_visible(False)
-        else:
-            self.figure = plt.figure()
-        self.canvas = FigureCanvas(self.figure)
-        self.vertical_lines = []
-        layout = QVBoxLayout()
-        layout.addWidget(self.canvas)
-        self.setLayout(layout)
-        self.i = 0
-
-    def clear(self):
-        plt.figure(self.figure.number)
-        plt.ion()
-        self.axis[0].clear()
-        self.axis[1].clear()
-        self.vertical_lines = []
-        print("cleared")
-
-    def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
-        print(x, y, index)
-        plt.figure(self.figure.number)
-        #plt.ion()
-        self.axis[index].plot(x, y)
 
 
 class App(QWidget):
