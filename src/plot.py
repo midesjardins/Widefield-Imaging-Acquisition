@@ -32,4 +32,4 @@ class PlotWindow(QDialog):
         plt.figure(self.figure.number)
         self.axis[index].plot(x, y)
         if root:
-            self.vertical_lines.append(self.axis[index].axvline(x=0))
+            self.vertical_lines.append(self.axis[index].axvline(x=0, color="red"))
