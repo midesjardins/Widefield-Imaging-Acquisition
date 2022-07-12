@@ -9,9 +9,11 @@ class PlotWindow(QDialog):
     def __init__(self, subplots=False, parent=None):
         super(PlotWindow, self).__init__(parent)
         if subplots:
-            self.figure, self.axis = plt.subplots(2, sharex=True)
+            self.figure, self.axis = plt.subplots(3, sharex=True)
             self.axis[0].get_yaxis().set_visible(False)
             self.axis[1].get_yaxis().set_visible(False)
+            self.axis[2].get_yaxis().set_visible(False)
+            self.axis[0].xaxis.tick_top()
         else:
             self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
@@ -26,6 +28,7 @@ class PlotWindow(QDialog):
         plt.ion()
         self.axis[0].clear()
         self.axis[1].clear()
+        self.axis[2].clear()
         self.vertical_lines = []
 
     def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
