@@ -25,6 +25,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.widgets import RectangleSelector
 from threading import Thread
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.controls import DAQ, Instrument, Camera
 from src.blocks import Stimulation, Block, Experiment
@@ -37,7 +38,7 @@ from src.data_handling import (
     shrink_array,
     frames_acquired_from_camera_signal,
     get_baseline_frame_indices,
-    average_baseline
+    average_baseline,
 )
 
 
@@ -313,7 +314,7 @@ class App(QWidget):
                 "27 Frequency 3",
                 "28 Duty 3",
                 "29 Heigth 3",
-                "30 Canal 3"
+                "30 Canal 3",
             ]
         )
         for i in range(1, 20):
@@ -425,8 +426,7 @@ class App(QWidget):
         self.first_signal_third_canal_check = QCheckBox()
         self.first_signal_third_canal_check.stateChanged.connect(self.canals_to_tree)
         self.first_signal_third_canal_check.setText("Canal 3")
-       # self.canal_window.addWidget(self.first_signal_third_canal_check)
-
+        # self.canal_window.addWidget(self.first_signal_third_canal_check)
 
         self.stimulation_type_label3 = QLabel("Type")
         self.stimulation_type_cell3 = QComboBox()
@@ -491,7 +491,6 @@ class App(QWidget):
         self.first_signal_type_window3.setContentsMargins(0, 0, 0, 0)
         self.first_signal_type_container3 = QWidget()
         self.first_signal_type_container3.setLayout(self.first_signal_type_window3)
-
 
         self.first_signal_pulses_window = QHBoxLayout()
         self.first_signal_type_pulses_label = QLabel("Pulses")
@@ -618,19 +617,27 @@ class App(QWidget):
 
         self.second_signal_heigth_window2 = QHBoxLayout()
         self.second_signal_type_heigth_label2 = QLabel("Heigth (V)")
-        self.second_signal_heigth_window2.addWidget(self.second_signal_type_heigth_label2)
+        self.second_signal_heigth_window2.addWidget(
+            self.second_signal_type_heigth_label2
+        )
         self.second_signal_type_heigth_cell2 = QLineEdit()
         self.second_signal_type_heigth_cell2.setValidator(self.onlyFloat)
         self.second_signal_type_heigth_cell2.textEdited.connect(self.signal_to_tree)
-        self.second_signal_heigth_window2.addWidget(self.second_signal_type_heigth_cell2)
+        self.second_signal_heigth_window2.addWidget(
+            self.second_signal_type_heigth_cell2
+        )
 
         self.second_signal_heigth_window3 = QHBoxLayout()
         self.second_signal_type_heigth_label3 = QLabel("Heigth (V)")
-        self.second_signal_heigth_window3.addWidget(self.second_signal_type_heigth_label3)
+        self.second_signal_heigth_window3.addWidget(
+            self.second_signal_type_heigth_label3
+        )
         self.second_signal_type_heigth_cell3 = QLineEdit()
         self.second_signal_type_heigth_cell3.setValidator(self.onlyFloat)
         self.second_signal_type_heigth_cell3.textEdited.connect(self.signal_to_tree)
-        self.second_signal_heigth_window3.addWidget(self.second_signal_type_heigth_cell3)
+        self.second_signal_heigth_window3.addWidget(
+            self.second_signal_type_heigth_cell3
+        )
 
         self.second_signal_frequency_window = QHBoxLayout()
         self.second_signal_type_frequency_label = QLabel("Frequency (Hz)")
@@ -848,70 +855,12 @@ class App(QWidget):
         file = QFileDialog.getOpenFileName()[0]
         try:
             blocks = get_dictionary(file)["Blocks"]
-            self.recursive_print(blocks)
+            self.tree.create_tree_item(blocks)
             self.tree.check_global_validity()
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
             print(err)
-
-    def recursive_print(self, block, parent=None):
-        """
-        Recursive function to print the blocks in the tree
-
-        Args:
-            block (_type_): The block to print
-            parent (_type_, optional): The parent of the block to print. Defaults to None.
-        """
-        if block["type"] == "Block":
-            if block["name"] == "root":
-                tree_item = self.tree.invisibleRootItem()
-            else:
-                tree_item = QTreeWidgetItem()
-                parent.addChild(tree_item)
-                self.set_block_attributes(tree_item, block)
-            for item in block["data"]:
-                self.recursive_print(item, parent=tree_item)
-        elif block["type"] == "Stimulation":
-            tree_item = QTreeWidgetItem()
-            parent.addChild(tree_item)
-            self.set_stim_attributes(tree_item, block)
-
-    def set_block_attributes(self, tree_item, dictionary):
-        tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "package.png")))
-        tree_item.setText(0, dictionary["name"])
-        tree_item.setText(1, str(dictionary["iterations"]))
-        tree_item.setText(2, str(dictionary["delay"]))
-        tree_item.setText(3, str(dictionary["jitter"]))
-
-    def set_stim_attributes(self, tree_item, dictionary):
-        tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))
-        tree_item.setText(0, dictionary["name"])
-        tree_item.setText(4, str(dictionary["type1"]))
-        tree_item.setText(5, str(dictionary["pulses"]))
-        tree_item.setText(6, str(dictionary["duration"]))
-        tree_item.setText(7, str(dictionary["jitter"]))
-        tree_item.setText(8, str(dictionary["width"]))
-        tree_item.setText(21, str(dictionary["heigth"]))
-        tree_item.setText(9, str(dictionary["freq"]))
-        tree_item.setText(10, str(dictionary["duty"]))
-        tree_item.setText(11, str(dictionary["type2"]))
-        tree_item.setText(12, str(dictionary["pulses2"]))
-        tree_item.setText(13, str(dictionary["jitter2"]))
-        tree_item.setText(14, str(dictionary["width2"]))
-        tree_item.setText(22, str(dictionary["heigth2"]))
-        tree_item.setText(15, str(dictionary["freq2"]))
-        tree_item.setText(16, str(dictionary["duty2"]))
-        tree_item.setText(23, str(dictionary["type3"]))
-        tree_item.setText(24, str(dictionary["pulses3"]))
-        tree_item.setText(25, str(dictionary["jitter3"]))
-        tree_item.setText(26, str(dictionary["width3"]))
-        tree_item.setText(29, str(dictionary["heigth3"]))
-        tree_item.setText(27, str(dictionary["freq3"]))
-        tree_item.setText(28, str(dictionary["duty3"]))
-        tree_item.setText(18, str(dictionary["canal1"]))
-        tree_item.setText(19, str(dictionary["canal2"]))
-        tree_item.setText(30, str(dictionary["canal3"]))
 
     def run(self):
         if self.check_override():
@@ -919,8 +868,8 @@ class App(QWidget):
             self.master_block = self.create_blocks()
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
-                self.tree.plot_x_values,
-                [self.tree.plot_stim1_values, self.tree.plot_stim2_values],
+                self.tree.x_values,
+                [self.tree.stim1_values, self.tree.stim2_values],
             )
             self.draw(root=True)
             self.actualize_daq()
@@ -1105,7 +1054,9 @@ class App(QWidget):
                             ) % len(self.daq.lights)
                             activation_map = (
                                 (
-                                    self.camera.baseline_frames[start_index::len(self.daq.lights)][-1]
+                                    self.camera.baseline_frames[
+                                        start_index :: len(self.daq.lights)
+                                    ][-1]
                                     - self.camera.average_baseline[
                                         self.live_preview_light_index
                                     ]
@@ -1212,11 +1163,20 @@ class App(QWidget):
                         jitter,
                         width,
                         frequency,
-                        duty, heigth
+                        duty,
+                        heigth,
                     ) = self.tree.get_attributes(item, canal=1)
                 else:
                     canal1 = False
-                    sign_type, pulses, jitter, width, frequency, duty, heigth = "", 0, 0, 0, 0, 0, 0
+                    sign_type, pulses, jitter, width, frequency, duty, heigth = (
+                        "",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    )
 
                 if item.text(19) == "True":
                     canal2 = True
@@ -1226,7 +1186,8 @@ class App(QWidget):
                         jitter2,
                         width2,
                         frequency2,
-                        duty2, heigth2
+                        duty2,
+                        heigth2,
                     ) = self.tree.get_attributes(item, canal=2)
                 else:
                     sign_type2, pulses2, jitter2, width2, frequency2, duty2, heigth2 = (
@@ -1236,7 +1197,7 @@ class App(QWidget):
                         0,
                         0,
                         0,
-                        0
+                        0,
                     )
                     canal2 = False
 
@@ -1248,7 +1209,8 @@ class App(QWidget):
                         jitter3,
                         width3,
                         frequency3,
-                        duty3, heigth3
+                        duty3,
+                        heigth3,
                     ) = self.tree.get_attributes(item, canal=3)
                 else:
                     sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
@@ -1258,7 +1220,7 @@ class App(QWidget):
                         0,
                         0,
                         0,
-                        0
+                        0,
                     )
                     canal2 = False
                 dictionary = {
@@ -1288,12 +1250,11 @@ class App(QWidget):
                     "width3": width3,
                     "freq3": frequency3,
                     "duty3": duty3,
-                    "heigth3": heigth3
+                    "heigth3": heigth3,
                 }
                 return Stimulation(dictionary)
         except Exception as err:
             pass
-
 
     def stop(self):
         self.stop_live()
@@ -1356,7 +1317,6 @@ class App(QWidget):
         self.directory_choose_button.setEnabled(self.files_saved)
         self.directory_cell.setEnabled(self.files_saved)
 
-
     def actualize_window(self):
         print("actualized")
         self.activate_buttons(
@@ -1381,7 +1341,6 @@ class App(QWidget):
         self.tree.graph(self.tree.currentItem())
         self.draw()
 
-
     def name_to_tree(self):
         branch = self.tree.currentItem()
         branch.setForeground(0, QBrush(QColor(0, 0, 0)))
@@ -1389,27 +1348,22 @@ class App(QWidget):
             branch.setText(0, self.block_name_cell.text())
         else:
             branch.setText(0, self.stimulation_name_cell.text())
-    @timeit
+
     def tree_to_name(self):
         try:
             if self.tree.currentItem().childCount() > 0:
                 if self.tree.currentItem().text(0) != "No Name":
-                    self.block_name_cell.setText(
-                        self.tree.currentItem().text(0)
-                    )
+                    self.block_name_cell.setText(self.tree.currentItem().text(0))
                 else:
                     self.block_name_cell.setText("")
             else:
                 if self.tree.currentItem().text(0) != "No Name":
-                    self.stimulation_name_cell.setText(
-                        self.tree.currentItem().text(0)
-                    )
+                    self.stimulation_name_cell.setText(self.tree.currentItem().text(0))
                 else:
                     self.stimulation_name_cell.setText("")
         except AttributeError:
             pass
 
-    @timeit
     def type_to_tree(self):
         self.tree.check_global_validity()
         self.different_signals_window.setCurrentIndex(
@@ -1469,151 +1423,99 @@ class App(QWidget):
             self.stimulation_type_cell3.setCurrentIndex(0)
 
     def signal_to_tree(self):
-        self.tree.currentItem().setText(
-            6, self.first_signal_type_duration_cell.text()
-        )
+        self.tree.currentItem().setText(6, self.first_signal_type_duration_cell.text())
 
-        self.tree.currentItem().setText(
-            5, self.first_signal_type_pulses_cell.text()
-        )
-        self.tree.currentItem().setText(
-            7, self.first_signal_type_jitter_cell.text()
-        )
-        self.tree.currentItem().setText(
-            8, self.first_signal_type_width_cell.text()
-        )
+        self.tree.currentItem().setText(5, self.first_signal_type_pulses_cell.text())
+        self.tree.currentItem().setText(7, self.first_signal_type_jitter_cell.text())
+        self.tree.currentItem().setText(8, self.first_signal_type_width_cell.text())
         self.tree.currentItem().setText(
             9, self.second_signal_type_frequency_cell.text()
         )
-        self.tree.currentItem().setText(
-            10, self.second_signal_type_duty_cell.text()
-        )
-        self.tree.currentItem().setText(
-            21, self.second_signal_type_heigth_cell.text()
-        )
+        self.tree.currentItem().setText(10, self.second_signal_type_duty_cell.text())
+        self.tree.currentItem().setText(21, self.second_signal_type_heigth_cell.text())
 
-        self.tree.currentItem().setText(
-            12, self.first_signal_type_pulses_cell2.text()
-        )
-        self.tree.currentItem().setText(
-            13, self.first_signal_type_jitter_cell2.text()
-        )
-        self.tree.currentItem().setText(
-            14, self.first_signal_type_width_cell2.text()
-        )
+        self.tree.currentItem().setText(12, self.first_signal_type_pulses_cell2.text())
+        self.tree.currentItem().setText(13, self.first_signal_type_jitter_cell2.text())
+        self.tree.currentItem().setText(14, self.first_signal_type_width_cell2.text())
         self.tree.currentItem().setText(
             15, self.second_signal_type_frequency_cell2.text()
         )
-        self.tree.currentItem().setText(
-            16, self.second_signal_type_duty_cell2.text()
-        )
-        self.tree.currentItem().setText(
-            22, self.second_signal_type_heigth_cell2.text()
-        )
-        self.tree.currentItem().setText(
-            24, self.first_signal_type_pulses_cell3.text()
-        )
-        self.tree.currentItem().setText(
-            25, self.first_signal_type_jitter_cell3.text()
-        )
-        self.tree.currentItem().setText(
-            26, self.first_signal_type_width_cell3.text()
-        )
+        self.tree.currentItem().setText(16, self.second_signal_type_duty_cell2.text())
+        self.tree.currentItem().setText(22, self.second_signal_type_heigth_cell2.text())
+        self.tree.currentItem().setText(24, self.first_signal_type_pulses_cell3.text())
+        self.tree.currentItem().setText(25, self.first_signal_type_jitter_cell3.text())
+        self.tree.currentItem().setText(26, self.first_signal_type_width_cell3.text())
         self.tree.currentItem().setText(
             27, self.second_signal_type_frequency_cell3.text()
         )
-        self.tree.currentItem().setText(
-            28, self.second_signal_type_duty_cell3.text()
-        )
-        self.tree.currentItem().setText(
-            29, self.second_signal_type_heigth_cell3.text()
-        )
+        self.tree.currentItem().setText(28, self.second_signal_type_duty_cell3.text())
+        self.tree.currentItem().setText(29, self.second_signal_type_heigth_cell3.text())
         self.tree.check_global_validity()
         self.tree.graph(self.tree.currentItem())
         self.draw()
-    @timeit
+
     def tree_to_signal(self):
         try:
-            self.first_signal_type_pulses_cell.setText(
-                self.tree.currentItem().text(5)
-            )
+            self.first_signal_type_pulses_cell.setText(self.tree.currentItem().text(5))
             self.first_signal_type_duration_cell.setText(
                 self.tree.currentItem().text(6)
             )
-            self.first_signal_type_jitter_cell.setText(
-                self.tree.currentItem().text(7)
-            )
-            self.first_signal_type_width_cell.setText(
-                self.tree.currentItem().text(8)
-            )
+            self.first_signal_type_jitter_cell.setText(self.tree.currentItem().text(7))
+            self.first_signal_type_width_cell.setText(self.tree.currentItem().text(8))
             self.second_signal_type_frequency_cell.setText(
                 self.tree.currentItem().text(9)
             )
             self.second_signal_type_heigth_cell.setText(
                 self.tree.currentItem().text(21)
             )
-            self.second_signal_type_duty_cell.setText(
-                self.tree.currentItem().text(10)
-            )
+            self.second_signal_type_duty_cell.setText(self.tree.currentItem().text(10))
             self.first_signal_type_pulses_cell2.setText(
                 self.tree.currentItem().text(12)
             )
             self.first_signal_type_jitter_cell2.setText(
                 self.tree.currentItem().text(13)
             )
-            self.first_signal_type_width_cell2.setText(
-                self.tree.currentItem().text(14)
-            )
+            self.first_signal_type_width_cell2.setText(self.tree.currentItem().text(14))
             self.second_signal_type_frequency_cell2.setText(
                 self.tree.currentItem().text(15)
             )
             self.second_signal_type_heigth_cell2.setText(
                 self.tree.currentItem().text(22)
             )
-            self.second_signal_type_duty_cell2.setText(
-                self.tree.currentItem().text(16)
-            )
+            self.second_signal_type_duty_cell2.setText(self.tree.currentItem().text(16))
             self.first_signal_type_pulses_cell3.setText(
                 self.tree.currentItem().text(24)
             )
             self.first_signal_type_jitter_cell3.setText(
                 self.tree.currentItem().text(25)
             )
-            self.first_signal_type_width_cell3.setText(
-                self.tree.currentItem().text(26)
-            )
+            self.first_signal_type_width_cell3.setText(self.tree.currentItem().text(26))
             self.second_signal_type_frequency_cell3.setText(
                 self.tree.currentItem().text(27)
             )
-            self.second_signal_type_duty_cell3.setText(
-                self.tree.currentItem().text(28)
-            )
+            self.second_signal_type_duty_cell3.setText(self.tree.currentItem().text(28))
             self.second_signal_type_heigth_cell3.setText(
                 self.tree.currentItem().text(29)
             )
         except Exception as err:
             pass
-    @timeit
+
     def tree_to_block(self):
         try:
-            self.block_iterations_cell.setText(
-                self.tree.currentItem().text(1)
-            )
+            self.block_iterations_cell.setText(self.tree.currentItem().text(1))
             self.block_delay_cell.setText(self.tree.currentItem().text(2))
             self.block_jitter_cell.setText(self.tree.currentItem().text(3))
         except Exception:
             pass
 
     def block_to_tree(self):
-        self.tree.currentItem().setText(
-            1, self.block_iterations_cell.text()
-        )
+        self.tree.currentItem().setText(1, self.block_iterations_cell.text())
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.tree.check_global_validity()
         self.tree.graph(self.tree.currentItem())
         self.draw()
-    @timeit
+
     def tree_to_canal(self):
         self.canal_running = True
         try:
@@ -1644,7 +1546,7 @@ class App(QWidget):
                     [
                         self.first_signal_first_canal_check,
                         self.first_signal_second_canal_check,
-                        self.first_signal_third_canal_check
+                        self.first_signal_third_canal_check,
                     ]
                 )
             if self.first_signal_first_canal_check.isChecked():
@@ -1663,7 +1565,7 @@ class App(QWidget):
             print(err)
             pass
         self.canal_running = False
-    @timeit
+
     def canals_to_tree(self):
         self.baseline_checkbox.setEnabled(True)
         if not self.canal_running:
@@ -1704,14 +1606,13 @@ class App(QWidget):
                 self.deactivate_buttons(self.canal3buttons)
             if (
                 self.first_signal_first_canal_check.isChecked()
-                or self.first_signal_second_canal_check.isChecked() or self.first_signal_third_canal_check.isChecked()
+                or self.first_signal_second_canal_check.isChecked()
+                or self.first_signal_third_canal_check.isChecked()
             ):
                 self.deactivate_buttons([self.baseline_checkbox])
             else:
                 self.activate_buttons([self.baseline_checkbox])
-            self.tree.currentItem().setText(
-                17, str(self.baseline_checkbox.isChecked())
-            )
+            self.tree.currentItem().setText(17, str(self.baseline_checkbox.isChecked()))
             self.tree.currentItem().setText(
                 18, str(self.first_signal_first_canal_check.isChecked())
             )
@@ -1756,49 +1657,30 @@ class App(QWidget):
             if i < self.count_lights()[0]:
                 self.preview_light_combo.addItem(self.count_lights()[1][i])
 
-
     def boolean(self, string):
         if string == "True":
             return True
         return False
-    @timeit
+
     def clear_plot(self):
         self.plot_window.clear()
 
-    @timeit
     def draw(self, root=False):
-        new_x_values = []
-        new_stim1_values = []
-        new_stim2_values = []
         try:
-            # time_start = time.time()
-            # sampling_indexes = np.linspace(0, len(self.plot_x_values)-1, round(3000+len(self.plot_x_values)/10), dtype=int)
-            # new_x_values = np.take(self.plot_x_values, sampling_indexes, 0)
-            # new_stim1_values = np.take(self.plot_stim1_values, sampling_indexes, 0)
-            # new_stim2_values = np.take(self.plot_stim2_values, sampling_indexes, 0)
-            # self.plot_window.plot(new_x_values, new_stim1_values, root)
-            # self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.clear_plot()
             self.plot_window.plot(
-                self.tree.plot_x_values, self.tree.plot_stim1_values, root, index=0
+                self.tree.x_values, self.tree.stim1_values, root, index=0
             )
             self.plot_window.plot(
-                self.tree.plot_x_values,
-                self.tree.plot_stim2_values,
-                root,
-                index=1,
+                self.tree.x_values, self.tree.stim2_values, root, index=1,
             )
             self.plot_window.plot(
-                self.tree.plot_x_values,
-                self.tree.plot_stim3_values,
-                root,
-                index=2,
+                self.tree.x_values, self.tree.stim3_values, root, index=2,
             )
-            # print(f"plot time:{time.time()-time_start}")
-            self.tree.plot_x_values = []
-            self.tree.plot_stim1_values = []
-            self.tree.plot_stim2_values = []
-            self.tree.plot_stim3_values = []
+            self.tree.x_values = []
+            self.tree.stim1_values = []
+            self.tree.stim2_values = []
+            self.tree.stim3_values = []
             self.elapsed_time = 0
         except Exception as err:
             print(err)

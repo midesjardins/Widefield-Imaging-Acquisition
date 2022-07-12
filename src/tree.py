@@ -9,9 +9,9 @@ from src.timeit import timeit
 class Tree(QTreeWidget):
     def __init__(self):
        super().__init__()
-       self.plot_x_values = []
-       self.plot_stim1_values = []
-       self.plot_stim2_values = []
+       self.x_values = []
+       self.stim1_values = []
+       self.stim2_values = []
        self.baseline_values = []
        pass
 
@@ -86,24 +86,81 @@ class Tree(QTreeWidget):
         #self.check_global_validity()
         #self.app.actualize_window()
 
-    @timeit
+    def create_tree_item(self, block, parent=None):
+        """
+        Recursive function to create the items of a block dictionary in the tree
+
+        Args:
+            block (dict): The block to print
+            parent (Tree Item): The parent of the block to print. Defaults to None.
+        """
+        if block["type"] == "Block":
+            if block["name"] == "root":
+                tree_item = self.invisibleRootItem()
+            else:
+                tree_item = QTreeWidgetItem()
+                parent.addChild(tree_item)
+                self.set_block_attributes(tree_item, block)
+            for item in block["data"]:
+                self.create_tree_item(item, parent=tree_item)
+        elif block["type"] == "Stimulation":
+            tree_item = QTreeWidgetItem()
+            parent.addChild(tree_item)
+            self.set_stim_attributes(tree_item, block)
+    
+    def set_block_attributes(self, tree_item, dictionary):
+        tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "package.png")))
+        tree_item.setText(0, dictionary["name"])
+        tree_item.setText(1, str(dictionary["iterations"]))
+        tree_item.setText(2, str(dictionary["delay"]))
+        tree_item.setText(3, str(dictionary["jitter"]))
+
+    def set_stim_attributes(self, tree_item, dictionary):
+        tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))
+        tree_item.setText(0, dictionary["name"])
+        tree_item.setText(4, str(dictionary["type1"]))
+        tree_item.setText(5, str(dictionary["pulses"]))
+        tree_item.setText(6, str(dictionary["duration"]))
+        tree_item.setText(7, str(dictionary["jitter"]))
+        tree_item.setText(8, str(dictionary["width"]))
+        tree_item.setText(21, str(dictionary["heigth"]))
+        tree_item.setText(9, str(dictionary["freq"]))
+        tree_item.setText(10, str(dictionary["duty"]))
+        tree_item.setText(11, str(dictionary["type2"]))
+        tree_item.setText(12, str(dictionary["pulses2"]))
+        tree_item.setText(13, str(dictionary["jitter2"]))
+        tree_item.setText(14, str(dictionary["width2"]))
+        tree_item.setText(22, str(dictionary["heigth2"]))
+        tree_item.setText(15, str(dictionary["freq2"]))
+        tree_item.setText(16, str(dictionary["duty2"]))
+        tree_item.setText(23, str(dictionary["type3"]))
+        tree_item.setText(24, str(dictionary["pulses3"]))
+        tree_item.setText(25, str(dictionary["jitter3"]))
+        tree_item.setText(26, str(dictionary["width3"]))
+        tree_item.setText(29, str(dictionary["heigth3"]))
+        tree_item.setText(27, str(dictionary["freq3"]))
+        tree_item.setText(28, str(dictionary["duty3"]))
+        tree_item.setText(18, str(dictionary["canal1"]))
+        tree_item.setText(19, str(dictionary["canal2"]))
+        tree_item.setText(30, str(dictionary["canal3"]))
+
     def graph(self, item=None):
         try:
             if item == self.currentItem() or item == self.invisibleRootItem():
                 self.elapsed_time = 0
-                self.plot_x_values = []
-                self.plot_stim1_values = []
-                self.plot_stim2_values = []
-                self.plot_stim3_values = []
+                self.x_values = []
+                self.stim1_values = []
+                self.stim2_values = []
+                self.stim3_values = []
                 self.baseline_values = []
             if item.childCount() > 0:
                 if item == self.invisibleRootItem():
-                    jitter, block_delay, iterations_number = 0, 0, 1
+                    jitter, block_delay, iterations = 0, 0, 1
                 else:
                     jitter = float(item.text(3))
-                    iterations_number = int(item.text(1))
+                    iterations = int(item.text(1))
                     block_delay = float(item.text(2))
-                for iteration in range(iterations_number):
+                for i in range(iterations):
                     for index in range(item.childCount()):
                         child = item.child(index)
                         self.graph(child)
@@ -115,14 +172,14 @@ class Tree(QTreeWidget):
                     )
                     data = np.zeros(len(time_values))
                     self.elapsed_time += delay
-                    self.plot_x_values = np.concatenate(
-                        (self.plot_x_values, time_values)
+                    self.x_values = np.concatenate(
+                        (self.x_values, time_values)
                     )
-                    self.plot_stim1_values = np.concatenate(
-                        (self.plot_stim1_values, data)
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, data)
                     )
-                    self.plot_stim2_values = np.concatenate(
-                        (self.plot_stim2_values, data)
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, data)
                     )
             else:
                 duration = float(item.text(6))
@@ -137,14 +194,6 @@ class Tree(QTreeWidget):
                         duty,
                         heigth,
                     ) = self.get_attributes(item, canal=1)
-                    print(time_values,
-                        sign_type,
-                        width,
-                        pulses,
-                        jitter,
-                        frequency,
-                        duty,
-                        heigth,)
                     data = make_signal(
                         time_values,
                         sign_type,
@@ -155,16 +204,12 @@ class Tree(QTreeWidget):
                         duty,
                         heigth,
                     )
-                    print("data")
-                    print(self.plot_stim1_values, data)
-                    self.plot_stim1_values = np.concatenate(
-                        (self.plot_stim1_values, data)
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, data)
                     )
                 else:
-                    print("no stim")
-                    print(self.plot_stim1_values, np.zeros(len(time_values)))
-                    self.plot_stim1_values = np.concatenate(
-                        (self.plot_stim1_values, np.zeros(len(time_values)))
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, np.zeros(len(time_values)))
                     )
 
                 if item.text(19) == "True":
@@ -187,12 +232,12 @@ class Tree(QTreeWidget):
                         duty2,
                         heigth2,
                     )
-                    self.plot_stim2_values = np.concatenate(
-                        (self.plot_stim2_values, data2)
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, data2)
                     )
                 else:
-                    self.plot_stim2_values = np.concatenate(
-                        (self.plot_stim2_values, np.zeros(len(time_values)))
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, np.zeros(len(time_values)))
                     )
 
                 if item.text(30) == "True":
@@ -215,12 +260,12 @@ class Tree(QTreeWidget):
                         duty3,
                         heigth3,
                     )
-                    self.plot_stim3_values = np.concatenate(
-                        (self.plot_stim3_values, data3)
+                    self.stim3_values = np.concatenate(
+                        (self.stim3_values, data3)
                     )
                 else:
-                    self.plot_stim3_values = np.concatenate(
-                        (self.plot_stim3_values, np.zeros(len(time_values)))
+                    self.stim3_values = np.concatenate(
+                        (self.stim3_values, np.zeros(len(time_values)))
                     )
 
                 if (
@@ -229,26 +274,25 @@ class Tree(QTreeWidget):
                     and item.text(30) == "False"
                     and item.text(17) == "True"
                 ):
-                    baseline_start_index = len(self.plot_x_values)
-                    baseline_stop_index = len(self.plot_x_values) + len(time_values)
+                    baseline_start_index = len(self.x_values)
+                    baseline_stop_index = len(self.x_values) + len(time_values)
                     self.baseline_values.append(
                         [baseline_start_index, baseline_stop_index]
                     )
                 time_values += self.elapsed_time
-                self.plot_x_values = np.concatenate((self.plot_x_values, time_values))
+                self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
             print(err)
-            self.plot_x_values = []
-            self.plot_stim1_values = []
-            self.plot_stim2_values = []
-            self.plot_stim3_values = []
+            self.x_values = []
+            self.stim1_values = []
+            self.stim2_values = []
+            self.stim3_values = []
             self.elapsed_time = 0
-    @timeit
+
     def check_global_validity(self, item=None):
         if item is None:
             item = self.invisibleRootItem()
-            # if self.check_block_validity(item) is True and (self.ir_checkbox.isChecked() or self.red_checkbox.isChecked() or self.green_checkbox.isChecked() or self.fluorescence_checkbox.isChecked()):
             if self.check_block_validity(item):
                 self.app.enable_run()
             else:
