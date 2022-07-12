@@ -1,10 +1,4 @@
-import time
-import numpy as np
-import sys
-import os
 import json
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.signal_generator import make_signal
 
 class Stimulation:
     def __init__(self, daq, duration, width=0, pulses=0, jitter=0, frequency=0, duty=0, width2=0, pulses2=0, jitter2=0, frequency2=0, duty2=0, pulse_type1='square', pulse_type2="square", name="", canal1=False, canal2=False):
@@ -45,7 +39,7 @@ class Stimulation:
         return_value.append("***")
         return "\n".join(return_value)
 
-    def toJSON(self):
+    def to_json(self):
         dictionary = {
             "type": "Stimulation",
             "name": self.name,
@@ -83,10 +77,10 @@ class Block:
                 stim_list.append(item.__str__(indent=indent+"   "))
         return "\n".join(stim_list)
 
-    def toJSON(self):
+    def to_json(self):
         data_list = []
         for item in self.data:
-            data_list.append(item.toJSON())
+            data_list.append(item.to_json())
         dictionary = {
             "type": "Block",
             "name": self.name,
@@ -116,7 +110,7 @@ class Experiment:
                 file.write(f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
             
             dictionary = {
-                "Blocks": self.blocks.toJSON(),
+                "Blocks": self.blocks.to_json(),
                 "Lights": self.daq.return_lights(),
                 "Framerate": self.framerate,
                 "Exposition": self.exposition,
