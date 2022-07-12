@@ -56,6 +56,7 @@ class PlotWindow(QDialog):
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
+        self.i = 0
 
     def clear(self):
         plt.figure(self.figure.number)
@@ -63,16 +64,13 @@ class PlotWindow(QDialog):
         self.axis[0].clear()
         self.axis[1].clear()
         self.vertical_lines = []
+        print("cleared")
 
     def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
+        print(x, y, index)
         plt.figure(self.figure.number)
-        plt.ion()
+        #plt.ion()
         self.axis[index].plot(x, y)
-        if root:
-            pass
-            #self.vertical_lines.append(self.axis[index].axvline(x=1, color="red"))
-
-    # plt.plot(x,y, color=color)
 
 
 class App(QWidget):
@@ -771,6 +769,7 @@ class App(QWidget):
             blocks = get_dictionary(file)["Blocks"]
             self.recursive_print(blocks)
             self.tree.check_global_validity()
+            self.clear_plot()
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
@@ -828,6 +827,7 @@ class App(QWidget):
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.create_blocks()
+            self.clear_plot()
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.plot_x_values,
@@ -1594,7 +1594,6 @@ class App(QWidget):
             # self.plot_window.plot(new_x_values, new_stim1_values, root)
             # self.plot_window.plot(new_x_values, new_stim2_values, root, color="g")
             self.clear_plot()
-            print(len(self.tree.plot_x_values))
             self.plot_window.plot(
                 self.tree.plot_x_values, self.tree.plot_stim1_values, root, index=0
             )

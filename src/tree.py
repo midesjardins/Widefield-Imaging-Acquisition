@@ -77,11 +77,13 @@ class Tree(QTreeWidget):
         try:
             if item is None:
                 item = self.currentItem()
+                self.elapsed_time = 0
                 self.plot_x_values = []
                 self.plot_stim1_values = []
                 self.plot_stim2_values = []
             if item.childCount() > 0:
                 if item == self.invisibleRootItem():
+                    self.elapsed_time = 0
                     self.plot_x_values = []
                     self.plot_stim1_values = []
                     self.plot_stim2_values = []
