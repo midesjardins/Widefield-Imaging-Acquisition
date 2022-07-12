@@ -75,25 +75,19 @@ class Tree(QTreeWidget):
 
     def graph(self, item=None):
         try:
-            if item is None:
-                item = self.currentItem()
+            if item == self.currentItem() or item == self.invisibleRootItem():
                 self.elapsed_time = 0
                 self.plot_x_values = []
                 self.plot_stim1_values = []
                 self.plot_stim2_values = []
+                self.baseline_values = []
             if item.childCount() > 0:
                 if item == self.invisibleRootItem():
-                    self.elapsed_time = 0
-                    self.plot_x_values = []
-                    self.plot_stim1_values = []
-                    self.plot_stim2_values = []
-                    self.baseline_values = []
                     jitter, block_delay, iterations_number = 0, 0, 1
                 else:
                     jitter = float(item.text(3))
                     iterations_number = int(item.text(1))
                     block_delay = float(item.text(2))
-
                 for iteration in range(iterations_number):
                     for index in range(item.childCount()):
                         child = item.child(index)

@@ -1255,7 +1255,7 @@ class App(QWidget):
         self.tree_to_signal()
         self.tree_to_canal()
         self.clear_plot()
-        self.tree.graph()
+        self.tree.graph(self.tree.currentItem())
         self.draw()
 
     def name_to_tree(self):
@@ -1312,7 +1312,7 @@ class App(QWidget):
             pass
         try:
             self.clear_plot()
-            self.tree.graph()
+            self.tree.graph(self.tree.currentItem())
             self.draw()
         except Exception:
             pass
@@ -1378,7 +1378,7 @@ class App(QWidget):
 
         self.tree.check_global_validity()
         self.clear_plot()
-        self.tree.graph()
+        self.tree.graph(self.tree.currentItem())
         self.draw()
 
     def tree_to_signal(self):
@@ -1443,7 +1443,7 @@ class App(QWidget):
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.tree.check_global_validity()
         self.clear_plot()
-        self.tree.graph()
+        self.tree.graph(self.tree.currentItem())
         self.draw()
 
     def tree_to_canal(self):
@@ -1538,7 +1538,7 @@ class App(QWidget):
                 # self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
                 self.tree.check_global_validity()
                 self.clear_plot()
-                self.tree.graph()
+                self.tree.graph(self.tree.currentItem())
                 self.draw()
 
     def enable_run(self):
