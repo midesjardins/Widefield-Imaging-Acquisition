@@ -4,8 +4,7 @@ import sys
 import os
 from nidaqmx.constants import AcquisitionType
 import numpy as np
-#sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.data_handling import extend_light_signal, shrink_array, find_rising_indices, create_complete_stack, reduce_stack, map_activation
+from src.data_handling import extend_light_signal, shrink_array, find_rising_indices, reduce_stack
 from src.waveforms import digital_square
 from pylablib.devices import IMAQ
 import warnings
@@ -58,6 +57,7 @@ class Camera(Instrument):
         self.frames_read = 0
 
     def delete_frames(self):
+        """Read all frames in the buffer"""
         self.cam.read_multiple_images()
 
     def loop(self, task):
@@ -145,11 +145,13 @@ class DAQ:
         self.write_waveforms()
     
     def set_trigger(self, port):
+        """ Set the trigger port and activate it"""
         self.trigger_activated = True
         self.trigger_port = port
 
     def remove_trigger(self):
-         self.trigger_activated = False
+        """Deactivate the trigger"""
+        self.trigger_activated = False
 
     def generate_stim_wave(self):
         """Create a stack of the stimulation signals and set the last values to zero"""
@@ -179,6 +181,7 @@ class DAQ:
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
 
     def extend_light_wave(self):
+        """Extend the light signal to be wider than the camera signal"""
         self.stacked_lights = extend_light_signal(self.stacked_lights, self.camera_signal)
 
     def write_waveforms(self):
@@ -235,12 +238,6 @@ class DAQ:
             time.sleep(2)
             self.stop_signal = True
             pass
-
-    def return_lights(self):
-        lights = []
-        for light in self.lights:
-            lights.append(light.name)
-        return lights
 
     def save(self, directory):
         """Save the light and stimulation data for each frame as a NPY file
