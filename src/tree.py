@@ -4,6 +4,7 @@ import numpy as np
 from src.waveforms import make_signal
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 from PyQt5.QtGui import QBrush, QColor, QIcon
+from src.timeit import timeit
 
 class Tree(QTreeWidget):
     def __init__(self):
@@ -24,9 +25,13 @@ class Tree(QTreeWidget):
         self.addTopLevelItem(tree_item)
         self.setCurrentItem(tree_item)
         self.app.tree_switch_window.setCurrentIndex(0)
-        self.app.canals_to_tree(first=True)
-        self.app.type_to_tree(first=True)
-        self.check_global_validity()
+        for i in [4, 11, 23]:
+                tree_item.setText(i, "square")
+        for i in [17, 18, 19, 30]:
+            tree_item.setText(i, "False")
+        #self.app.canals_to_tree(first=True)
+        #self.app.type_to_tree(first=True)
+        #self.check_global_validity()
 
     def add_brother(self):
         if self.currentItem():
@@ -39,9 +44,13 @@ class Tree(QTreeWidget):
             else:
                 self.addTopLevelItem(tree_item)
             self.setCurrentItem(tree_item)
-            self.app.type_to_tree(first=True)
-            self.app.canals_to_tree(first=True)
-            self.check_global_validity()
+            for i in [4, 11, 23]:
+                tree_item.setText(i, "square")
+            for i in [17, 18, 19, 30]:
+                tree_item.setText(i, "False")
+            #self.app.type_to_tree(first=True)
+            #self.app.canals_to_tree(first=True)
+            #self.check_global_validity()
 
     def add_child(self):
         if self.currentItem():
@@ -56,9 +65,13 @@ class Tree(QTreeWidget):
             self.selectedItems()[0].addChild(tree_item)
             self.selectedItems()[0].setExpanded(True)
             self.setCurrentItem(tree_item)
-            self.app.type_to_tree(first=True)
-            self.app.canals_to_tree(first=True)
-            self.check_global_validity()
+            for i in [4, 11, 23]:
+                tree_item.setText(i, "square")
+            for i in [17, 18, 19, 30]:
+                tree_item.setText(i, "False")
+            #self.app.type_to_tree(first=True)
+            #self.app.canals_to_tree(first=True)
+            #self.check_global_validity()
 
     def delete_branch(self):
         try:
@@ -70,9 +83,10 @@ class Tree(QTreeWidget):
         except Exception:
             parent = self.invisibleRootItem()
         parent.removeChild(self.currentItem())
-        self.check_global_validity()
-        self.app.actualize_window()
+        #self.check_global_validity()
+        #self.app.actualize_window()
 
+    @timeit
     def graph(self, item=None):
         try:
             if item == self.currentItem() or item == self.invisibleRootItem():
@@ -123,6 +137,14 @@ class Tree(QTreeWidget):
                         duty,
                         heigth,
                     ) = self.get_attributes(item, canal=1)
+                    print(time_values,
+                        sign_type,
+                        width,
+                        pulses,
+                        jitter,
+                        frequency,
+                        duty,
+                        heigth,)
                     data = make_signal(
                         time_values,
                         sign_type,
@@ -133,10 +155,14 @@ class Tree(QTreeWidget):
                         duty,
                         heigth,
                     )
+                    print("data")
+                    print(self.plot_stim1_values, data)
                     self.plot_stim1_values = np.concatenate(
                         (self.plot_stim1_values, data)
                     )
                 else:
+                    print("no stim")
+                    print(self.plot_stim1_values, np.zeros(len(time_values)))
                     self.plot_stim1_values = np.concatenate(
                         (self.plot_stim1_values, np.zeros(len(time_values)))
                     )
@@ -218,7 +244,7 @@ class Tree(QTreeWidget):
             self.plot_stim2_values = []
             self.plot_stim3_values = []
             self.elapsed_time = 0
-
+    @timeit
     def check_global_validity(self, item=None):
         if item is None:
             item = self.invisibleRootItem()

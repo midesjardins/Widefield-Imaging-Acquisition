@@ -31,6 +31,7 @@ from src.blocks import Stimulation, Block, Experiment
 from src.waveforms import make_signal, random_square
 from src.tree import Tree
 from src.plot import PlotWindow
+from src.timeit import timeit
 from src.data_handling import (
     get_dictionary,
     shrink_array,
@@ -315,11 +316,13 @@ class App(QWidget):
                 "30 Canal 3"
             ]
         )
-        for i in range(19):
-            # self.tree.header().hideSection(i+1)
-            pass
-        # self.tree.setHeaderHidden(True)
-        # self.tree.setColumnWidth(0, 330)
+        for i in range(1, 20):
+            self.tree.header().hideSection(i)
+        for i in range(21, 31):
+            self.tree.header().hideSection(i)
+        self.tree.setHeaderHidden(True)
+        self.tree.setColumnWidth(0, 330)
+        self.tree.setColumnWidth(20, 20)
         self.tree.currentItemChanged.connect(self.actualize_window)
         self.tree_window.addWidget(self.tree)
 
@@ -847,7 +850,6 @@ class App(QWidget):
             blocks = get_dictionary(file)["Blocks"]
             self.recursive_print(blocks)
             self.tree.check_global_validity()
-            self.clear_plot()
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
@@ -915,7 +917,6 @@ class App(QWidget):
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.create_blocks()
-            self.clear_plot()
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.plot_x_values,
@@ -1356,8 +1357,8 @@ class App(QWidget):
         self.directory_cell.setEnabled(self.files_saved)
 
 
-
     def actualize_window(self):
+        print("actualized")
         self.activate_buttons(
             [self.add_child_branch_button, self.tree.add_brother_branch_button]
         )
@@ -1377,9 +1378,9 @@ class App(QWidget):
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
-        self.clear_plot()
         self.tree.graph(self.tree.currentItem())
         self.draw()
+
 
     def name_to_tree(self):
         branch = self.tree.currentItem()
@@ -1388,7 +1389,7 @@ class App(QWidget):
             branch.setText(0, self.block_name_cell.text())
         else:
             branch.setText(0, self.stimulation_name_cell.text())
-
+    @timeit
     def tree_to_name(self):
         try:
             if self.tree.currentItem().childCount() > 0:
@@ -1408,13 +1409,9 @@ class App(QWidget):
         except AttributeError:
             pass
 
-    def type_to_tree(self, first=False):
-        if first is True:
-            self.stimulation_type_cell.setCurrentIndex(0)
-            self.stimulation_type_cell2.setCurrentIndex(0)
-            self.stimulation_type_cell3.setCurrentIndex(0)
-        else:
-            self.tree.check_global_validity()
+    @timeit
+    def type_to_tree(self):
+        self.tree.check_global_validity()
         self.different_signals_window.setCurrentIndex(
             self.stimulation_type_cell.currentIndex()
         )
@@ -1424,7 +1421,6 @@ class App(QWidget):
         self.different_signals_window3.setCurrentIndex(
             self.stimulation_type_cell3.currentIndex()
         )
-        # self.check_stim_validity()
         try:
             self.tree.currentItem().setText(
                 4, str(self.stimulation_type_cell.currentText())
@@ -1444,7 +1440,6 @@ class App(QWidget):
         except Exception:
             pass
         try:
-            self.clear_plot()
             self.tree.graph(self.tree.currentItem())
             self.draw()
         except Exception:
@@ -1534,10 +1529,9 @@ class App(QWidget):
             29, self.second_signal_type_heigth_cell3.text()
         )
         self.tree.check_global_validity()
-        self.clear_plot()
         self.tree.graph(self.tree.currentItem())
         self.draw()
-
+    @timeit
     def tree_to_signal(self):
         try:
             self.first_signal_type_pulses_cell.setText(
@@ -1599,7 +1593,7 @@ class App(QWidget):
             )
         except Exception as err:
             pass
-
+    @timeit
     def tree_to_block(self):
         try:
             self.block_iterations_cell.setText(
@@ -1617,10 +1611,9 @@ class App(QWidget):
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.tree.check_global_validity()
-        self.clear_plot()
         self.tree.graph(self.tree.currentItem())
         self.draw()
-
+    @timeit
     def tree_to_canal(self):
         self.canal_running = True
         try:
@@ -1670,78 +1663,68 @@ class App(QWidget):
             print(err)
             pass
         self.canal_running = False
-
-    def canals_to_tree(self, int=0, first=False):
+    @timeit
+    def canals_to_tree(self):
         self.baseline_checkbox.setEnabled(True)
         if not self.canal_running:
-            if first:
-                self.tree.currentItem().setText(17, "False")
-                self.tree.currentItem().setText(18, "False")
-                self.tree.currentItem().setText(19, "False")
-                self.tree.currentItem().setText(30, "False")
-                self.deactivate_buttons(self.canal1buttons)
-                self.deactivate_buttons(self.canal2buttons)
-                self.deactivate_buttons(self.canal3buttons)
+            if self.baseline_checkbox.isChecked():
+                self.deactivate_buttons(
+                    self.canal1buttons + [self.first_signal_first_canal_check]
+                )
+                self.deactivate_buttons(
+                    self.canal2buttons + [self.first_signal_second_canal_check]
+                )
+                self.deactivate_buttons(
+                    self.canal3buttons + [self.first_signal_third_canal_check]
+                )
             else:
-                if self.baseline_checkbox.isChecked():
-                    self.deactivate_buttons(
-                        self.canal1buttons + [self.first_signal_first_canal_check]
-                    )
-                    self.deactivate_buttons(
-                        self.canal2buttons + [self.first_signal_second_canal_check]
-                    )
-                    self.deactivate_buttons(
-                        self.canal3buttons + [self.first_signal_third_canal_check]
-                    )
-                else:
-                    self.activate_buttons(
-                        self.canal1buttons + [self.first_signal_first_canal_check]
-                    )
-                    self.activate_buttons(
-                        self.canal2buttons + [self.first_signal_second_canal_check]
-                    )
-                    self.activate_buttons(
-                        self.canal3buttons + [self.first_signal_third_canal_check]
-                    )
-                if self.first_signal_first_canal_check.isChecked():
-                    self.baseline_checkbox.setEnabled(False)
-                    self.activate_buttons(self.canal1buttons)
-                else:
-                    self.deactivate_buttons(self.canal1buttons)
-                if self.first_signal_second_canal_check.isChecked():
-                    self.baseline_checkbox.setEnabled(False)
-                    self.activate_buttons(self.canal2buttons)
-                else:
-                    self.deactivate_buttons(self.canal2buttons)
-                if self.first_signal_third_canal_check.isChecked():
-                    self.baseline_checkbox.setEnabled(False)
-                    self.activate_buttons(self.canal3buttons)
-                else:
-                    self.deactivate_buttons(self.canal3buttons)
-                if (
-                    self.first_signal_first_canal_check.isChecked()
-                    or self.first_signal_second_canal_check.isChecked() or self.first_signal_third_canal_check.isChecked()
-                ):
-                    self.deactivate_buttons([self.baseline_checkbox])
-                else:
-                    self.activate_buttons([self.baseline_checkbox])
-                self.tree.currentItem().setText(
-                    17, str(self.baseline_checkbox.isChecked())
+                self.activate_buttons(
+                    self.canal1buttons + [self.first_signal_first_canal_check]
                 )
-                self.tree.currentItem().setText(
-                    18, str(self.first_signal_first_canal_check.isChecked())
+                self.activate_buttons(
+                    self.canal2buttons + [self.first_signal_second_canal_check]
                 )
-                self.tree.currentItem().setText(
-                    19, str(self.first_signal_second_canal_check.isChecked())
+                self.activate_buttons(
+                    self.canal3buttons + [self.first_signal_third_canal_check]
                 )
-                self.tree.currentItem().setText(
-                    30, str(self.first_signal_third_canal_check.isChecked())
-                )
-                # self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
-                self.tree.check_global_validity()
-                self.clear_plot()
-                self.tree.graph(self.tree.currentItem())
-                self.draw()
+            if self.first_signal_first_canal_check.isChecked():
+                self.baseline_checkbox.setEnabled(False)
+                self.activate_buttons(self.canal1buttons)
+            else:
+                self.deactivate_buttons(self.canal1buttons)
+            if self.first_signal_second_canal_check.isChecked():
+                self.baseline_checkbox.setEnabled(False)
+                self.activate_buttons(self.canal2buttons)
+            else:
+                self.deactivate_buttons(self.canal2buttons)
+            if self.first_signal_third_canal_check.isChecked():
+                self.baseline_checkbox.setEnabled(False)
+                self.activate_buttons(self.canal3buttons)
+            else:
+                self.deactivate_buttons(self.canal3buttons)
+            if (
+                self.first_signal_first_canal_check.isChecked()
+                or self.first_signal_second_canal_check.isChecked() or self.first_signal_third_canal_check.isChecked()
+            ):
+                self.deactivate_buttons([self.baseline_checkbox])
+            else:
+                self.activate_buttons([self.baseline_checkbox])
+            self.tree.currentItem().setText(
+                17, str(self.baseline_checkbox.isChecked())
+            )
+            self.tree.currentItem().setText(
+                18, str(self.first_signal_first_canal_check.isChecked())
+            )
+            self.tree.currentItem().setText(
+                19, str(self.first_signal_second_canal_check.isChecked())
+            )
+            self.tree.currentItem().setText(
+                30, str(self.first_signal_third_canal_check.isChecked())
+            )
+            # self.first_signal_type_pulses_cell2.setEnabled(self.first_signal_second_canal_check.isChecked())
+            self.tree.check_global_validity()
+            self.tree.graph(self.tree.currentItem())
+            self.draw()
 
     def enable_run(self):
         self.run_button.setDisabled(False)
@@ -1778,11 +1761,11 @@ class App(QWidget):
         if string == "True":
             return True
         return False
-
+    @timeit
     def clear_plot(self):
         self.plot_window.clear()
 
-
+    @timeit
     def draw(self, root=False):
         new_x_values = []
         new_stim1_values = []
