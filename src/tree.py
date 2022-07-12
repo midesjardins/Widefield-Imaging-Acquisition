@@ -8,6 +8,7 @@ from src.timeit import timeit
 
 class Tree(QTreeWidget):
     def __init__(self):
+       """ Initialize the tree widget"""
        super().__init__()
        self.x_values = []
        self.stim1_values = []
@@ -22,34 +23,21 @@ class Tree(QTreeWidget):
     def first_stimulation(self):
         """ Create the first stimulation in the tree """
         tree_item = QTreeWidgetItem()
-        self.style_tree_item(tree_item)
         self.addTopLevelItem(tree_item)
-        self.setCurrentItem(tree_item)
         self.app.tree_switch_window.setCurrentIndex(0)
-        for i in [4, 11, 23]:
-                tree_item.setText(i, "square")
-        for i in [17, 18, 19, 30]:
-            tree_item.setText(i, "False")
+        self.set_defaults(tree_item)
 
     def add_brother(self):
         """ Add a brother to the current item in the tree"""
         if self.currentItem():
             tree_item = QTreeWidgetItem()
-            self.style_tree_item(tree_item)
             parent = self.selectedItems()[0].parent()
             if parent:
                 index = parent.indexOfChild(self.selectedItems()[0])
                 parent.insertChild(index + 1, tree_item)
             else:
                 self.addTopLevelItem(tree_item)
-            self.setCurrentItem(tree_item)
-            for i in [4, 11, 23]:
-                tree_item.setText(i, "square")
-            for i in [17, 18, 19, 30]:
-                tree_item.setText(i, "False")
-            #self.app.type_to_tree(first=True)
-            #self.app.canals_to_tree(first=True)
-            #self.check_global_validity()
+            self.set_defaults(tree_item)
 
     def add_child(self):
         """Add a child to the current item in the tree"""
@@ -61,17 +49,22 @@ class Tree(QTreeWidget):
                 20, QIcon(os.path.join("gui", "icons", "alert-triangle.png"))
             )
             tree_item = QTreeWidgetItem()
-            self.style_tree_item(tree_item)
             self.selectedItems()[0].addChild(tree_item)
             self.selectedItems()[0].setExpanded(True)
-            self.setCurrentItem(tree_item)
-            for i in [4, 11, 23]:
-                tree_item.setText(i, "square")
-            for i in [17, 18, 19, 30]:
-                tree_item.setText(i, "False")
-            #self.app.type_to_tree(first=True)
-            #self.app.canals_to_tree(first=True)
-            #self.check_global_validity()
+            self.set_defaults(tree_item)
+            
+
+    def set_defaults(self, item):
+        """ Set the default values for a new item in the tree"""
+        self.setCurrentItem(item)
+        item.setIcon(20, QIcon(os.path.join("gui", "icons", "alert-triangle.png")))
+        item.setForeground(0, QBrush(QColor(211, 211, 211)))
+        item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))
+        item.setText(0, "No Name")
+        for i in [4, 11, 23]:
+            item.setText(i, "square")
+        for i in [17, 18, 19, 30]:
+            item.setText(i, "False")
 
     def delete_item(self):
         """ Delete the current item in the tree and its children"""
@@ -84,8 +77,6 @@ class Tree(QTreeWidget):
         except Exception:
             parent = self.invisibleRootItem()
         parent.removeChild(self.currentItem())
-        #self.check_global_validity()
-        #self.app.actualize_window()
 
     def create_tree_item(self, block, parent=None):
         """
@@ -493,10 +484,3 @@ class Tree(QTreeWidget):
                 )
         except Exception:
             pass
-
-    def style_tree_item(self, item):
-        """Style a newly created tree item."""
-        item.setIcon(20, QIcon(os.path.join("gui", "icons", "alert-triangle.png")))
-        item.setForeground(0, QBrush(QColor(211, 211, 211)))
-        item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))
-        item.setText(0, "No Name")

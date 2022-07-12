@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 class PlotWindow(QDialog):
     def __init__(self, subplots=False, parent=None):
+        """ Initialize the plot window """
         super(PlotWindow, self).__init__(parent)
         if subplots:
             self.figure, self.axis = plt.subplots(3, sharex=True)
@@ -24,6 +25,7 @@ class PlotWindow(QDialog):
         self.i = 0
 
     def clear(self):
+        """ Clear each axis of the plot """
         plt.figure(self.figure.number)
         plt.ion()
         self.axis[0].clear()
@@ -32,6 +34,7 @@ class PlotWindow(QDialog):
         self.vertical_lines = []
 
     def plot(self, x, y, root, color="#1CFFFB", subplots=False, index=0):
+        """ Plot the given data on the plot window """
         plt.figure(self.figure.number)
         self.axis[index].plot(x, y)
         if root:
