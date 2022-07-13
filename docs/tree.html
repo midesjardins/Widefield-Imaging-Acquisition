@@ -1,0 +1,1745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>tree API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>tree</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import os
+import random
+import numpy as np
+from src.waveforms import make_signal
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PyQt5.QtGui import QBrush, QColor, QIcon
+from src.timeit import timeit
+
+class Tree(QTreeWidget):
+    def __init__(self):
+       &#34;&#34;&#34; Initialize the tree widget&#34;&#34;&#34;
+       super().__init__()
+       self.x_values = []
+       self.stim1_values = []
+       self.stim2_values = []
+       self.baseline_values = []
+       pass
+
+    def set_app(self, app):
+        &#34;&#34;&#34; Set the corresponding app instance&#34;&#34;&#34;
+        self.app = app
+
+    def first_stimulation(self):
+        &#34;&#34;&#34; Create the first stimulation in the tree &#34;&#34;&#34;
+        tree_item = QTreeWidgetItem()
+        self.addTopLevelItem(tree_item)
+        self.app.tree_switch_window.setCurrentIndex(0)
+        self.set_defaults(tree_item)
+
+    def add_brother(self):
+        &#34;&#34;&#34; Add a brother to the current item in the tree&#34;&#34;&#34;
+        if self.currentItem():
+            tree_item = QTreeWidgetItem()
+            parent = self.selectedItems()[0].parent()
+            if parent:
+                index = parent.indexOfChild(self.selectedItems()[0])
+                parent.insertChild(index + 1, tree_item)
+            else:
+                self.addTopLevelItem(tree_item)
+            self.set_defaults(tree_item)
+
+    def add_child(self):
+        &#34;&#34;&#34;Add a child to the current item in the tree&#34;&#34;&#34;
+        if self.currentItem():
+            self.currentItem().setIcon(
+                0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;))
+            )
+            self.currentItem().setIcon(
+                20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;))
+            )
+            tree_item = QTreeWidgetItem()
+            self.selectedItems()[0].addChild(tree_item)
+            self.selectedItems()[0].setExpanded(True)
+            self.set_defaults(tree_item)
+            
+
+    def set_defaults(self, item):
+        &#34;&#34;&#34; Set the default values for a new item in the tree&#34;&#34;&#34;
+        self.setCurrentItem(item)
+        item.setIcon(20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;)))
+        item.setForeground(0, QBrush(QColor(211, 211, 211)))
+        item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
+        item.setText(0, &#34;No Name&#34;)
+        for i in [4, 11, 23]:
+            item.setText(i, &#34;square&#34;)
+        for i in [17, 18, 19, 30]:
+            item.setText(i, &#34;False&#34;)
+
+    def delete_item(self):
+        &#34;&#34;&#34; Delete the current item in the tree and its children&#34;&#34;&#34;
+        try:
+            parent = self.currentItem().parent()
+            if parent.childCount() == 1:
+                parent.setIcon(
+                    0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;))
+                )
+        except Exception:
+            parent = self.invisibleRootItem()
+        parent.removeChild(self.currentItem())
+
+    def create_tree_item(self, block, parent=None):
+        &#34;&#34;&#34;
+        Recursively create the items in the block dictionary
+
+        Args:
+            block (dict): The dictionary containing the blocks to create
+            parent (Tree Item): The parent of the block to print. Defaults to None.
+        &#34;&#34;&#34;
+        if block[&#34;type&#34;] == &#34;Block&#34;:
+            if block[&#34;name&#34;] == &#34;root&#34;:
+                tree_item = self.invisibleRootItem()
+            else:
+                tree_item = QTreeWidgetItem()
+                parent.addChild(tree_item)
+                self.set_block_attributes(tree_item, block)
+            for item in block[&#34;data&#34;]:
+                self.create_tree_item(item, parent=tree_item)
+        elif block[&#34;type&#34;] == &#34;Stimulation&#34;:
+            tree_item = QTreeWidgetItem()
+            parent.addChild(tree_item)
+            self.set_stim_attributes(tree_item, block)
+    
+    def set_block_attributes(self, tree_item, dictionary):
+        &#34;&#34;&#34; Set the attributes of a block in the tree
+
+        Args:
+            tree_item (Tree Item): The tree item on which to apply the attributes
+            dictionary (dict): The dictionary containing the attributes
+        &#34;&#34;&#34;
+        tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;)))
+        tree_item.setText(0, dictionary[&#34;name&#34;])
+        tree_item.setText(1, str(dictionary[&#34;iterations&#34;]))
+        tree_item.setText(2, str(dictionary[&#34;delay&#34;]))
+        tree_item.setText(3, str(dictionary[&#34;jitter&#34;]))
+
+    def set_stim_attributes(self, tree_item, dictionary):
+        &#34;&#34;&#34; Set the attributes of a stimulation in the tree
+        
+        Args:
+            tree_item (Tree Item): The tree item on which to apply the attributes
+            dictionary (dict): The dictionary containing the attributes
+        &#34;&#34;&#34;
+        tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
+        tree_item.setText(0, dictionary[&#34;name&#34;])
+        tree_item.setText(4, str(dictionary[&#34;type1&#34;]))
+        tree_item.setText(5, str(dictionary[&#34;pulses&#34;]))
+        tree_item.setText(6, str(dictionary[&#34;duration&#34;]))
+        tree_item.setText(7, str(dictionary[&#34;jitter&#34;]))
+        tree_item.setText(8, str(dictionary[&#34;width&#34;]))
+        tree_item.setText(21, str(dictionary[&#34;heigth&#34;]))
+        tree_item.setText(9, str(dictionary[&#34;freq&#34;]))
+        tree_item.setText(10, str(dictionary[&#34;duty&#34;]))
+        tree_item.setText(11, str(dictionary[&#34;type2&#34;]))
+        tree_item.setText(12, str(dictionary[&#34;pulses2&#34;]))
+        tree_item.setText(13, str(dictionary[&#34;jitter2&#34;]))
+        tree_item.setText(14, str(dictionary[&#34;width2&#34;]))
+        tree_item.setText(22, str(dictionary[&#34;heigth2&#34;]))
+        tree_item.setText(15, str(dictionary[&#34;freq2&#34;]))
+        tree_item.setText(16, str(dictionary[&#34;duty2&#34;]))
+        tree_item.setText(23, str(dictionary[&#34;type3&#34;]))
+        tree_item.setText(24, str(dictionary[&#34;pulses3&#34;]))
+        tree_item.setText(25, str(dictionary[&#34;jitter3&#34;]))
+        tree_item.setText(26, str(dictionary[&#34;width3&#34;]))
+        tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
+        tree_item.setText(27, str(dictionary[&#34;freq3&#34;]))
+        tree_item.setText(28, str(dictionary[&#34;duty3&#34;]))
+        tree_item.setText(18, str(dictionary[&#34;canal1&#34;]))
+        tree_item.setText(19, str(dictionary[&#34;canal2&#34;]))
+        tree_item.setText(30, str(dictionary[&#34;canal3&#34;]))
+
+    def graph(self, item=None):
+        &#34;&#34;&#34;
+        Generate the x and y values for an item in the tree
+
+        Args:
+            item (Tree Item): The item to graph. Defaults to current item.
+        &#34;&#34;&#34;
+        try:
+            if item == self.currentItem() or item == self.invisibleRootItem():
+                self.elapsed_time = 0
+                self.x_values = []
+                self.stim1_values = []
+                self.stim2_values = []
+                self.stim3_values = []
+                self.baseline_values = []
+            if item.childCount() &gt; 0:
+                if item == self.invisibleRootItem():
+                    jitter, block_delay, iterations = 0, 0, 1
+                else:
+                    jitter = float(item.text(3))
+                    iterations = int(item.text(1))
+                    block_delay = float(item.text(2))
+                for i in range(iterations):
+                    for index in range(item.childCount()):
+                        child = item.child(index)
+                        self.graph(child)
+                    delay = block_delay + random.random() * jitter
+                    time_values = np.linspace(
+                        self.elapsed_time,
+                        self.elapsed_time + delay,
+                        int(round(delay * 3000)),
+                    )
+                    data = np.zeros(len(time_values))
+                    self.elapsed_time += delay
+                    self.x_values = np.concatenate(
+                        (self.x_values, time_values)
+                    )
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, data)
+                    )
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, data)
+                    )
+            else:
+                duration = float(item.text(6))
+                time_values = np.linspace(0, duration, int(round(duration * 3000)))
+                if item.text(18) == &#34;True&#34;:
+                    (
+                        sign_type,
+                        pulses,
+                        jitter,
+                        width,
+                        frequency,
+                        duty,
+                        heigth,
+                    ) = self.get_attributes(item, canal=1)
+                    data = make_signal(
+                        time_values,
+                        sign_type,
+                        width,
+                        pulses,
+                        jitter,
+                        frequency,
+                        duty,
+                        heigth,
+                    )
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, data)
+                    )
+                else:
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, np.zeros(len(time_values)))
+                    )
+
+                if item.text(19) == &#34;True&#34;:
+                    (
+                        sign_type2,
+                        pulses2,
+                        jitter2,
+                        width2,
+                        frequency2,
+                        duty2,
+                        heigth2,
+                    ) = self.get_attributes(item, canal=2)
+                    data2 = make_signal(
+                        time_values,
+                        sign_type2,
+                        width2,
+                        pulses2,
+                        jitter2,
+                        frequency2,
+                        duty2,
+                        heigth2,
+                    )
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, data2)
+                    )
+                else:
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, np.zeros(len(time_values)))
+                    )
+
+                if item.text(30) == &#34;True&#34;:
+                    (
+                        sign_type3,
+                        pulses3,
+                        jitter3,
+                        width3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    ) = self.get_attributes(item, canal=3)
+                    data3 = make_signal(
+                        time_values,
+                        sign_type3,
+                        width3,
+                        pulses3,
+                        jitter3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    )
+                    self.stim3_values = np.concatenate(
+                        (self.stim3_values, data3)
+                    )
+                else:
+                    self.stim3_values = np.concatenate(
+                        (self.stim3_values, np.zeros(len(time_values)))
+                    )
+
+                if (
+                    item.text(18) == &#34;False&#34;
+                    and item.text(19) == &#34;False&#34;
+                    and item.text(30) == &#34;False&#34;
+                    and item.text(17) == &#34;True&#34;
+                ):
+                    baseline_start_index = len(self.x_values)
+                    baseline_stop_index = len(self.x_values) + len(time_values)
+                    self.baseline_values.append(
+                        [baseline_start_index, baseline_stop_index]
+                    )
+                time_values += self.elapsed_time
+                self.x_values = np.concatenate((self.x_values, time_values))
+                self.elapsed_time += duration
+        except Exception as err:
+            print(err)
+            self.x_values = []
+            self.stim1_values = []
+            self.stim2_values = []
+            self.stim3_values = []
+            self.elapsed_time = 0
+
+    def check_global_validity(self, item=None):
+        &#34;&#34;&#34;
+        Check if an item is a valid stimulation/block.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to the root item.
+        &#34;&#34;&#34;
+        if item is None:
+            item = self.invisibleRootItem()
+            if self.check_block_validity(item):
+                self.app.enable_run()
+            else:
+                self.app.disable_run()
+        elif item.childCount() &gt; 0:
+            self.set_icon(item, self.check_block_validity(item))
+        else:
+            self.set_icon(item, self.check_stim_validity(item))
+        for child_index in range(item.childCount()):
+            self.check_global_validity(item.child(child_index))
+
+    def check_stim_validity(self, item=None):
+        &#34;&#34;&#34;
+        Check if a stimulation is valid.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to current item.
+        &#34;&#34;&#34;
+        valid = True
+        if item is None:
+            item == self.currentItem()
+        if item.text(6) == &#34;&#34;:
+            valid = False
+
+        if item.text(18) == &#34;True&#34;:
+            if (
+                item.text(4) == &#34;square&#34;
+                and item.text(9) != &#34;&#34;
+                and item.text(10) != &#34;&#34;
+                and item.text(21) != &#34;&#34;
+            ):
+                pass
+            elif (
+                item.text(4) == &#34;random-square&#34;
+                and item.text(5) != &#34;&#34;
+                and item.text(7) != &#34;&#34;
+                and item.text(8) != &#34;&#34;
+            ):
+                pass
+            else:
+                valid = False
+
+        if item.text(19) == &#34;True&#34;:
+            if (
+                item.text(11) == &#34;square&#34;
+                and item.text(15) != &#34;&#34;
+                and item.text(16) != &#34;&#34;
+                and item.text(22) != &#34;&#34;
+            ):
+                pass
+            elif (
+                item.text(11) == &#34;random-square&#34;
+                and item.text(12) != &#34;&#34;
+                and item.text(13) != &#34;&#34;
+                and item.text(4) != &#34;&#34;
+            ):
+                pass
+            else:
+                valid = False
+        if item.text(30) == &#34;True&#34;:
+            if (
+                item.text(23) == &#34;square&#34;
+                and item.text(27) != &#34;&#34;
+                and item.text(28) != &#34;&#34;
+                and item.text(29) != &#34;&#34;
+            ):
+                pass
+            elif (
+                item.text(23) == &#34;random-square&#34;
+                and item.text(24) != &#34;&#34;
+                and item.text(25) != &#34;&#34;
+                and item.text(26) != &#34;&#34;
+            ):
+                pass
+            else:
+                valid = False
+        return valid
+
+    def check_block_validity(self, item=None):
+        &#34;&#34;&#34;
+        Check if a block is valid.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to current item.
+        &#34;&#34;&#34;
+        valid = True
+        if item is None:
+            item = self.currentItem()
+        if item.childCount() == 0:
+            return self.check_stim_validity(item=item)
+        if item == self.invisibleRootItem():
+            if item.childCount() == 0:
+                valid = False
+        elif item.childCount() &gt; 0:
+            valid = item.text(1) != &#34;&#34; and item.text(2) != &#34;&#34; and item.text(3) != &#34;&#34;
+        for child_index in range(item.childCount()):
+            if not self.check_block_validity(item.child(child_index)):
+                valid = False
+        return valid
+
+    def get_attributes(self, item, canal=1):
+        &#34;&#34;&#34;
+        Get the attributes of a stimulation.
+
+        Args:
+            item (Tree Item): The item to get the attributes from.
+            canal (int): The canal to get the attributes from. Defaults to 1.
+        &#34;&#34;&#34;
+        if canal == 1:
+            sign_type = item.text(4)
+            try:
+                pulses = int(item.text(5))
+                jitter = float(item.text(7))
+                width = float(item.text(8))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(9))
+                duty = float(item.text(10)) / 100
+                heigth = float(item.text(21))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+        elif canal == 2:
+            sign_type = item.text(11)
+            try:
+                pulses = int(item.text(12))
+                jitter = float(item.text(13))
+                width = float(item.text(14))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(15))
+                duty = float(item.text(16)) / 100
+                heigth = float(item.text(22))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+        elif canal == 3:
+            sign_type = item.text(23)
+            try:
+                pulses = int(item.text(23))
+                jitter = float(item.text(25))
+                width = float(item.text(26))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(27))
+                duty = float(item.text(28)) / 100
+                heigth = float(item.text(29))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+    def set_icon(self, item, valid):
+        &#34;&#34;&#34;
+        Set the icon of a tree item.
+
+        Args:
+            item (Tree Item): The item to set the icon for.
+            valid (bool): Whether the item is valid or not.
+        &#34;&#34;&#34;
+        try:
+            if valid:
+                item.setIcon(
+                    20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;circle-check.png&#34;))
+                )
+            else:
+                item.setIcon(
+                    20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;))
+                )
+        except Exception:
+            pass</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="tree.Tree"><code class="flex name class">
+<span>class <span class="ident">Tree</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>QTreeWidget(parent: QWidget = None)</p>
+<p>Initialize the tree widget</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Tree(QTreeWidget):
+    def __init__(self):
+       &#34;&#34;&#34; Initialize the tree widget&#34;&#34;&#34;
+       super().__init__()
+       self.x_values = []
+       self.stim1_values = []
+       self.stim2_values = []
+       self.baseline_values = []
+       pass
+
+    def set_app(self, app):
+        &#34;&#34;&#34; Set the corresponding app instance&#34;&#34;&#34;
+        self.app = app
+
+    def first_stimulation(self):
+        &#34;&#34;&#34; Create the first stimulation in the tree &#34;&#34;&#34;
+        tree_item = QTreeWidgetItem()
+        self.addTopLevelItem(tree_item)
+        self.app.tree_switch_window.setCurrentIndex(0)
+        self.set_defaults(tree_item)
+
+    def add_brother(self):
+        &#34;&#34;&#34; Add a brother to the current item in the tree&#34;&#34;&#34;
+        if self.currentItem():
+            tree_item = QTreeWidgetItem()
+            parent = self.selectedItems()[0].parent()
+            if parent:
+                index = parent.indexOfChild(self.selectedItems()[0])
+                parent.insertChild(index + 1, tree_item)
+            else:
+                self.addTopLevelItem(tree_item)
+            self.set_defaults(tree_item)
+
+    def add_child(self):
+        &#34;&#34;&#34;Add a child to the current item in the tree&#34;&#34;&#34;
+        if self.currentItem():
+            self.currentItem().setIcon(
+                0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;))
+            )
+            self.currentItem().setIcon(
+                20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;))
+            )
+            tree_item = QTreeWidgetItem()
+            self.selectedItems()[0].addChild(tree_item)
+            self.selectedItems()[0].setExpanded(True)
+            self.set_defaults(tree_item)
+            
+
+    def set_defaults(self, item):
+        &#34;&#34;&#34; Set the default values for a new item in the tree&#34;&#34;&#34;
+        self.setCurrentItem(item)
+        item.setIcon(20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;)))
+        item.setForeground(0, QBrush(QColor(211, 211, 211)))
+        item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
+        item.setText(0, &#34;No Name&#34;)
+        for i in [4, 11, 23]:
+            item.setText(i, &#34;square&#34;)
+        for i in [17, 18, 19, 30]:
+            item.setText(i, &#34;False&#34;)
+
+    def delete_item(self):
+        &#34;&#34;&#34; Delete the current item in the tree and its children&#34;&#34;&#34;
+        try:
+            parent = self.currentItem().parent()
+            if parent.childCount() == 1:
+                parent.setIcon(
+                    0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;))
+                )
+        except Exception:
+            parent = self.invisibleRootItem()
+        parent.removeChild(self.currentItem())
+
+    def create_tree_item(self, block, parent=None):
+        &#34;&#34;&#34;
+        Recursively create the items in the block dictionary
+
+        Args:
+            block (dict): The dictionary containing the blocks to create
+            parent (Tree Item): The parent of the block to print. Defaults to None.
+        &#34;&#34;&#34;
+        if block[&#34;type&#34;] == &#34;Block&#34;:
+            if block[&#34;name&#34;] == &#34;root&#34;:
+                tree_item = self.invisibleRootItem()
+            else:
+                tree_item = QTreeWidgetItem()
+                parent.addChild(tree_item)
+                self.set_block_attributes(tree_item, block)
+            for item in block[&#34;data&#34;]:
+                self.create_tree_item(item, parent=tree_item)
+        elif block[&#34;type&#34;] == &#34;Stimulation&#34;:
+            tree_item = QTreeWidgetItem()
+            parent.addChild(tree_item)
+            self.set_stim_attributes(tree_item, block)
+    
+    def set_block_attributes(self, tree_item, dictionary):
+        &#34;&#34;&#34; Set the attributes of a block in the tree
+
+        Args:
+            tree_item (Tree Item): The tree item on which to apply the attributes
+            dictionary (dict): The dictionary containing the attributes
+        &#34;&#34;&#34;
+        tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;)))
+        tree_item.setText(0, dictionary[&#34;name&#34;])
+        tree_item.setText(1, str(dictionary[&#34;iterations&#34;]))
+        tree_item.setText(2, str(dictionary[&#34;delay&#34;]))
+        tree_item.setText(3, str(dictionary[&#34;jitter&#34;]))
+
+    def set_stim_attributes(self, tree_item, dictionary):
+        &#34;&#34;&#34; Set the attributes of a stimulation in the tree
+        
+        Args:
+            tree_item (Tree Item): The tree item on which to apply the attributes
+            dictionary (dict): The dictionary containing the attributes
+        &#34;&#34;&#34;
+        tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
+        tree_item.setText(0, dictionary[&#34;name&#34;])
+        tree_item.setText(4, str(dictionary[&#34;type1&#34;]))
+        tree_item.setText(5, str(dictionary[&#34;pulses&#34;]))
+        tree_item.setText(6, str(dictionary[&#34;duration&#34;]))
+        tree_item.setText(7, str(dictionary[&#34;jitter&#34;]))
+        tree_item.setText(8, str(dictionary[&#34;width&#34;]))
+        tree_item.setText(21, str(dictionary[&#34;heigth&#34;]))
+        tree_item.setText(9, str(dictionary[&#34;freq&#34;]))
+        tree_item.setText(10, str(dictionary[&#34;duty&#34;]))
+        tree_item.setText(11, str(dictionary[&#34;type2&#34;]))
+        tree_item.setText(12, str(dictionary[&#34;pulses2&#34;]))
+        tree_item.setText(13, str(dictionary[&#34;jitter2&#34;]))
+        tree_item.setText(14, str(dictionary[&#34;width2&#34;]))
+        tree_item.setText(22, str(dictionary[&#34;heigth2&#34;]))
+        tree_item.setText(15, str(dictionary[&#34;freq2&#34;]))
+        tree_item.setText(16, str(dictionary[&#34;duty2&#34;]))
+        tree_item.setText(23, str(dictionary[&#34;type3&#34;]))
+        tree_item.setText(24, str(dictionary[&#34;pulses3&#34;]))
+        tree_item.setText(25, str(dictionary[&#34;jitter3&#34;]))
+        tree_item.setText(26, str(dictionary[&#34;width3&#34;]))
+        tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
+        tree_item.setText(27, str(dictionary[&#34;freq3&#34;]))
+        tree_item.setText(28, str(dictionary[&#34;duty3&#34;]))
+        tree_item.setText(18, str(dictionary[&#34;canal1&#34;]))
+        tree_item.setText(19, str(dictionary[&#34;canal2&#34;]))
+        tree_item.setText(30, str(dictionary[&#34;canal3&#34;]))
+
+    def graph(self, item=None):
+        &#34;&#34;&#34;
+        Generate the x and y values for an item in the tree
+
+        Args:
+            item (Tree Item): The item to graph. Defaults to current item.
+        &#34;&#34;&#34;
+        try:
+            if item == self.currentItem() or item == self.invisibleRootItem():
+                self.elapsed_time = 0
+                self.x_values = []
+                self.stim1_values = []
+                self.stim2_values = []
+                self.stim3_values = []
+                self.baseline_values = []
+            if item.childCount() &gt; 0:
+                if item == self.invisibleRootItem():
+                    jitter, block_delay, iterations = 0, 0, 1
+                else:
+                    jitter = float(item.text(3))
+                    iterations = int(item.text(1))
+                    block_delay = float(item.text(2))
+                for i in range(iterations):
+                    for index in range(item.childCount()):
+                        child = item.child(index)
+                        self.graph(child)
+                    delay = block_delay + random.random() * jitter
+                    time_values = np.linspace(
+                        self.elapsed_time,
+                        self.elapsed_time + delay,
+                        int(round(delay * 3000)),
+                    )
+                    data = np.zeros(len(time_values))
+                    self.elapsed_time += delay
+                    self.x_values = np.concatenate(
+                        (self.x_values, time_values)
+                    )
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, data)
+                    )
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, data)
+                    )
+            else:
+                duration = float(item.text(6))
+                time_values = np.linspace(0, duration, int(round(duration * 3000)))
+                if item.text(18) == &#34;True&#34;:
+                    (
+                        sign_type,
+                        pulses,
+                        jitter,
+                        width,
+                        frequency,
+                        duty,
+                        heigth,
+                    ) = self.get_attributes(item, canal=1)
+                    data = make_signal(
+                        time_values,
+                        sign_type,
+                        width,
+                        pulses,
+                        jitter,
+                        frequency,
+                        duty,
+                        heigth,
+                    )
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, data)
+                    )
+                else:
+                    self.stim1_values = np.concatenate(
+                        (self.stim1_values, np.zeros(len(time_values)))
+                    )
+
+                if item.text(19) == &#34;True&#34;:
+                    (
+                        sign_type2,
+                        pulses2,
+                        jitter2,
+                        width2,
+                        frequency2,
+                        duty2,
+                        heigth2,
+                    ) = self.get_attributes(item, canal=2)
+                    data2 = make_signal(
+                        time_values,
+                        sign_type2,
+                        width2,
+                        pulses2,
+                        jitter2,
+                        frequency2,
+                        duty2,
+                        heigth2,
+                    )
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, data2)
+                    )
+                else:
+                    self.stim2_values = np.concatenate(
+                        (self.stim2_values, np.zeros(len(time_values)))
+                    )
+
+                if item.text(30) == &#34;True&#34;:
+                    (
+                        sign_type3,
+                        pulses3,
+                        jitter3,
+                        width3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    ) = self.get_attributes(item, canal=3)
+                    data3 = make_signal(
+                        time_values,
+                        sign_type3,
+                        width3,
+                        pulses3,
+                        jitter3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    )
+                    self.stim3_values = np.concatenate(
+                        (self.stim3_values, data3)
+                    )
+                else:
+                    self.stim3_values = np.concatenate(
+                        (self.stim3_values, np.zeros(len(time_values)))
+                    )
+
+                if (
+                    item.text(18) == &#34;False&#34;
+                    and item.text(19) == &#34;False&#34;
+                    and item.text(30) == &#34;False&#34;
+                    and item.text(17) == &#34;True&#34;
+                ):
+                    baseline_start_index = len(self.x_values)
+                    baseline_stop_index = len(self.x_values) + len(time_values)
+                    self.baseline_values.append(
+                        [baseline_start_index, baseline_stop_index]
+                    )
+                time_values += self.elapsed_time
+                self.x_values = np.concatenate((self.x_values, time_values))
+                self.elapsed_time += duration
+        except Exception as err:
+            print(err)
+            self.x_values = []
+            self.stim1_values = []
+            self.stim2_values = []
+            self.stim3_values = []
+            self.elapsed_time = 0
+
+    def check_global_validity(self, item=None):
+        &#34;&#34;&#34;
+        Check if an item is a valid stimulation/block.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to the root item.
+        &#34;&#34;&#34;
+        if item is None:
+            item = self.invisibleRootItem()
+            if self.check_block_validity(item):
+                self.app.enable_run()
+            else:
+                self.app.disable_run()
+        elif item.childCount() &gt; 0:
+            self.set_icon(item, self.check_block_validity(item))
+        else:
+            self.set_icon(item, self.check_stim_validity(item))
+        for child_index in range(item.childCount()):
+            self.check_global_validity(item.child(child_index))
+
+    def check_stim_validity(self, item=None):
+        &#34;&#34;&#34;
+        Check if a stimulation is valid.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to current item.
+        &#34;&#34;&#34;
+        valid = True
+        if item is None:
+            item == self.currentItem()
+        if item.text(6) == &#34;&#34;:
+            valid = False
+
+        if item.text(18) == &#34;True&#34;:
+            if (
+                item.text(4) == &#34;square&#34;
+                and item.text(9) != &#34;&#34;
+                and item.text(10) != &#34;&#34;
+                and item.text(21) != &#34;&#34;
+            ):
+                pass
+            elif (
+                item.text(4) == &#34;random-square&#34;
+                and item.text(5) != &#34;&#34;
+                and item.text(7) != &#34;&#34;
+                and item.text(8) != &#34;&#34;
+            ):
+                pass
+            else:
+                valid = False
+
+        if item.text(19) == &#34;True&#34;:
+            if (
+                item.text(11) == &#34;square&#34;
+                and item.text(15) != &#34;&#34;
+                and item.text(16) != &#34;&#34;
+                and item.text(22) != &#34;&#34;
+            ):
+                pass
+            elif (
+                item.text(11) == &#34;random-square&#34;
+                and item.text(12) != &#34;&#34;
+                and item.text(13) != &#34;&#34;
+                and item.text(4) != &#34;&#34;
+            ):
+                pass
+            else:
+                valid = False
+        if item.text(30) == &#34;True&#34;:
+            if (
+                item.text(23) == &#34;square&#34;
+                and item.text(27) != &#34;&#34;
+                and item.text(28) != &#34;&#34;
+                and item.text(29) != &#34;&#34;
+            ):
+                pass
+            elif (
+                item.text(23) == &#34;random-square&#34;
+                and item.text(24) != &#34;&#34;
+                and item.text(25) != &#34;&#34;
+                and item.text(26) != &#34;&#34;
+            ):
+                pass
+            else:
+                valid = False
+        return valid
+
+    def check_block_validity(self, item=None):
+        &#34;&#34;&#34;
+        Check if a block is valid.
+
+        Args:
+            item (Tree Item): The item to check. Defaults to current item.
+        &#34;&#34;&#34;
+        valid = True
+        if item is None:
+            item = self.currentItem()
+        if item.childCount() == 0:
+            return self.check_stim_validity(item=item)
+        if item == self.invisibleRootItem():
+            if item.childCount() == 0:
+                valid = False
+        elif item.childCount() &gt; 0:
+            valid = item.text(1) != &#34;&#34; and item.text(2) != &#34;&#34; and item.text(3) != &#34;&#34;
+        for child_index in range(item.childCount()):
+            if not self.check_block_validity(item.child(child_index)):
+                valid = False
+        return valid
+
+    def get_attributes(self, item, canal=1):
+        &#34;&#34;&#34;
+        Get the attributes of a stimulation.
+
+        Args:
+            item (Tree Item): The item to get the attributes from.
+            canal (int): The canal to get the attributes from. Defaults to 1.
+        &#34;&#34;&#34;
+        if canal == 1:
+            sign_type = item.text(4)
+            try:
+                pulses = int(item.text(5))
+                jitter = float(item.text(7))
+                width = float(item.text(8))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(9))
+                duty = float(item.text(10)) / 100
+                heigth = float(item.text(21))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+        elif canal == 2:
+            sign_type = item.text(11)
+            try:
+                pulses = int(item.text(12))
+                jitter = float(item.text(13))
+                width = float(item.text(14))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(15))
+                duty = float(item.text(16)) / 100
+                heigth = float(item.text(22))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+        elif canal == 3:
+            sign_type = item.text(23)
+            try:
+                pulses = int(item.text(23))
+                jitter = float(item.text(25))
+                width = float(item.text(26))
+            except Exception:
+                pulses, jitter, width = 0, 0, 0
+            try:
+                frequency = float(item.text(27))
+                duty = float(item.text(28)) / 100
+                heigth = float(item.text(29))
+            except Exception:
+                frequency, duty, heigth = 0, 0, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+    def set_icon(self, item, valid):
+        &#34;&#34;&#34;
+        Set the icon of a tree item.
+
+        Args:
+            item (Tree Item): The item to set the icon for.
+            valid (bool): Whether the item is valid or not.
+        &#34;&#34;&#34;
+        try:
+            if valid:
+                item.setIcon(
+                    20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;circle-check.png&#34;))
+                )
+            else:
+                item.setIcon(
+                    20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;))
+                )
+        except Exception:
+            pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtWidgets.QTreeWidget</li>
+<li>PyQt5.QtWidgets.QTreeView</li>
+<li>PyQt5.QtWidgets.QAbstractItemView</li>
+<li>PyQt5.QtWidgets.QAbstractScrollArea</li>
+<li>PyQt5.QtWidgets.QFrame</li>
+<li>PyQt5.QtWidgets.QWidget</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>PyQt5.QtGui.QPaintDevice</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="tree.Tree.add_brother"><code class="name flex">
+<span>def <span class="ident">add_brother</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a brother to the current item in the tree</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_brother(self):
+    &#34;&#34;&#34; Add a brother to the current item in the tree&#34;&#34;&#34;
+    if self.currentItem():
+        tree_item = QTreeWidgetItem()
+        parent = self.selectedItems()[0].parent()
+        if parent:
+            index = parent.indexOfChild(self.selectedItems()[0])
+            parent.insertChild(index + 1, tree_item)
+        else:
+            self.addTopLevelItem(tree_item)
+        self.set_defaults(tree_item)</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.add_child"><code class="name flex">
+<span>def <span class="ident">add_child</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a child to the current item in the tree</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_child(self):
+    &#34;&#34;&#34;Add a child to the current item in the tree&#34;&#34;&#34;
+    if self.currentItem():
+        self.currentItem().setIcon(
+            0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;))
+        )
+        self.currentItem().setIcon(
+            20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;))
+        )
+        tree_item = QTreeWidgetItem()
+        self.selectedItems()[0].addChild(tree_item)
+        self.selectedItems()[0].setExpanded(True)
+        self.set_defaults(tree_item)</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.check_block_validity"><code class="name flex">
+<span>def <span class="ident">check_block_validity</span></span>(<span>self, item=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if a block is valid.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The item to check. Defaults to current item.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_block_validity(self, item=None):
+    &#34;&#34;&#34;
+    Check if a block is valid.
+
+    Args:
+        item (Tree Item): The item to check. Defaults to current item.
+    &#34;&#34;&#34;
+    valid = True
+    if item is None:
+        item = self.currentItem()
+    if item.childCount() == 0:
+        return self.check_stim_validity(item=item)
+    if item == self.invisibleRootItem():
+        if item.childCount() == 0:
+            valid = False
+    elif item.childCount() &gt; 0:
+        valid = item.text(1) != &#34;&#34; and item.text(2) != &#34;&#34; and item.text(3) != &#34;&#34;
+    for child_index in range(item.childCount()):
+        if not self.check_block_validity(item.child(child_index)):
+            valid = False
+    return valid</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.check_global_validity"><code class="name flex">
+<span>def <span class="ident">check_global_validity</span></span>(<span>self, item=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if an item is a valid stimulation/block.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The item to check. Defaults to the root item.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_global_validity(self, item=None):
+    &#34;&#34;&#34;
+    Check if an item is a valid stimulation/block.
+
+    Args:
+        item (Tree Item): The item to check. Defaults to the root item.
+    &#34;&#34;&#34;
+    if item is None:
+        item = self.invisibleRootItem()
+        if self.check_block_validity(item):
+            self.app.enable_run()
+        else:
+            self.app.disable_run()
+    elif item.childCount() &gt; 0:
+        self.set_icon(item, self.check_block_validity(item))
+    else:
+        self.set_icon(item, self.check_stim_validity(item))
+    for child_index in range(item.childCount()):
+        self.check_global_validity(item.child(child_index))</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.check_stim_validity"><code class="name flex">
+<span>def <span class="ident">check_stim_validity</span></span>(<span>self, item=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if a stimulation is valid.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The item to check. Defaults to current item.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_stim_validity(self, item=None):
+    &#34;&#34;&#34;
+    Check if a stimulation is valid.
+
+    Args:
+        item (Tree Item): The item to check. Defaults to current item.
+    &#34;&#34;&#34;
+    valid = True
+    if item is None:
+        item == self.currentItem()
+    if item.text(6) == &#34;&#34;:
+        valid = False
+
+    if item.text(18) == &#34;True&#34;:
+        if (
+            item.text(4) == &#34;square&#34;
+            and item.text(9) != &#34;&#34;
+            and item.text(10) != &#34;&#34;
+            and item.text(21) != &#34;&#34;
+        ):
+            pass
+        elif (
+            item.text(4) == &#34;random-square&#34;
+            and item.text(5) != &#34;&#34;
+            and item.text(7) != &#34;&#34;
+            and item.text(8) != &#34;&#34;
+        ):
+            pass
+        else:
+            valid = False
+
+    if item.text(19) == &#34;True&#34;:
+        if (
+            item.text(11) == &#34;square&#34;
+            and item.text(15) != &#34;&#34;
+            and item.text(16) != &#34;&#34;
+            and item.text(22) != &#34;&#34;
+        ):
+            pass
+        elif (
+            item.text(11) == &#34;random-square&#34;
+            and item.text(12) != &#34;&#34;
+            and item.text(13) != &#34;&#34;
+            and item.text(4) != &#34;&#34;
+        ):
+            pass
+        else:
+            valid = False
+    if item.text(30) == &#34;True&#34;:
+        if (
+            item.text(23) == &#34;square&#34;
+            and item.text(27) != &#34;&#34;
+            and item.text(28) != &#34;&#34;
+            and item.text(29) != &#34;&#34;
+        ):
+            pass
+        elif (
+            item.text(23) == &#34;random-square&#34;
+            and item.text(24) != &#34;&#34;
+            and item.text(25) != &#34;&#34;
+            and item.text(26) != &#34;&#34;
+        ):
+            pass
+        else:
+            valid = False
+    return valid</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.create_tree_item"><code class="name flex">
+<span>def <span class="ident">create_tree_item</span></span>(<span>self, block, parent=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recursively create the items in the block dictionary</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>block</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The dictionary containing the blocks to create</dd>
+<dt><strong><code>parent</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The parent of the block to print. Defaults to None.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_tree_item(self, block, parent=None):
+    &#34;&#34;&#34;
+    Recursively create the items in the block dictionary
+
+    Args:
+        block (dict): The dictionary containing the blocks to create
+        parent (Tree Item): The parent of the block to print. Defaults to None.
+    &#34;&#34;&#34;
+    if block[&#34;type&#34;] == &#34;Block&#34;:
+        if block[&#34;name&#34;] == &#34;root&#34;:
+            tree_item = self.invisibleRootItem()
+        else:
+            tree_item = QTreeWidgetItem()
+            parent.addChild(tree_item)
+            self.set_block_attributes(tree_item, block)
+        for item in block[&#34;data&#34;]:
+            self.create_tree_item(item, parent=tree_item)
+    elif block[&#34;type&#34;] == &#34;Stimulation&#34;:
+        tree_item = QTreeWidgetItem()
+        parent.addChild(tree_item)
+        self.set_stim_attributes(tree_item, block)</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.delete_item"><code class="name flex">
+<span>def <span class="ident">delete_item</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Delete the current item in the tree and its children</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def delete_item(self):
+    &#34;&#34;&#34; Delete the current item in the tree and its children&#34;&#34;&#34;
+    try:
+        parent = self.currentItem().parent()
+        if parent.childCount() == 1:
+            parent.setIcon(
+                0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;))
+            )
+    except Exception:
+        parent = self.invisibleRootItem()
+    parent.removeChild(self.currentItem())</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.first_stimulation"><code class="name flex">
+<span>def <span class="ident">first_stimulation</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create the first stimulation in the tree</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def first_stimulation(self):
+    &#34;&#34;&#34; Create the first stimulation in the tree &#34;&#34;&#34;
+    tree_item = QTreeWidgetItem()
+    self.addTopLevelItem(tree_item)
+    self.app.tree_switch_window.setCurrentIndex(0)
+    self.set_defaults(tree_item)</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.get_attributes"><code class="name flex">
+<span>def <span class="ident">get_attributes</span></span>(<span>self, item, canal=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the attributes of a stimulation.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The item to get the attributes from.</dd>
+<dt><strong><code>canal</code></strong> :&ensp;<code>int</code></dt>
+<dd>The canal to get the attributes from. Defaults to 1.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_attributes(self, item, canal=1):
+    &#34;&#34;&#34;
+    Get the attributes of a stimulation.
+
+    Args:
+        item (Tree Item): The item to get the attributes from.
+        canal (int): The canal to get the attributes from. Defaults to 1.
+    &#34;&#34;&#34;
+    if canal == 1:
+        sign_type = item.text(4)
+        try:
+            pulses = int(item.text(5))
+            jitter = float(item.text(7))
+            width = float(item.text(8))
+        except Exception:
+            pulses, jitter, width = 0, 0, 0
+        try:
+            frequency = float(item.text(9))
+            duty = float(item.text(10)) / 100
+            heigth = float(item.text(21))
+        except Exception:
+            frequency, duty, heigth = 0, 0, 0
+        return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+    elif canal == 2:
+        sign_type = item.text(11)
+        try:
+            pulses = int(item.text(12))
+            jitter = float(item.text(13))
+            width = float(item.text(14))
+        except Exception:
+            pulses, jitter, width = 0, 0, 0
+        try:
+            frequency = float(item.text(15))
+            duty = float(item.text(16)) / 100
+            heigth = float(item.text(22))
+        except Exception:
+            frequency, duty, heigth = 0, 0, 0
+        return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+
+    elif canal == 3:
+        sign_type = item.text(23)
+        try:
+            pulses = int(item.text(23))
+            jitter = float(item.text(25))
+            width = float(item.text(26))
+        except Exception:
+            pulses, jitter, width = 0, 0, 0
+        try:
+            frequency = float(item.text(27))
+            duty = float(item.text(28)) / 100
+            heigth = float(item.text(29))
+        except Exception:
+            frequency, duty, heigth = 0, 0, 0
+        return (sign_type, pulses, jitter, width, frequency, duty, heigth)</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.graph"><code class="name flex">
+<span>def <span class="ident">graph</span></span>(<span>self, item=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate the x and y values for an item in the tree</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The item to graph. Defaults to current item.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def graph(self, item=None):
+    &#34;&#34;&#34;
+    Generate the x and y values for an item in the tree
+
+    Args:
+        item (Tree Item): The item to graph. Defaults to current item.
+    &#34;&#34;&#34;
+    try:
+        if item == self.currentItem() or item == self.invisibleRootItem():
+            self.elapsed_time = 0
+            self.x_values = []
+            self.stim1_values = []
+            self.stim2_values = []
+            self.stim3_values = []
+            self.baseline_values = []
+        if item.childCount() &gt; 0:
+            if item == self.invisibleRootItem():
+                jitter, block_delay, iterations = 0, 0, 1
+            else:
+                jitter = float(item.text(3))
+                iterations = int(item.text(1))
+                block_delay = float(item.text(2))
+            for i in range(iterations):
+                for index in range(item.childCount()):
+                    child = item.child(index)
+                    self.graph(child)
+                delay = block_delay + random.random() * jitter
+                time_values = np.linspace(
+                    self.elapsed_time,
+                    self.elapsed_time + delay,
+                    int(round(delay * 3000)),
+                )
+                data = np.zeros(len(time_values))
+                self.elapsed_time += delay
+                self.x_values = np.concatenate(
+                    (self.x_values, time_values)
+                )
+                self.stim1_values = np.concatenate(
+                    (self.stim1_values, data)
+                )
+                self.stim2_values = np.concatenate(
+                    (self.stim2_values, data)
+                )
+        else:
+            duration = float(item.text(6))
+            time_values = np.linspace(0, duration, int(round(duration * 3000)))
+            if item.text(18) == &#34;True&#34;:
+                (
+                    sign_type,
+                    pulses,
+                    jitter,
+                    width,
+                    frequency,
+                    duty,
+                    heigth,
+                ) = self.get_attributes(item, canal=1)
+                data = make_signal(
+                    time_values,
+                    sign_type,
+                    width,
+                    pulses,
+                    jitter,
+                    frequency,
+                    duty,
+                    heigth,
+                )
+                self.stim1_values = np.concatenate(
+                    (self.stim1_values, data)
+                )
+            else:
+                self.stim1_values = np.concatenate(
+                    (self.stim1_values, np.zeros(len(time_values)))
+                )
+
+            if item.text(19) == &#34;True&#34;:
+                (
+                    sign_type2,
+                    pulses2,
+                    jitter2,
+                    width2,
+                    frequency2,
+                    duty2,
+                    heigth2,
+                ) = self.get_attributes(item, canal=2)
+                data2 = make_signal(
+                    time_values,
+                    sign_type2,
+                    width2,
+                    pulses2,
+                    jitter2,
+                    frequency2,
+                    duty2,
+                    heigth2,
+                )
+                self.stim2_values = np.concatenate(
+                    (self.stim2_values, data2)
+                )
+            else:
+                self.stim2_values = np.concatenate(
+                    (self.stim2_values, np.zeros(len(time_values)))
+                )
+
+            if item.text(30) == &#34;True&#34;:
+                (
+                    sign_type3,
+                    pulses3,
+                    jitter3,
+                    width3,
+                    frequency3,
+                    duty3,
+                    heigth3,
+                ) = self.get_attributes(item, canal=3)
+                data3 = make_signal(
+                    time_values,
+                    sign_type3,
+                    width3,
+                    pulses3,
+                    jitter3,
+                    frequency3,
+                    duty3,
+                    heigth3,
+                )
+                self.stim3_values = np.concatenate(
+                    (self.stim3_values, data3)
+                )
+            else:
+                self.stim3_values = np.concatenate(
+                    (self.stim3_values, np.zeros(len(time_values)))
+                )
+
+            if (
+                item.text(18) == &#34;False&#34;
+                and item.text(19) == &#34;False&#34;
+                and item.text(30) == &#34;False&#34;
+                and item.text(17) == &#34;True&#34;
+            ):
+                baseline_start_index = len(self.x_values)
+                baseline_stop_index = len(self.x_values) + len(time_values)
+                self.baseline_values.append(
+                    [baseline_start_index, baseline_stop_index]
+                )
+            time_values += self.elapsed_time
+            self.x_values = np.concatenate((self.x_values, time_values))
+            self.elapsed_time += duration
+    except Exception as err:
+        print(err)
+        self.x_values = []
+        self.stim1_values = []
+        self.stim2_values = []
+        self.stim3_values = []
+        self.elapsed_time = 0</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.set_app"><code class="name flex">
+<span>def <span class="ident">set_app</span></span>(<span>self, app)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the corresponding app instance</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_app(self, app):
+    &#34;&#34;&#34; Set the corresponding app instance&#34;&#34;&#34;
+    self.app = app</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.set_block_attributes"><code class="name flex">
+<span>def <span class="ident">set_block_attributes</span></span>(<span>self, tree_item, dictionary)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the attributes of a block in the tree</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>tree_item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The tree item on which to apply the attributes</dd>
+<dt><strong><code>dictionary</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The dictionary containing the attributes</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_block_attributes(self, tree_item, dictionary):
+    &#34;&#34;&#34; Set the attributes of a block in the tree
+
+    Args:
+        tree_item (Tree Item): The tree item on which to apply the attributes
+        dictionary (dict): The dictionary containing the attributes
+    &#34;&#34;&#34;
+    tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;)))
+    tree_item.setText(0, dictionary[&#34;name&#34;])
+    tree_item.setText(1, str(dictionary[&#34;iterations&#34;]))
+    tree_item.setText(2, str(dictionary[&#34;delay&#34;]))
+    tree_item.setText(3, str(dictionary[&#34;jitter&#34;]))</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.set_defaults"><code class="name flex">
+<span>def <span class="ident">set_defaults</span></span>(<span>self, item)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the default values for a new item in the tree</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_defaults(self, item):
+    &#34;&#34;&#34; Set the default values for a new item in the tree&#34;&#34;&#34;
+    self.setCurrentItem(item)
+    item.setIcon(20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;)))
+    item.setForeground(0, QBrush(QColor(211, 211, 211)))
+    item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
+    item.setText(0, &#34;No Name&#34;)
+    for i in [4, 11, 23]:
+        item.setText(i, &#34;square&#34;)
+    for i in [17, 18, 19, 30]:
+        item.setText(i, &#34;False&#34;)</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.set_icon"><code class="name flex">
+<span>def <span class="ident">set_icon</span></span>(<span>self, item, valid)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the icon of a tree item.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The item to set the icon for.</dd>
+<dt><strong><code>valid</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether the item is valid or not.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_icon(self, item, valid):
+    &#34;&#34;&#34;
+    Set the icon of a tree item.
+
+    Args:
+        item (Tree Item): The item to set the icon for.
+        valid (bool): Whether the item is valid or not.
+    &#34;&#34;&#34;
+    try:
+        if valid:
+            item.setIcon(
+                20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;circle-check.png&#34;))
+            )
+        else:
+            item.setIcon(
+                20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;))
+            )
+    except Exception:
+        pass</code></pre>
+</details>
+</dd>
+<dt id="tree.Tree.set_stim_attributes"><code class="name flex">
+<span>def <span class="ident">set_stim_attributes</span></span>(<span>self, tree_item, dictionary)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the attributes of a stimulation in the tree</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>tree_item</code></strong> :&ensp;<code><a title="tree.Tree" href="#tree.Tree">Tree</a> Item</code></dt>
+<dd>The tree item on which to apply the attributes</dd>
+<dt><strong><code>dictionary</code></strong> :&ensp;<code>dict</code></dt>
+<dd>The dictionary containing the attributes</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_stim_attributes(self, tree_item, dictionary):
+    &#34;&#34;&#34; Set the attributes of a stimulation in the tree
+    
+    Args:
+        tree_item (Tree Item): The tree item on which to apply the attributes
+        dictionary (dict): The dictionary containing the attributes
+    &#34;&#34;&#34;
+    tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
+    tree_item.setText(0, dictionary[&#34;name&#34;])
+    tree_item.setText(4, str(dictionary[&#34;type1&#34;]))
+    tree_item.setText(5, str(dictionary[&#34;pulses&#34;]))
+    tree_item.setText(6, str(dictionary[&#34;duration&#34;]))
+    tree_item.setText(7, str(dictionary[&#34;jitter&#34;]))
+    tree_item.setText(8, str(dictionary[&#34;width&#34;]))
+    tree_item.setText(21, str(dictionary[&#34;heigth&#34;]))
+    tree_item.setText(9, str(dictionary[&#34;freq&#34;]))
+    tree_item.setText(10, str(dictionary[&#34;duty&#34;]))
+    tree_item.setText(11, str(dictionary[&#34;type2&#34;]))
+    tree_item.setText(12, str(dictionary[&#34;pulses2&#34;]))
+    tree_item.setText(13, str(dictionary[&#34;jitter2&#34;]))
+    tree_item.setText(14, str(dictionary[&#34;width2&#34;]))
+    tree_item.setText(22, str(dictionary[&#34;heigth2&#34;]))
+    tree_item.setText(15, str(dictionary[&#34;freq2&#34;]))
+    tree_item.setText(16, str(dictionary[&#34;duty2&#34;]))
+    tree_item.setText(23, str(dictionary[&#34;type3&#34;]))
+    tree_item.setText(24, str(dictionary[&#34;pulses3&#34;]))
+    tree_item.setText(25, str(dictionary[&#34;jitter3&#34;]))
+    tree_item.setText(26, str(dictionary[&#34;width3&#34;]))
+    tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
+    tree_item.setText(27, str(dictionary[&#34;freq3&#34;]))
+    tree_item.setText(28, str(dictionary[&#34;duty3&#34;]))
+    tree_item.setText(18, str(dictionary[&#34;canal1&#34;]))
+    tree_item.setText(19, str(dictionary[&#34;canal2&#34;]))
+    tree_item.setText(30, str(dictionary[&#34;canal3&#34;]))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="tree.Tree" href="#tree.Tree">Tree</a></code></h4>
+<ul class="">
+<li><code><a title="tree.Tree.add_brother" href="#tree.Tree.add_brother">add_brother</a></code></li>
+<li><code><a title="tree.Tree.add_child" href="#tree.Tree.add_child">add_child</a></code></li>
+<li><code><a title="tree.Tree.check_block_validity" href="#tree.Tree.check_block_validity">check_block_validity</a></code></li>
+<li><code><a title="tree.Tree.check_global_validity" href="#tree.Tree.check_global_validity">check_global_validity</a></code></li>
+<li><code><a title="tree.Tree.check_stim_validity" href="#tree.Tree.check_stim_validity">check_stim_validity</a></code></li>
+<li><code><a title="tree.Tree.create_tree_item" href="#tree.Tree.create_tree_item">create_tree_item</a></code></li>
+<li><code><a title="tree.Tree.delete_item" href="#tree.Tree.delete_item">delete_item</a></code></li>
+<li><code><a title="tree.Tree.first_stimulation" href="#tree.Tree.first_stimulation">first_stimulation</a></code></li>
+<li><code><a title="tree.Tree.get_attributes" href="#tree.Tree.get_attributes">get_attributes</a></code></li>
+<li><code><a title="tree.Tree.graph" href="#tree.Tree.graph">graph</a></code></li>
+<li><code><a title="tree.Tree.set_app" href="#tree.Tree.set_app">set_app</a></code></li>
+<li><code><a title="tree.Tree.set_block_attributes" href="#tree.Tree.set_block_attributes">set_block_attributes</a></code></li>
+<li><code><a title="tree.Tree.set_defaults" href="#tree.Tree.set_defaults">set_defaults</a></code></li>
+<li><code><a title="tree.Tree.set_icon" href="#tree.Tree.set_icon">set_icon</a></code></li>
+<li><code><a title="tree.Tree.set_stim_attributes" href="#tree.Tree.set_stim_attributes">set_stim_attributes</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
