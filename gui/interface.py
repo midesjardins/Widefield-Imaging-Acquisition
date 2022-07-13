@@ -45,14 +45,14 @@ from src.data_handling import (
 class App(QWidget):
     def __init__(self):
         super().__init__()
-        self.ports = get_dictionary("config.json")["Ports"]
+        self.cwd = os.path.dirname(os.path.dirname(__file__))
+        self.ports = get_dictionary(os.path.join(self.cwd, "config.json"))["Ports"]
         self.baseline_values = []
         self.elapsed_time = 0
         self.files_saved = False
         self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
-        self.cwd = os.path.dirname(os.path.dirname(__file__))
         self.onlyFloat = QDoubleValidator()
         self.onlyFloat.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
