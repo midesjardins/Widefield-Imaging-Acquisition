@@ -2,9 +2,22 @@ import json
 
 class Stimulation:
     def __init__(self, dictionary):
+        """ Initialize the stimulation object with a dictionary
+        
+        Args:
+            dictionary (dict): dictionary containing the stimulation parameters
+        """
         self.dico = dictionary
 
     def __str__(self, indent=""):
+        """ Return a string representation of the stimulation object 
+        
+        Args:
+            indent (str): indentation for the current line of the string representation
+            
+        Returns:
+            str: string representation of the stimulation object
+        """
         return_value = []
         if self.dico["type1"] == "random-square" and self.dico["canal1"]:
             return_value.append(indent+f"{self.dico['name']} - Channel 1 --- Duration: {self.dico['duration']}, Pulses: {self.dico['pulses']}, Width: {self.dico['width']}, Jitter: {self.dico['jitter']}")
@@ -24,9 +37,20 @@ class Stimulation:
         return "\n".join(return_value)
 
     def to_json(self):
+        """ Return a json representation of the stimulation object """
         return self.dico
+
 class Block:
     def __init__(self, name, data, delay=0, iterations=1, jitter=0):
+        """ Initialize the block object
+        
+        Args:
+            name (str): Name of the block
+            data (list): List of stimulation/block objects
+            delay (int): Delay between each block iteration
+            iterations (int): Number of iterations of the block
+            jitter (int): Jitter of the block
+        """
         self.name = name
         self.data = data
         self.iterations = iterations
@@ -35,6 +59,14 @@ class Block:
         self.exp = None
 
     def __str__(self, indent=""):
+        """ Return a string representation of the block object
+
+        Args:
+            indent (str): indentation for the current line of the string representation
+
+        Returns:
+            str: string representation of the block object
+        """
         stim_list = []
         for iteration in range(self.iterations):
             stim_list.append(indent + self.name + f" ({iteration+1}/{self.iterations}) --- Delay: {self.delay}, Jitter: {self.jitter}")
@@ -43,6 +75,7 @@ class Block:
         return "\n".join(stim_list)
 
     def to_json(self):
+        """ Return a json representation of the block object """
         data_list = []
         for item in self.data:
             data_list.append(item.to_json())
@@ -58,6 +91,17 @@ class Block:
 
 class Experiment:
     def __init__(self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name"):
+        """ Initialize the experiment object
+
+        Args:
+            blocks (list): List of block objects
+            framerate (int): Framerate of the experiment
+            exposition (int): Exposition time of the experiment
+            mouse_id (str): Mouse ID of the experiment
+            directory (str): Directory of the experiment
+            daq (str): DAQ used for the experiment
+            name (str): Name of the experiment
+        """
         self.name = name
         self.blocks = blocks
         self.framerate = framerate
@@ -66,24 +110,25 @@ class Experiment:
         self.directory = directory + f"/{name}"
         self.daq = daq
 
-    def start(self, x_values, y_values):
-        self.daq.launch(self.name, x_values, y_values)
+    def save(self, extents=None):
+        """ Save the experiment object to multiple files
 
-    def save(self, save, extents=None):
-        if save is True:
-            with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:
-                file.write(f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
-            
-            dictionary = {
-                "Blocks": self.blocks.to_json(),
-                "Lights": self.daq.return_lights(),
-                "Framerate": self.framerate,
-                "Exposition": self.exposition,
-                "Mouse ID": self.mouse_id
-            }
-            
-            with open(f'{self.directory}/experiment-metadata.json', 'w') as file:
-                json.dump(dictionary, file)
-            
-            self.daq.camera.save(self.directory, extents)
-            self.daq.save(self.directory)
+        Args:
+            extents (list): Positions of the ROI corners used for the experiment
+        """
+        with open(f'{self.directory}/experiment-metadata.txt', 'w') as file:
+            file.write(f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}")
+        
+        dictionary = {
+            "Blocks": self.blocks.to_json(),
+            "Lights": self.daq.return_lights(),
+            "Framerate": self.framerate,
+            "Exposition": self.exposition,
+            "Mouse ID": self.mouse_id
+        }
+        
+        with open(f'{self.directory}/experiment-metadata.json', 'w') as file:
+            json.dump(dictionary, file)
+        
+        self.daq.camera.save(self.directory, extents)
+        self.daq.save(self.directory)

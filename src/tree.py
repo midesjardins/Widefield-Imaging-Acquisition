@@ -301,7 +301,14 @@ class Tree(QTreeWidget):
             self.elapsed_time = 0
 
     def create_blocks(self, item=None):
-        """ Recursively create blocks from tree items"""
+        """ Recursively create blocks from tree items
+        
+        Args:
+            item (Tree Item): The item to create blocks from. Defaults to current item.
+        
+        Returns:
+            Block: A master block containing all the children blocks
+        """
         try:
             if item is None:
                 item = self.invisibleRootItem()

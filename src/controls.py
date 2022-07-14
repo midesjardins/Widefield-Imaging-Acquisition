@@ -4,7 +4,7 @@ import sys
 import os
 from nidaqmx.constants import AcquisitionType
 import numpy as np
-from src.data_handling import extend_light_signal, shrink_array, find_rising_indices, reduce_stack
+from src.calculations import extend_light_signal, shrink_array, find_rising_indices, reduce_stack
 from src.waveforms import digital_square
 from pylablib.devices import IMAQ
 import warnings
@@ -158,6 +158,7 @@ class DAQ:
         self.stim_signal = np.stack((self.stim_values))
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
+        self.stim_signal[2][-1] = 0
     
     def generate_light_wave(self):
         """Generate a light signal for each light used and set the last value to zero"""

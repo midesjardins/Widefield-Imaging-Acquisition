@@ -837,7 +837,7 @@ class App(QWidget):
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.x_values,
-                [self.tree.stim1_values, self.tree.stim2_values],
+                [self.tree.stim1_values, self.tree.stim2_values, self.tree.stim3_values],
             )
             self.draw(root=True)
             self.actualize_daq()
@@ -933,11 +933,11 @@ class App(QWidget):
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
-        if not self.daq.stop_signal and self.save_files_after_stop:
+        if not self.daq.stop_signal and self.save_files_after_stop and self.directory_save_files_checkbox.isChecked():
             try:
-                self.experiment.save(self.files_saved, self.roi_extent)
+                self.experiment.save(self.roi_extent)
             except Exception:
-                self.experiment.save(self.directory_save_files_checkbox.isChecked())
+                self.experiment.save()
         self.stop()
 
     def open_live_saving_thread(self):
@@ -1087,7 +1087,8 @@ class App(QWidget):
             self.camera = Camera(self.ports["camera"], "name")
         except Exception:
             self.camera = None
-        self.stimuli = [Instrument("ao0", "air-pump"), Instrument("ao1", "air-pump2")]
+        self.stimuli = [Instrument("ao0", "air-pump"), Instrument("ao1", "air-pump2"), Instrument("ao3", "air-pump3")]
+        # TODO verify that said port exists
         self.daq = DAQ(
             "dev1",
             [],
