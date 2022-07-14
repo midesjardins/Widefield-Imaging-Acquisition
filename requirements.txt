@@ -1,9 +1,0 @@
-###### Required Python Packages #####
-nidaqmx
-numpy
-matplotlib
-scipy
-serial
-PyQt5
-nidaqmx
-pylablib

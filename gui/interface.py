@@ -1,6 +1,5 @@
 import sys
 import time
-import random
 import os
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QLocale
@@ -18,7 +17,6 @@ from PyQt5.QtWidgets import (
     QComboBox,
     QMessageBox,
     QFileDialog,
-    QTreeWidgetItem,
     QApplication,
     QSlider,
 )
@@ -28,12 +26,10 @@ from threading import Thread
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from src.controls import DAQ, Instrument, Camera
-from src.blocks import Stimulation, Block, Experiment
-from src.waveforms import make_signal, random_square
+from src.blocks import Experiment
 from src.tree import Tree
 from src.plot import PlotWindow
-from src.timeit import timeit
-from src.data_handling import (
+from src.calculations import (
     get_dictionary,
     shrink_array,
     frames_acquired_from_camera_signal,
@@ -44,6 +40,7 @@ from src.data_handling import (
 
 class App(QWidget):
     def __init__(self):
+        """ Initialize the application """
         super().__init__()
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         self.ports = get_dictionary(os.path.join(self.cwd, "config.json"))["Ports"]
@@ -61,6 +58,7 @@ class App(QWidget):
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
+        """ Stop all processes when closing the application """
         self.video_running = False
         try:
             self.daq.stop_signal = True
@@ -72,6 +70,7 @@ class App(QWidget):
         self.check_if_thread_is_alive()
 
     def initUI(self):
+        """ Initialize the user interface """
         self.title = "Widefield Imaging Aquisition"
         self.dimensions = (10, 10, 640, 480)
         self.setWindowTitle(self.title)
@@ -159,16 +158,16 @@ class App(QWidget):
 
         self.image_settings_second_window = QHBoxLayout()
         self.ir_checkbox = QCheckBox("Infrared")
-        self.ir_checkbox.stateChanged.connect(self.check_lights)
+        self.ir_checkbox.stateChanged.connect(self.actualize_lights)
         self.image_settings_second_window.addWidget(self.ir_checkbox)
         self.red_checkbox = QCheckBox("Red")
-        self.red_checkbox.stateChanged.connect(self.check_lights)
+        self.red_checkbox.stateChanged.connect(self.actualize_lights)
         self.image_settings_second_window.addWidget(self.red_checkbox)
         self.green_checkbox = QCheckBox("Green")
-        self.green_checkbox.stateChanged.connect(self.check_lights)
+        self.green_checkbox.stateChanged.connect(self.actualize_lights)
         self.image_settings_second_window.addWidget(self.green_checkbox)
         self.fluorescence_checkbox = QCheckBox("Blue")
-        self.fluorescence_checkbox.stateChanged.connect(self.check_lights)
+        self.fluorescence_checkbox.stateChanged.connect(self.actualize_lights)
         self.image_settings_second_window.addWidget(self.fluorescence_checkbox)
 
         self.light_channel_layout = QHBoxLayout()
@@ -795,6 +794,7 @@ class App(QWidget):
         self.show()
 
     def deactivate_channels(self):
+        """ Deactivate canal checkboxes if the baseline checkbox is checked"""
         if self.baseline_checkbox.isChecked():
             self.deactivate_buttons(
                 [self.first_canal_check, self.second_canal_check,]
@@ -805,9 +805,11 @@ class App(QWidget):
             )
 
     def adjust_exposure(self):
+        """ Match the exposure of the image preview to the slider value"""
         self.max_exposure = self.exposure_slider.value()
 
     def set_trigger(self):
+        """ Set the trigger for the DAQ"""
         if self.trigger_checkbox.isChecked():
             self.run_button.setText("Run at Trigger")
             self.daq.set_trigger(self.ports["trigger"])
@@ -816,6 +818,7 @@ class App(QWidget):
             self.daq.remove_trigger()
 
     def import_config(self):
+        """ Import a configuration file"""
         file = QFileDialog.getOpenFileName()[0]
         try:
             blocks = get_dictionary(file)["Blocks"]
@@ -827,9 +830,10 @@ class App(QWidget):
             print(err)
 
     def run(self):
+        """ Run the experiment"""
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
-            self.master_block = self.create_blocks()
+            self.master_block = self.tree.create_blocks()
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.x_values,
@@ -844,6 +848,7 @@ class App(QWidget):
             self.open_start_experiment_thread()
 
     def check_override(self):
+        """ Check if experiment with the same name already exists"""
         if os.path.isfile(
             os.path.join(
                 self.directory_cell.text(),
@@ -864,10 +869,12 @@ class App(QWidget):
             return True
 
     def open_baseline_check_thread(self):
+        """ Open the thread for the baseline check"""
         self.baseline_check_thread = Thread(target=self.check_baseline)
         self.baseline_check_thread.start()
 
     def check_baseline(self):
+        """ Monitor the incoming frames and check if the baseline is reached"""
         if len(self.daq.lights) > 0:
             self.camera.baseline_data = []
             self.camera.adding_frames = False
@@ -909,10 +916,12 @@ class App(QWidget):
                     time.sleep(0.01)
 
     def open_start_experiment_thread(self):
+        """ Open the thread for the start of the experiment"""
         self.start_experiment_thread = Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
     def run_stimulation(self):
+        """ Run the stimulation in parallel with the lights"""
         self.experiment = Experiment(
             self.master_block,
             int(self.framerate_cell.text()),
@@ -932,10 +941,12 @@ class App(QWidget):
         self.stop()
 
     def open_live_saving_thread(self):
+        """ Open the thread for the live saving"""
         self.live_save_thread = Thread(target=self.live_save)
         self.live_save_thread.start()
 
     def live_save(self):
+        """ Save NPY chunked files when the number of frames is over 1200"""
         self.camera.file_index = 0
         self.camera.is_saving = False
         if self.directory_save_files_checkbox.isChecked():
@@ -982,10 +993,12 @@ class App(QWidget):
                 time.sleep(0.01)
 
     def open_live_preview_thread(self):
+        """ Open the thread for the live preview"""
         self.live_preview_thread = Thread(target=self.start_live)
         self.live_preview_thread.start()
 
     def start_live(self):
+        """ Start the live preview"""
         plt.ion()
         self.memory = []
         self.camera.baseline_completed = False
@@ -1038,13 +1051,16 @@ class App(QWidget):
                 pass
 
     def stop_live(self):
+        """ Stop the live preview"""
         self.camera.video_running = False
 
     def open_signal_preview_thread(self):
-        self.signal_preview_thread = Thread(target=self.preview_signal)
+        """ Open the thread for the signal preview"""
+        self.signal_preview_thread = Thread(target=self.actualize_progression)
         self.signal_preview_thread.start()
 
-    def preview_signal(self):
+    def actualize_progression(self):
+        """ Actualize the position of the progress bar"""
         plt.ion()
         while self.daq.stop_signal is False:
             try:
@@ -1057,13 +1073,16 @@ class App(QWidget):
                 pass
 
     def change_preview_light_channel(self):
+        """ Change the light channel for the live preview"""
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
 
     def open_daq_generation_thread(self):
+        """ Open the thread for the DAQ generation"""
         self.daq_generation_thread = Thread(target=self.generate_daq)
         self.daq_generation_thread.start()
 
     def generate_daq(self):
+        """ Generate the DAQ"""
         try:
             self.camera = Camera(self.ports["camera"], "name")
         except Exception:
@@ -1079,6 +1098,7 @@ class App(QWidget):
         )
 
     def actualize_daq(self):
+        """ Actualize the DAQ with the current settings"""
         try:
             self.daq.lights = []
             if self.ir_checkbox.isChecked():
@@ -1096,126 +1116,8 @@ class App(QWidget):
         except Exception:
             pass
 
-    def create_blocks(self, item=None):
-        try:
-            if item is None:
-                item = self.tree.invisibleRootItem()
-            if item.childCount() > 0:
-                children = []
-                for index in range(item.childCount()):
-                    children.append(self.create_blocks(item=item.child(index)))
-                if item == self.tree.invisibleRootItem():
-                    return Block("root", children)
-                return Block(
-                    item.text(0),
-                    children,
-                    delay=int(item.text(2)),
-                    iterations=int(item.text(1)),
-                )
-            else:
-                duration = int(item.text(6))
-                if item.text(18) == "True":
-                    canal1 = True
-                    (
-                        sign_type,
-                        pulses,
-                        jitter,
-                        width,
-                        frequency,
-                        duty,
-                        heigth,
-                    ) = self.tree.get_attributes(item, canal=1)
-                else:
-                    canal1 = False
-                    sign_type, pulses, jitter, width, frequency, duty, heigth = (
-                        "",
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                    )
-
-                if item.text(19) == "True":
-                    canal2 = True
-                    (
-                        sign_type2,
-                        pulses2,
-                        jitter2,
-                        width2,
-                        frequency2,
-                        duty2,
-                        heigth2,
-                    ) = self.tree.get_attributes(item, canal=2)
-                else:
-                    sign_type2, pulses2, jitter2, width2, frequency2, duty2, heigth2 = (
-                        "",
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                    )
-                    canal2 = False
-
-                if item.text(30) == "True":
-                    canal3 = True
-                    (
-                        sign_type3,
-                        pulses3,
-                        jitter3,
-                        width3,
-                        frequency3,
-                        duty3,
-                        heigth3,
-                    ) = self.tree.get_attributes(item, canal=3)
-                else:
-                    sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
-                        "",
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                    )
-                    canal2 = False
-                dictionary = {
-                    "type": "Stimulation",
-                    "name": item.text(0),
-                    "duration": duration,
-                    "canal1": canal1,
-                    "canal2": canal2,
-                    "canal3": canal3,
-                    "type1": sign_type,
-                    "pulses": pulses,
-                    "jitter": jitter,
-                    "width": width,
-                    "freq": frequency,
-                    "duty": duty,
-                    "heigth": heigth,
-                    "type2": sign_type2,
-                    "pulses2": pulses2,
-                    "jitter2": jitter2,
-                    "width2": width2,
-                    "freq2": frequency2,
-                    "duty2": duty2,
-                    "heigth2": heigth2,
-                    "type3": sign_type3,
-                    "pulses3": pulses3,
-                    "jitter3": jitter3,
-                    "width3": width3,
-                    "freq3": frequency3,
-                    "duty3": duty3,
-                    "heigth3": heigth3,
-                }
-                return Stimulation(dictionary)
-        except Exception as err:
-            pass
-
     def stop(self):
+        """ Stop the experiment and reactivate the interface"""
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
         self.deactivate_buttons(
@@ -1227,11 +1129,13 @@ class App(QWidget):
             pass
 
     def stop_while_running(self):
+        """ Stop the experiment while it is running"""
         if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
         self.stop()
 
     def stop_stimulation_dialog(self):
+        """ Ask if user wants to keep the files after experiment is stopped""" 
         button = QMessageBox.question(
             self, "Save Files", "Do you want to save the current files?"
         )
@@ -1241,14 +1145,17 @@ class App(QWidget):
             self.save_files_after_stop = False
 
     def show_buttons(self, buttons):
+        """ Show the buttons in a list"""
         for button in buttons:
             button.setVisible(True)
 
     def hide_buttons(self, buttons):
+        """ Hide the buttons in a list"""
         for button in buttons:
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
+        """ Activate the buttons in a list"""
         for button in buttons:
             button.setEnabled(True)
         if buttons == self.enabled_buttons:
@@ -1261,6 +1168,7 @@ class App(QWidget):
             self.stop_button.setDisabled(True)
 
     def deactivate_buttons(self, buttons):
+        """ Deactivate the buttons in a list"""
         if buttons == self.enabled_buttons:
             self.stop_button.setEnabled(True)
             self.tree.clearSelection()
@@ -1268,16 +1176,18 @@ class App(QWidget):
             button.setDisabled(True)
 
     def choose_directory(self):
+        """ Choose the directory where to save the files"""
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(folder)
 
     def enable_directory(self):
+        """ Enable the directory cell"""
         self.files_saved = self.directory_save_files_checkbox.isChecked()
         self.directory_choose_button.setEnabled(self.files_saved)
         self.directory_cell.setEnabled(self.files_saved)
 
     def actualize_window(self):
-        print("actualized")
+        """ Actualize the 'Stimulation Edit' and 'Signal Preview' windows"""
         self.activate_buttons(
             [self.add_child_branch_button, self.tree.add_brother_branch_button]
         )
@@ -1301,6 +1211,7 @@ class App(QWidget):
         self.draw()
 
     def name_to_tree(self):
+        """ Transfer the name of the current item from the cell to the tree"""
         branch = self.tree.currentItem()
         branch.setForeground(0, QBrush(QColor(0, 0, 0)))
         if branch.childCount() > 0:
@@ -1309,6 +1220,7 @@ class App(QWidget):
             branch.setText(0, self.stimulation_name_cell.text())
 
     def tree_to_name(self):
+        """ Transfer the name of the current item from the tree to the cell"""
         try:
             if self.tree.currentItem().childCount() > 0:
                 if self.tree.currentItem().text(0) != "No Name":
@@ -1324,6 +1236,7 @@ class App(QWidget):
             pass
 
     def type_to_tree(self):
+        """ Transfer the type of the current item from the cell to the tree"""
         self.tree.check_global_validity()
         self.different_signals_window.setCurrentIndex(
             self.stim_type_cell.currentIndex()
@@ -1353,6 +1266,7 @@ class App(QWidget):
             pass
 
     def tree_to_type(self):
+        """ Transfer the type of the current item from the tree to the cell"""
         dico = {"square": 0, "random-square": 1, "Third": 2}
         try:
             self.stim_type_cell.setCurrentIndex(dico[self.tree.currentItem().text(4)])
@@ -1370,6 +1284,7 @@ class App(QWidget):
             self.stim_type_cell3.setCurrentIndex(0)
 
     def signal_to_tree(self):
+        """ Transfer the signal of the current item from the cell to the tree"""
         self.tree.currentItem().setText(6, self.duration_cell.text())
         self.tree.currentItem().setText(5, self.pulses_cell.text())
         self.tree.currentItem().setText(7, self.jitter_cell.text())
@@ -1394,6 +1309,7 @@ class App(QWidget):
         self.draw()
 
     def tree_to_signal(self):
+        """ Transfer the signal of the current item from the tree to the cell"""
         try:
             self.pulses_cell.setText(self.tree.currentItem().text(5))
             self.duration_cell.setText(self.tree.currentItem().text(6))
@@ -1418,6 +1334,7 @@ class App(QWidget):
             pass
 
     def tree_to_block(self):
+        """ Transfer the block attributes from the tree to the cells"""
         try:
             self.block_iterations_cell.setText(self.tree.currentItem().text(1))
             self.block_delay_cell.setText(self.tree.currentItem().text(2))
@@ -1426,6 +1343,7 @@ class App(QWidget):
             pass
 
     def block_to_tree(self):
+        """ Transfer the block attributes from the cells to the tree"""
         self.tree.currentItem().setText(1, self.block_iterations_cell.text())
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
@@ -1434,6 +1352,7 @@ class App(QWidget):
         self.draw()
 
     def tree_to_canal(self):
+        """ Transfer the canals attributes from the tree to the cells"""
         self.canal_running = True
         try:
             self.baseline_checkbox.setChecked(
@@ -1478,6 +1397,7 @@ class App(QWidget):
         self.canal_running = False
 
     def canals_to_tree(self):
+        """ Transfer the canals attributes from the cells to the tree"""
         self.baseline_checkbox.setEnabled(True)
         if not self.canal_running:
             if self.baseline_checkbox.isChecked():
@@ -1523,12 +1443,15 @@ class App(QWidget):
             self.draw()
 
     def enable_run(self):
+        """ Enable the run button"""
         self.run_button.setDisabled(False)
 
     def disable_run(self):
+        """ Disable the run button"""
         self.run_button.setDisabled(True)
 
     def count_lights(self):
+        """ Return the number of lights and a list of their names"""
         count = 0
         text = []
         for checkbox in [
@@ -1542,7 +1465,8 @@ class App(QWidget):
                 text.append(checkbox.text())
         return (count, text)
 
-    def check_lights(self):
+    def actualize_lights(self):
+        """ Update the lights list in the combo box"""
         self.preview_light_combo.clear()
         if self.count_lights()[0] == 0:
             self.preview_light_combo.setEnabled(False)
@@ -1553,16 +1477,14 @@ class App(QWidget):
                 self.preview_light_combo.addItem(self.count_lights()[1][i])
 
     def boolean(self, string):
+        """ Return a boolean from a string"""
         if string == "True":
             return True
         return False
 
-    def clear_plot(self):
-        self.plot_window.clear()
-
     def draw(self, root=False):
         try:
-            self.clear_plot()
+            self.plot_window.clear()
             self.plot_window.plot(
                 self.tree.x_values, self.tree.stim1_values, root, index=0
             )
@@ -1582,14 +1504,15 @@ class App(QWidget):
             pass
 
     def set_roi(self):
+        """ Set the ROI"""
         self.deactivate_buttons(buttons=self.enabled_buttons)
         self.stop_button.setEnabled(False)
         self.save_roi_button.setEnabled(False)
         self.roi_buttons.setCurrentIndex(1)
 
         def onselect_function(eclick, erelease):
+            """ Save the ROI dimensions as attributes"""
             self.roi_extent = self.rect_selector.extents
-            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(
@@ -1605,6 +1528,7 @@ class App(QWidget):
         )
 
     def reset_roi(self):
+        """ Reset the ROI"""
         plt.figure(self.image_view.figure.number)
         plt.xlim(0, 1024)
         plt.ylim(0, 1024)
@@ -1612,12 +1536,14 @@ class App(QWidget):
         self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):
+        """ Cancel the ROI selection"""
         self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         self.rect_selector.clear()
         self.rect_selector = None
 
     def save_roi(self):
+        """ Save the ROI"""
         self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         plt.figure(self.image_view.figure.number)
@@ -1629,6 +1555,7 @@ class App(QWidget):
         self.reset_roi_button.setEnabled(True)
 
     def verify_exposure(self):
+        """ Verify if the exposure/framerate combination is valid"""
         try:
             boolean_check = (int(self.exposure_cell.text()) / 1000 + 0.0015) * int(
                 self.framerate_cell.text()
@@ -1638,10 +1565,8 @@ class App(QWidget):
         self.exposure_warning_label.setHidden(boolean_check)
         self.check_run()
 
-    def check_run(self):
-        pass
-
     def check_if_thread_is_alive(self):
+        """ Check what threads are alive"""
         try:
             if self.live_preview_thread.is_alive():
                 print("Live preview thread is alive")
@@ -1691,6 +1616,7 @@ class App(QWidget):
             print(err)
 
     def initialize_buttons(self):
+        """ Define list of buttons to activate/deactivate"""
         self.canal1buttons = [
             self.stim_type_cell,
             self.pulses_label,

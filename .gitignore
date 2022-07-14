@@ -1,5 +1,6 @@
 __pycache__
 .vscode
+.github
 .vs/
 .DS_Store
 data

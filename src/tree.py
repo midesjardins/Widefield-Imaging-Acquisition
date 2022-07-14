@@ -4,7 +4,7 @@ import numpy as np
 from src.waveforms import make_signal
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 from PyQt5.QtGui import QBrush, QColor, QIcon
-from src.timeit import timeit
+from src.blocks import Block, Stimulation
 
 class Tree(QTreeWidget):
     def __init__(self):
@@ -299,6 +299,126 @@ class Tree(QTreeWidget):
             self.stim2_values = []
             self.stim3_values = []
             self.elapsed_time = 0
+
+    def create_blocks(self, item=None):
+        """ Recursively create blocks from tree items"""
+        try:
+            if item is None:
+                item = self.invisibleRootItem()
+            if item.childCount() > 0:
+                children = []
+                for index in range(item.childCount()):
+                    children.append(self.create_blocks(item=item.child(index)))
+                if item == self.invisibleRootItem():
+                    return Block("root", children)
+                return Block(
+                    item.text(0),
+                    children,
+                    delay=int(item.text(2)),
+                    iterations=int(item.text(1)),
+                )
+            else:
+                duration = int(item.text(6))
+                if item.text(18) == "True":
+                    canal1 = True
+                    (
+                        sign_type,
+                        pulses,
+                        jitter,
+                        width,
+                        frequency,
+                        duty,
+                        heigth,
+                    ) = self.get_attributes(item, canal=1)
+                else:
+                    canal1 = False
+                    sign_type, pulses, jitter, width, frequency, duty, heigth = (
+                        "",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    )
+
+                if item.text(19) == "True":
+                    canal2 = True
+                    (
+                        sign_type2,
+                        pulses2,
+                        jitter2,
+                        width2,
+                        frequency2,
+                        duty2,
+                        heigth2,
+                    ) = self.get_attributes(item, canal=2)
+                else:
+                    sign_type2, pulses2, jitter2, width2, frequency2, duty2, heigth2 = (
+                        "",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    )
+                    canal2 = False
+
+                if item.text(30) == "True":
+                    canal3 = True
+                    (
+                        sign_type3,
+                        pulses3,
+                        jitter3,
+                        width3,
+                        frequency3,
+                        duty3,
+                        heigth3,
+                    ) = self.get_attributes(item, canal=3)
+                else:
+                    sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
+                        "",
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    )
+                    canal2 = False
+                dictionary = {
+                    "type": "Stimulation",
+                    "name": item.text(0),
+                    "duration": duration,
+                    "canal1": canal1,
+                    "canal2": canal2,
+                    "canal3": canal3,
+                    "type1": sign_type,
+                    "pulses": pulses,
+                    "jitter": jitter,
+                    "width": width,
+                    "freq": frequency,
+                    "duty": duty,
+                    "heigth": heigth,
+                    "type2": sign_type2,
+                    "pulses2": pulses2,
+                    "jitter2": jitter2,
+                    "width2": width2,
+                    "freq2": frequency2,
+                    "duty2": duty2,
+                    "heigth2": heigth2,
+                    "type3": sign_type3,
+                    "pulses3": pulses3,
+                    "jitter3": jitter3,
+                    "width3": width3,
+                    "freq3": frequency3,
+                    "duty3": duty3,
+                    "heigth3": heigth3,
+                }
+                return Stimulation(dictionary)
+        except Exception as err:
+            pass
 
     def check_global_validity(self, item=None):
         """

@@ -1,8 +1,3 @@
-
-
-
-
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -29,7 +24,7 @@
 <br />
 <div align="center">
   <a >
-    <img src="gui/logo.png" alt="Logo" width="80" height="80">
+    <img src="gui/icons/logo.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">Widefield Imaging Acquisition</h3>
