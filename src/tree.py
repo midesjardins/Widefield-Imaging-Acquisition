@@ -84,7 +84,7 @@ class Tree(QTreeWidget):
 
         Args:
             block (dict): The dictionary containing the blocks to create
-            parent (Tree Item): The parent of the block to print. Defaults to None.
+            parent (QTreeWidgetItem): The parent of the block to print. Defaults to None.
         """
         if block["type"] == "Block":
             if block["name"] == "root":
@@ -104,7 +104,7 @@ class Tree(QTreeWidget):
         """ Set the attributes of a block in the tree
 
         Args:
-            tree_item (Tree Item): The tree item on which to apply the attributes
+            tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
         """
         tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "package.png")))
@@ -117,7 +117,7 @@ class Tree(QTreeWidget):
         """ Set the attributes of a stimulation in the tree
         
         Args:
-            tree_item (Tree Item): The tree item on which to apply the attributes
+            tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
         """
         tree_item.setIcon(0, QIcon(os.path.join("gui", "icons", "wave-square.png")))
@@ -153,7 +153,7 @@ class Tree(QTreeWidget):
         Generate the x and y values for an item in the tree
 
         Args:
-            item (Tree Item): The item to graph. Defaults to current item.
+            item (QTreeWidgetItem): The item to graph. Defaults to current item.
         """
         try:
             if item == self.currentItem() or item == self.invisibleRootItem():
@@ -292,7 +292,7 @@ class Tree(QTreeWidget):
         """ Recursively create blocks from tree items
         
         Args:
-            item (Tree Item): The item to create blocks from. Defaults to current item.
+            item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
         
         Returns:
             Block: A master block containing all the children blocks
@@ -420,7 +420,7 @@ class Tree(QTreeWidget):
         Check if an item is a valid stimulation/block.
 
         Args:
-            item (Tree Item): The item to check. Defaults to the root item.
+            item (QTreeWidgetItem): The item to check. Defaults to the root item.
         """
         if item is None:
             item = self.invisibleRootItem()
@@ -440,7 +440,7 @@ class Tree(QTreeWidget):
         Check if a stimulation is valid.
 
         Args:
-            item (Tree Item): The item to check. Defaults to current item.
+            item (QTreeWidgetItem): The item to check. Defaults to current item.
         """
         valid = True
         if item is None:
@@ -507,7 +507,7 @@ class Tree(QTreeWidget):
         Check if a block is valid.
 
         Args:
-            item (Tree Item): The item to check. Defaults to current item.
+            item (QTreeWidgetItem): The item to check. Defaults to current item.
         """
         valid = True
         if item is None:
@@ -529,7 +529,7 @@ class Tree(QTreeWidget):
         Get the attributes of a stimulation.
 
         Args:
-            item (Tree Item): The item to get the attributes from.
+            item (QTreeWidgetItem): The item to get the attributes from.
             canal (int): The canal to get the attributes from. Defaults to 1.
         """
         if canal == 1:
@@ -585,7 +585,7 @@ class Tree(QTreeWidget):
         Set the icon of a tree item.
 
         Args:
-            item (Tree Item): The item to set the icon for.
+            item (QTreeWidgetItem): The item to set the icon for.
             valid (bool): Whether the item is valid or not.
         """
         try:

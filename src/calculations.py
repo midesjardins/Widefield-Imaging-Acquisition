@@ -6,7 +6,15 @@ import time
 
 
 def shrink_array(array, extents):
-    """Reduce the dimensions of frames to match ROI and return a list of frames"""
+    """Reduce the dimensions of frames to match ROI and return a list of frames
+    
+    Arguments:
+        array (np.array): Array of frames
+        extents (list): List of extents to shrink the array to
+        
+    Returns:
+        array: Reduced array of frames
+    """
     return np.array(array)[
         :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
     ]
@@ -46,7 +54,11 @@ def reduce_stack(stack, indices):
 
 
 def separate_images(lights, frames):
-    """ Separate images into different light channels """
+    """ Separate images into different light channels 
+    
+    Arguments:
+        lights (list): List of lights
+        frames (np.array): Array of frames"""
     separated_images = []
     for index in range(len(lights)):
         separated_images.append(frames[index :: len(lights), :, :])
@@ -54,7 +66,14 @@ def separate_images(lights, frames):
 
 
 def separate_vectors(lights, vector):
-    """ Separate vectors into different light channels """
+    """ Separate vectors into different light channels
+    
+    Arguments:
+        lights (list): List of lights
+        vector (np.array): Vector containing the stimulation data
+    
+    Returns:
+        list: List of separated vectors"""
     separated_vectors = []
     for index in range(len(lights)):
         separated_vectors.append(vector[:, index :: len(lights)])
@@ -62,7 +81,14 @@ def separate_vectors(lights, vector):
 
 
 def extract_from_path(path):
-    """ Extract lights, frames and vector files from a given path """
+    """ Extract lights, frames and vector files from a given path 
+    
+    Arguments:
+        path (str): Path to the directory containing the files
+        
+    Returns:
+        tuple: Tuple containing the lights, frames and vector files
+    """
     files_list = os.listdir(path)
     for file_name in files_list:
         if "-data" in file_name:
@@ -75,7 +101,15 @@ def extract_from_path(path):
 
 
 def extend_light_signal(lights, camera):
-    """ Extend the light signal to be wider the camera signal """
+    """ Extend the light signal to be wider the camera signal 
+    
+    Arguments:
+        lights (array): Array of light signals
+        camera (array): Array of camera frames
+        
+    Returns:
+        array: Array of extended light signals
+    """
     camera_dy = np.diff(camera)
     camera_indices = np.where(abs(camera_dy) > 0)[0]
     difference = camera_indices[1] - camera_indices[0]
@@ -105,7 +139,15 @@ def frames_acquired_from_camera_signal(camera_signal):
 
 
 def average_baseline(frame_list, light_count=1, start_index=0):
-    """ Average the baselines of a list of frames """
+    """ Average the baselines of a list of frames 
+    
+    Arguments:
+        frame_list (list): List of frames
+        light_count (int): Number of lights
+        start_index (int): Light index of the first frame in list
+        
+    Returns:
+        list: List of averaged baselines"""
     try:
         baselines = []
         for light_index in range(light_count):
@@ -127,9 +169,14 @@ def average_baseline(frame_list, light_count=1, start_index=0):
 
 
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
-    """ Get the start and end indices of the baseline in terms of frames acquired """
-    print(baseline_indices)
-    print(len(frames_acquired))
+    """ Get the start/end baseline indices in terms of frames acquired 
+    
+    Arguments:
+        baseline_indices (list of tuples): List of baseline indices tuples
+        frames_acquired (list): List of frames acquired
+        
+    Returns:
+        list of tuples: List of start/end baseline indices in terms of frames acquired"""
     list_of_indices = []
     for index in baseline_indices:
         list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
@@ -137,7 +184,7 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
 
 
 def map_activation(frames, baseline):
-    """ Map the activation of each frame to the baseline """
+    """ Map the activation of each frame to the baseline"""
     return np.array(frames) - np.array([baseline])
 
 
