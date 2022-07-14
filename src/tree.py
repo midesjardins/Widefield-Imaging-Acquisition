@@ -6,15 +6,16 @@ from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 from PyQt5.QtGui import QBrush, QColor, QIcon
 from src.blocks import Block, Stimulation
 
+
 class Tree(QTreeWidget):
     def __init__(self):
-       """ Initialize the tree widget"""
-       super().__init__()
-       self.x_values = []
-       self.stim1_values = []
-       self.stim2_values = []
-       self.baseline_values = []
-       pass
+        """ Initialize the tree widget"""
+        super().__init__()
+        self.x_values = []
+        self.stim1_values = []
+        self.stim2_values = []
+        self.baseline_values = []
+        pass
 
     def set_app(self, app):
         """ Set the corresponding app instance"""
@@ -52,7 +53,6 @@ class Tree(QTreeWidget):
             self.selectedItems()[0].addChild(tree_item)
             self.selectedItems()[0].setExpanded(True)
             self.set_defaults(tree_item)
-            
 
     def set_defaults(self, item):
         """ Set the default values for a new item in the tree"""
@@ -99,7 +99,7 @@ class Tree(QTreeWidget):
             tree_item = QTreeWidgetItem()
             parent.addChild(tree_item)
             self.set_stim_attributes(tree_item, block)
-    
+
     def set_block_attributes(self, tree_item, dictionary):
         """ Set the attributes of a block in the tree
 
@@ -182,15 +182,9 @@ class Tree(QTreeWidget):
                     )
                     data = np.zeros(len(time_values))
                     self.elapsed_time += delay
-                    self.x_values = np.concatenate(
-                        (self.x_values, time_values)
-                    )
-                    self.stim1_values = np.concatenate(
-                        (self.stim1_values, data)
-                    )
-                    self.stim2_values = np.concatenate(
-                        (self.stim2_values, data)
-                    )
+                    self.x_values = np.concatenate((self.x_values, time_values))
+                    self.stim1_values = np.concatenate((self.stim1_values, data))
+                    self.stim2_values = np.concatenate((self.stim2_values, data))
             else:
                 duration = float(item.text(6))
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
@@ -214,9 +208,7 @@ class Tree(QTreeWidget):
                         duty,
                         heigth,
                     )
-                    self.stim1_values = np.concatenate(
-                        (self.stim1_values, data)
-                    )
+                    self.stim1_values = np.concatenate((self.stim1_values, data))
                 else:
                     self.stim1_values = np.concatenate(
                         (self.stim1_values, np.zeros(len(time_values)))
@@ -242,9 +234,7 @@ class Tree(QTreeWidget):
                         duty2,
                         heigth2,
                     )
-                    self.stim2_values = np.concatenate(
-                        (self.stim2_values, data2)
-                    )
+                    self.stim2_values = np.concatenate((self.stim2_values, data2))
                 else:
                     self.stim2_values = np.concatenate(
                         (self.stim2_values, np.zeros(len(time_values)))
@@ -270,9 +260,7 @@ class Tree(QTreeWidget):
                         duty3,
                         heigth3,
                     )
-                    self.stim3_values = np.concatenate(
-                        (self.stim3_values, data3)
-                    )
+                    self.stim3_values = np.concatenate((self.stim3_values, data3))
                 else:
                     self.stim3_values = np.concatenate(
                         (self.stim3_values, np.zeros(len(time_values)))

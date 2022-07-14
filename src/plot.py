@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import sys
 import os
 from PyQt5.QtWidgets import QDialog, QVBoxLayout
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 
 class PlotWindow(QDialog):
     def __init__(self, subplots=False, parent=None):
@@ -14,7 +16,6 @@ class PlotWindow(QDialog):
             self.axis[0].get_yaxis().set_visible(False)
             self.axis[1].get_yaxis().set_visible(False)
             self.axis[2].get_yaxis().set_visible(False)
-            self.axis[0].xaxis.tick_top()
         else:
             self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)

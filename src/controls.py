@@ -4,13 +4,21 @@ import sys
 import os
 from nidaqmx.constants import AcquisitionType
 import numpy as np
-from src.calculations import extend_light_signal, shrink_array, find_rising_indices, reduce_stack
+from src.calculations import (
+    extend_light_signal,
+    shrink_array,
+    find_rising_indices,
+    reduce_stack,
+)
 from src.waveforms import digital_square
 from pylablib.devices import IMAQ
 import warnings
+
 warnings.filterwarnings("ignore")
 
 WIDEFIELD_COMPUTER = True
+
+
 class Instrument:
     def __init__(self, port, name):
         """A class used to represent a analog or digital instrument controlled by a DAQ
@@ -21,6 +29,7 @@ class Instrument:
         """
         self.port = port
         self.name = name
+
 
 class Camera(Instrument):
     def __init__(self, port, name):
@@ -40,7 +49,7 @@ class Camera(Instrument):
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
-            #print(err)
+            # print(err)
             pass
 
     def initialize(self, daq):
@@ -86,7 +95,7 @@ class Camera(Instrument):
                 pass
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
-    
+
     def save(self, directory, extents):
         """Save the acquired frames (reduced if necessary) to a 3D NPY file
 
@@ -102,8 +111,6 @@ class Camera(Instrument):
                 pass
         np.save(os.path.join(directory, "data", f"{self.file_index}.npy"), self.frames)
 
-
-        
 
 class DAQ:
     def __init__(self, name, lights, stimuli, camera, framerate, exposure):
@@ -123,7 +130,12 @@ class DAQ:
         self.framerate, self.exposure = framerate, exposure
         self.stop_signal = False
         self.lights, self.stimuli, self.camera = lights, stimuli, camera
-        self.tasks, self.light_signals, self.stim_signal, self.camera_signal = [], [], [], None
+        self.tasks, self.light_signals, self.stim_signal, self.camera_signal = (
+            [],
+            [],
+            [],
+            None,
+        )
 
     def launch(self, name, time_values, stim_values):
         """Generate stimulation, light and camera signal and write them to the DAQ
@@ -143,7 +155,7 @@ class DAQ:
             self.generate_camera_wave()
             self.extend_light_wave()
         self.write_waveforms()
-    
+
     def set_trigger(self, port):
         """ Set the trigger port and activate it"""
         self.trigger_activated = True
@@ -159,20 +171,25 @@ class DAQ:
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
         self.stim_signal[2][-1] = 0
-    
+
     def generate_light_wave(self):
         """Generate a light signal for each light used and set the last value to zero"""
         self.light_signals = []
         for potential_light_index in range(4):
             if potential_light_index < len(self.lights):
-                signal = digital_square(self.time_values, self.framerate/len(self.lights), self.framerate*self.exposure/len(self.lights), int(potential_light_index*3000/(self.framerate)))
+                signal = digital_square(
+                    self.time_values,
+                    self.framerate / len(self.lights),
+                    self.framerate * self.exposure / len(self.lights),
+                    int(potential_light_index * 3000 / (self.framerate)),
+                )
                 signal[-1] = False
                 self.light_signals.append(signal)
         if len(self.light_signals) > 1:
             self.stacked_lights = np.stack((self.light_signals))
         else:
             self.stacked_lights = self.light_signals
-    
+
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
         try:
@@ -183,56 +200,68 @@ class DAQ:
 
     def extend_light_wave(self):
         """Extend the light signal to be wider than the camera signal"""
-        self.stacked_lights = extend_light_signal(self.stacked_lights, self.camera_signal)
+        self.stacked_lights = extend_light_signal(
+            self.stacked_lights, self.camera_signal
+        )
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
         if WIDEFIELD_COMPUTER:
-            with nidaqmx.Task(new_task_name='lights') as l_task:
+            with nidaqmx.Task(new_task_name="lights") as l_task:
                 self.control_task = l_task
-                with nidaqmx.Task(new_task_name='stimuli') as s_task:
+                with nidaqmx.Task(new_task_name="stimuli") as s_task:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
-                        s_task.ao_channels.add_ao_voltage_chan(f"{self.name}/{stimulus.port}")
+                        s_task.ao_channels.add_ao_voltage_chan(
+                            f"{self.name}/{stimulus.port}"
+                        )
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                         null_lights.append([False, False])
                     l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     self.camera.initialize(self)
                     self.sample([s_task, l_task])
-                    if len(self.lights) > 0: 
-                        self.write([s_task, l_task], [self.stim_signal, self.all_signals])
+                    if len(self.lights) > 0:
+                        self.write(
+                            [s_task, l_task], [self.stim_signal, self.all_signals]
+                        )
                         self.camera.delete_frames()
                         if self.trigger_activated:
-                         with nidaqmx.Task(new_task_name='trigger') as t_task:
-                            t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
-                            while True:
-                                time.sleep(0.001)
-                                if t_task.read():
-                                    break
+                            with nidaqmx.Task(new_task_name="trigger") as t_task:
+                                t_task.di_channels.add_di_chan(
+                                    (f"{self.name}/{self.trigger_port}")
+                                )
+                                while True:
+                                    time.sleep(0.001)
+                                    if t_task.read():
+                                        break
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
-                        s_task.write([[0, 0],[0, 0]])
+                        s_task.write([[0, 0], [0, 0]])
                         l_task.write(null_lights)
                         self.start([s_task, l_task])
                     else:
                         self.write([s_task], [self.stim_signal])
                         self.camera.delete_frames()
                         if self.trigger_activated:
-                         with nidaqmx.Task(new_task_name='trigger') as t_task:
-                            t_task.di_channels.add_di_chan((f"{self.name}/{self.trigger_port}"))
-                            while True:
-                                time.sleep(0.001)
-                                if t_task.read():
-                                    break
+                            with nidaqmx.Task(new_task_name="trigger") as t_task:
+                                t_task.di_channels.add_di_chan(
+                                    (f"{self.name}/{self.trigger_port}")
+                                )
+                                while True:
+                                    time.sleep(0.001)
+                                    if t_task.read():
+                                        break
                         self.start([s_task])
-                        while s_task.is_task_done() is False and self.stop_signal is False:
+                        while (
+                            s_task.is_task_done() is False and self.stop_signal is False
+                        ):
                             time.sleep(0.01)
                             pass
                         self.stop([s_task])
-                        s_task.write([[0, 0],[0, 0]])
+                        s_task.write([[0, 0], [0, 0]])
                         self.start([s_task])
 
         else:
@@ -253,11 +282,16 @@ class DAQ:
         except Exception as err:
             print(err)
         np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
-    
+
     def reset_daq(self):
         """Reset the DAQ parameters
         """
-        self.light_signals, self.stim_signal, self.camera_signal, self.time_values = [], [], None, None
+        self.light_signals, self.stim_signal, self.camera_signal, self.time_values = (
+            [],
+            [],
+            None,
+            None,
+        )
 
     def start(self, tasks):
         """Start each nidaqmx task in a list
@@ -267,7 +301,7 @@ class DAQ:
         """
         for task in tasks:
             task.start()
-    
+
     def wait(self, tasks):
         """Wait for completion of nidaqmx tasks in a list
 
@@ -275,7 +309,7 @@ class DAQ:
             tasks (list): A list of nidaqmx tasks
         """
         for task in tasks:
-            task.wait_until_done(timeout=1.5*len(self.time_values)/3000)
+            task.wait_until_done(timeout=1.5 * len(self.time_values) / 3000)
 
     def sample(self, tasks):
         """Set the sampling rate for a list of nidaqmx tasks
@@ -284,7 +318,11 @@ class DAQ:
             tasks (list): A list of nidaqmx tasks
         """
         for task in tasks:
-            task.timing.cfg_samp_clk_timing(3000, sample_mode=AcquisitionType.FINITE, samps_per_chan=len(self.stim_signal[0]))
+            task.timing.cfg_samp_clk_timing(
+                3000,
+                sample_mode=AcquisitionType.FINITE,
+                samps_per_chan=len(self.stim_signal[0]),
+            )
 
     def write(self, tasks, content):
         """Write a list of arrays to a list of nidaqmx tasks
@@ -295,7 +333,7 @@ class DAQ:
         """
         for i, task in enumerate(tasks):
             task.write(content[i])
-    
+
     def stop(self, tasks):
         """Stop each nidaqmx task in a list
 
