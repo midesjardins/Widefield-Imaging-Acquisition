@@ -1094,9 +1094,9 @@ class App(QWidget):
         except Exception:
             self.camera = None
         self.stimuli = [
-            Instrument("ao0", "air-pump"),
-            Instrument("ao1", "air-pump2"),
-            Instrument("ao3", "air-pump3"),
+            Instrument(self.ports["analog0"], "air-pump"),
+            Instrument(self.ports["analog1"], "air-pump2"),
+            Instrument(self.ports["co2"], "air-pump3"),
         ]
         # TODO verify that said port exists
         self.daq = DAQ(
