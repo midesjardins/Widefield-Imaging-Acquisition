@@ -43,7 +43,8 @@ class App(QWidget):
         """ Initialize the application """
         super().__init__()
         self.cwd = os.path.dirname(os.path.dirname(__file__))
-        self.ports = get_dictionary(os.path.join(self.cwd, "config.json"))["Ports"]
+        self.config = get_dictionary(os.path.join(self.cwd, "config.json"))
+        self.ports = self.config["Ports"]
         self.baseline_values = []
         self.elapsed_time = 0
         self.files_saved = False
@@ -316,13 +317,14 @@ class App(QWidget):
                 "30 Canal 3",
             ]
         )
-        for i in range(1, 20):
-            self.tree.header().hideSection(i)
-        for i in range(21, 31):
-            self.tree.header().hideSection(i)
-        self.tree.setHeaderHidden(True)
-        self.tree.setColumnWidth(0, 330)
-        self.tree.setColumnWidth(20, 20)
+        if not self.config["Debug"]:
+            for i in range(1, 20):
+                self.tree.header().hideSection(i)
+            for i in range(21, 31):
+                self.tree.header().hideSection(i)
+            self.tree.setHeaderHidden(True)
+            self.tree.setColumnWidth(0, 330)
+            self.tree.setColumnWidth(20, 20)
         self.tree.currentItemChanged.connect(self.actualize_window)
         self.tree_window.addWidget(self.tree)
 

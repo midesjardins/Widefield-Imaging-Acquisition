@@ -185,6 +185,7 @@ class Tree(QTreeWidget):
                     self.x_values = np.concatenate((self.x_values, time_values))
                     self.stim1_values = np.concatenate((self.stim1_values, data))
                     self.stim2_values = np.concatenate((self.stim2_values, data))
+                    self.stim3_values = np.concatenate((self.stim3_values, data))
             else:
                 duration = float(item.text(6))
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
