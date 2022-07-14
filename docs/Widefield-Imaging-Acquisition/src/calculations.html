@@ -34,7 +34,15 @@ import time
 
 
 def shrink_array(array, extents):
-    &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames&#34;&#34;&#34;
+    &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames
+    
+    Args:
+        array (array): Array of frames
+        extents (list): List of extents to shrink the array to
+        
+    Returns:
+        array: Reduced array of frames
+    &#34;&#34;&#34;
     return np.array(array)[
         :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
     ]
@@ -74,7 +82,14 @@ def reduce_stack(stack, indices):
 
 
 def separate_images(lights, frames):
-    &#34;&#34;&#34; Separate images into different light channels &#34;&#34;&#34;
+    &#34;&#34;&#34; Separate images into different light channels 
+    
+    Args:
+        lights (list): List of lights
+        frames (array): Array of frames
+        
+    Returns:
+        list: List of separated images&#34;&#34;&#34;
     separated_images = []
     for index in range(len(lights)):
         separated_images.append(frames[index :: len(lights), :, :])
@@ -82,7 +97,14 @@ def separate_images(lights, frames):
 
 
 def separate_vectors(lights, vector):
-    &#34;&#34;&#34; Separate vectors into different light channels &#34;&#34;&#34;
+    &#34;&#34;&#34; Separate vectors into different light channels
+    
+    Args:
+        lights (list): List of lights
+        vector (array): Vector containing the stimulation data
+    
+    Returns:
+        list: List of separated vectors&#34;&#34;&#34;
     separated_vectors = []
     for index in range(len(lights)):
         separated_vectors.append(vector[:, index :: len(lights)])
@@ -90,7 +112,14 @@ def separate_vectors(lights, vector):
 
 
 def extract_from_path(path):
-    &#34;&#34;&#34; Extract lights, frames and vector files from a given path &#34;&#34;&#34;
+    &#34;&#34;&#34; Extract lights, frames and vector files from a given path 
+    
+    Args:
+        path (str): Path to the directory containing the files
+        
+    Returns:
+        tuple: Tuple containing the lights, frames and vector files
+    &#34;&#34;&#34;
     files_list = os.listdir(path)
     for file_name in files_list:
         if &#34;-data&#34; in file_name:
@@ -103,7 +132,15 @@ def extract_from_path(path):
 
 
 def extend_light_signal(lights, camera):
-    &#34;&#34;&#34; Extend the light signal to be wider the camera signal &#34;&#34;&#34;
+    &#34;&#34;&#34; Extend the light signal to be wider the camera signal 
+    
+    Args:
+        lights (array): Array of light signals
+        camera (array): Array of camera frames
+        
+    Returns:
+        array: Array of extended light signals
+    &#34;&#34;&#34;
     camera_dy = np.diff(camera)
     camera_indices = np.where(abs(camera_dy) &gt; 0)[0]
     difference = camera_indices[1] - camera_indices[0]
@@ -133,7 +170,15 @@ def frames_acquired_from_camera_signal(camera_signal):
 
 
 def average_baseline(frame_list, light_count=1, start_index=0):
-    &#34;&#34;&#34; Average the baselines of a list of frames &#34;&#34;&#34;
+    &#34;&#34;&#34; Average the baselines of a list of frames 
+    
+    Args:
+        frame_list (list): List of frames
+        light_count (int): Number of lights
+        start_index (int): Light index of the first frame in list
+        
+    Returns:
+        list: List of averaged baselines&#34;&#34;&#34;
     try:
         baselines = []
         for light_index in range(light_count):
@@ -155,9 +200,14 @@ def average_baseline(frame_list, light_count=1, start_index=0):
 
 
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
-    &#34;&#34;&#34; Get the start and end indices of the baseline in terms of frames acquired &#34;&#34;&#34;
-    print(baseline_indices)
-    print(len(frames_acquired))
+    &#34;&#34;&#34; Get the start/end baseline indices in terms of frames acquired 
+    
+    Args:
+        baseline_indices (list of tuples): List of baseline indices tuples
+        frames_acquired (list): List of frames acquired
+        
+    Returns:
+        list of tuples: List of start/end baseline indices in terms of frames acquired&#34;&#34;&#34;
     list_of_indices = []
     for index in baseline_indices:
         list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
@@ -165,7 +215,7 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
 
 
 def map_activation(frames, baseline):
-    &#34;&#34;&#34; Map the activation of each frame to the baseline &#34;&#34;&#34;
+    &#34;&#34;&#34; Map the activation of each frame to the baseline&#34;&#34;&#34;
     return np.array(frames) - np.array([baseline])
 
 
@@ -193,13 +243,35 @@ def timeit(method):
 <span>def <span class="ident">average_baseline</span></span>(<span>frame_list, light_count=1, start_index=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Average the baselines of a list of frames</p></div>
+<div class="desc"><p>Average the baselines of a list of frames </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>frame_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of frames</dd>
+<dt><strong><code>light_count</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of lights</dd>
+<dt><strong><code>start_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>Light index of the first frame in list</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of averaged baselines</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def average_baseline(frame_list, light_count=1, start_index=0):
-    &#34;&#34;&#34; Average the baselines of a list of frames &#34;&#34;&#34;
+    &#34;&#34;&#34; Average the baselines of a list of frames 
+    
+    Args:
+        frame_list (list): List of frames
+        light_count (int): Number of lights
+        start_index (int): Light index of the first frame in list
+        
+    Returns:
+        list: List of averaged baselines&#34;&#34;&#34;
     try:
         baselines = []
         for light_index in range(light_count):
@@ -243,13 +315,33 @@ def timeit(method):
 <span>def <span class="ident">extend_light_signal</span></span>(<span>lights, camera)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Extend the light signal to be wider the camera signal</p></div>
+<div class="desc"><p>Extend the light signal to be wider the camera signal </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lights</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of light signals</dd>
+<dt><strong><code>camera</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of camera frames</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array</code></dt>
+<dd>Array of extended light signals</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def extend_light_signal(lights, camera):
-    &#34;&#34;&#34; Extend the light signal to be wider the camera signal &#34;&#34;&#34;
+    &#34;&#34;&#34; Extend the light signal to be wider the camera signal 
+    
+    Args:
+        lights (array): Array of light signals
+        camera (array): Array of camera frames
+        
+    Returns:
+        array: Array of extended light signals
+    &#34;&#34;&#34;
     camera_dy = np.diff(camera)
     camera_indices = np.where(abs(camera_dy) &gt; 0)[0]
     difference = camera_indices[1] - camera_indices[0]
@@ -269,13 +361,30 @@ def timeit(method):
 <span>def <span class="ident">extract_from_path</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Extract lights, frames and vector files from a given path</p></div>
+<div class="desc"><p>Extract lights, frames and vector files from a given path </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to the directory containing the files</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>Tuple containing the lights, frames and vector files</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def extract_from_path(path):
-    &#34;&#34;&#34; Extract lights, frames and vector files from a given path &#34;&#34;&#34;
+    &#34;&#34;&#34; Extract lights, frames and vector files from a given path 
+    
+    Args:
+        path (str): Path to the directory containing the files
+        
+    Returns:
+        tuple: Tuple containing the lights, frames and vector files
+    &#34;&#34;&#34;
     files_list = os.listdir(path)
     for file_name in files_list:
         if &#34;-data&#34; in file_name:
@@ -342,15 +451,32 @@ def timeit(method):
 <span>def <span class="ident">get_baseline_frame_indices</span></span>(<span>baseline_indices, frames_acquired)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get the start and end indices of the baseline in terms of frames acquired</p></div>
+<div class="desc"><p>Get the start/end baseline indices in terms of frames acquired </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>baseline_indices</code></strong> :&ensp;<code>list</code> of <code>tuples</code></dt>
+<dd>List of baseline indices tuples</dd>
+<dt><strong><code>frames_acquired</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of frames acquired</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code> of <code>tuples</code></dt>
+<dd>List of start/end baseline indices in terms of frames acquired</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_baseline_frame_indices(baseline_indices, frames_acquired):
-    &#34;&#34;&#34; Get the start and end indices of the baseline in terms of frames acquired &#34;&#34;&#34;
-    print(baseline_indices)
-    print(len(frames_acquired))
+    &#34;&#34;&#34; Get the start/end baseline indices in terms of frames acquired 
+    
+    Args:
+        baseline_indices (list of tuples): List of baseline indices tuples
+        frames_acquired (list): List of frames acquired
+        
+    Returns:
+        list of tuples: List of start/end baseline indices in terms of frames acquired&#34;&#34;&#34;
     list_of_indices = []
     for index in baseline_indices:
         list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
@@ -383,7 +509,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def map_activation(frames, baseline):
-    &#34;&#34;&#34; Map the activation of each frame to the baseline &#34;&#34;&#34;
+    &#34;&#34;&#34; Map the activation of each frame to the baseline&#34;&#34;&#34;
     return np.array(frames) - np.array([baseline])</code></pre>
 </details>
 </dd>
@@ -405,13 +531,32 @@ def timeit(method):
 <span>def <span class="ident">separate_images</span></span>(<span>lights, frames)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Separate images into different light channels</p></div>
+<div class="desc"><p>Separate images into different light channels </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lights</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of lights</dd>
+<dt><strong><code>frames</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of frames</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of separated images</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def separate_images(lights, frames):
-    &#34;&#34;&#34; Separate images into different light channels &#34;&#34;&#34;
+    &#34;&#34;&#34; Separate images into different light channels 
+    
+    Args:
+        lights (list): List of lights
+        frames (array): Array of frames
+        
+    Returns:
+        list: List of separated images&#34;&#34;&#34;
     separated_images = []
     for index in range(len(lights)):
         separated_images.append(frames[index :: len(lights), :, :])
@@ -422,13 +567,32 @@ def timeit(method):
 <span>def <span class="ident">separate_vectors</span></span>(<span>lights, vector)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Separate vectors into different light channels</p></div>
+<div class="desc"><p>Separate vectors into different light channels</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lights</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of lights</dd>
+<dt><strong><code>vector</code></strong> :&ensp;<code>array</code></dt>
+<dd>Vector containing the stimulation data</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of separated vectors</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def separate_vectors(lights, vector):
-    &#34;&#34;&#34; Separate vectors into different light channels &#34;&#34;&#34;
+    &#34;&#34;&#34; Separate vectors into different light channels
+    
+    Args:
+        lights (list): List of lights
+        vector (array): Vector containing the stimulation data
+    
+    Returns:
+        list: List of separated vectors&#34;&#34;&#34;
     separated_vectors = []
     for index in range(len(lights)):
         separated_vectors.append(vector[:, index :: len(lights)])
@@ -439,13 +603,33 @@ def timeit(method):
 <span>def <span class="ident">shrink_array</span></span>(<span>array, extents)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Reduce the dimensions of frames to match ROI and return a list of frames</p></div>
+<div class="desc"><p>Reduce the dimensions of frames to match ROI and return a list of frames</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>array</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of frames</dd>
+<dt><strong><code>extents</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of extents to shrink the array to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array</code></dt>
+<dd>Reduced array of frames</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def shrink_array(array, extents):
-    &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames&#34;&#34;&#34;
+    &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames
+    
+    Args:
+        array (array): Array of frames
+        extents (list): List of extents to shrink the array to
+        
+    Returns:
+        array: Reduced array of frames
+    &#34;&#34;&#34;
     return np.array(array)[
         :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
     ]</code></pre>

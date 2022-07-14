@@ -112,7 +112,7 @@ class Tree(QTreeWidget):
 
         Args:
             block (dict): The dictionary containing the blocks to create
-            parent (Tree Item): The parent of the block to print. Defaults to None.
+            parent (QTreeWidgetItem): The parent of the block to print. Defaults to None.
         &#34;&#34;&#34;
         if block[&#34;type&#34;] == &#34;Block&#34;:
             if block[&#34;name&#34;] == &#34;root&#34;:
@@ -132,7 +132,7 @@ class Tree(QTreeWidget):
         &#34;&#34;&#34; Set the attributes of a block in the tree
 
         Args:
-            tree_item (Tree Item): The tree item on which to apply the attributes
+            tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
         &#34;&#34;&#34;
         tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;)))
@@ -145,7 +145,7 @@ class Tree(QTreeWidget):
         &#34;&#34;&#34; Set the attributes of a stimulation in the tree
         
         Args:
-            tree_item (Tree Item): The tree item on which to apply the attributes
+            tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
         &#34;&#34;&#34;
         tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
@@ -181,7 +181,7 @@ class Tree(QTreeWidget):
         Generate the x and y values for an item in the tree
 
         Args:
-            item (Tree Item): The item to graph. Defaults to current item.
+            item (QTreeWidgetItem): The item to graph. Defaults to current item.
         &#34;&#34;&#34;
         try:
             if item == self.currentItem() or item == self.invisibleRootItem():
@@ -320,7 +320,7 @@ class Tree(QTreeWidget):
         &#34;&#34;&#34; Recursively create blocks from tree items
         
         Args:
-            item (Tree Item): The item to create blocks from. Defaults to current item.
+            item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
         
         Returns:
             Block: A master block containing all the children blocks
@@ -448,7 +448,7 @@ class Tree(QTreeWidget):
         Check if an item is a valid stimulation/block.
 
         Args:
-            item (Tree Item): The item to check. Defaults to the root item.
+            item (QTreeWidgetItem): The item to check. Defaults to the root item.
         &#34;&#34;&#34;
         if item is None:
             item = self.invisibleRootItem()
@@ -468,7 +468,7 @@ class Tree(QTreeWidget):
         Check if a stimulation is valid.
 
         Args:
-            item (Tree Item): The item to check. Defaults to current item.
+            item (QTreeWidgetItem): The item to check. Defaults to current item.
         &#34;&#34;&#34;
         valid = True
         if item is None:
@@ -535,7 +535,7 @@ class Tree(QTreeWidget):
         Check if a block is valid.
 
         Args:
-            item (Tree Item): The item to check. Defaults to current item.
+            item (QTreeWidgetItem): The item to check. Defaults to current item.
         &#34;&#34;&#34;
         valid = True
         if item is None:
@@ -557,7 +557,7 @@ class Tree(QTreeWidget):
         Get the attributes of a stimulation.
 
         Args:
-            item (Tree Item): The item to get the attributes from.
+            item (QTreeWidgetItem): The item to get the attributes from.
             canal (int): The canal to get the attributes from. Defaults to 1.
         &#34;&#34;&#34;
         if canal == 1:
@@ -613,7 +613,7 @@ class Tree(QTreeWidget):
         Set the icon of a tree item.
 
         Args:
-            item (Tree Item): The item to set the icon for.
+            item (QTreeWidgetItem): The item to set the icon for.
             valid (bool): Whether the item is valid or not.
         &#34;&#34;&#34;
         try:
@@ -725,7 +725,7 @@ class Tree(QTreeWidget):
 
         Args:
             block (dict): The dictionary containing the blocks to create
-            parent (Tree Item): The parent of the block to print. Defaults to None.
+            parent (QTreeWidgetItem): The parent of the block to print. Defaults to None.
         &#34;&#34;&#34;
         if block[&#34;type&#34;] == &#34;Block&#34;:
             if block[&#34;name&#34;] == &#34;root&#34;:
@@ -745,7 +745,7 @@ class Tree(QTreeWidget):
         &#34;&#34;&#34; Set the attributes of a block in the tree
 
         Args:
-            tree_item (Tree Item): The tree item on which to apply the attributes
+            tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
         &#34;&#34;&#34;
         tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;)))
@@ -758,7 +758,7 @@ class Tree(QTreeWidget):
         &#34;&#34;&#34; Set the attributes of a stimulation in the tree
         
         Args:
-            tree_item (Tree Item): The tree item on which to apply the attributes
+            tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
         &#34;&#34;&#34;
         tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))
@@ -794,7 +794,7 @@ class Tree(QTreeWidget):
         Generate the x and y values for an item in the tree
 
         Args:
-            item (Tree Item): The item to graph. Defaults to current item.
+            item (QTreeWidgetItem): The item to graph. Defaults to current item.
         &#34;&#34;&#34;
         try:
             if item == self.currentItem() or item == self.invisibleRootItem():
@@ -933,7 +933,7 @@ class Tree(QTreeWidget):
         &#34;&#34;&#34; Recursively create blocks from tree items
         
         Args:
-            item (Tree Item): The item to create blocks from. Defaults to current item.
+            item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
         
         Returns:
             Block: A master block containing all the children blocks
@@ -1061,7 +1061,7 @@ class Tree(QTreeWidget):
         Check if an item is a valid stimulation/block.
 
         Args:
-            item (Tree Item): The item to check. Defaults to the root item.
+            item (QTreeWidgetItem): The item to check. Defaults to the root item.
         &#34;&#34;&#34;
         if item is None:
             item = self.invisibleRootItem()
@@ -1081,7 +1081,7 @@ class Tree(QTreeWidget):
         Check if a stimulation is valid.
 
         Args:
-            item (Tree Item): The item to check. Defaults to current item.
+            item (QTreeWidgetItem): The item to check. Defaults to current item.
         &#34;&#34;&#34;
         valid = True
         if item is None:
@@ -1148,7 +1148,7 @@ class Tree(QTreeWidget):
         Check if a block is valid.
 
         Args:
-            item (Tree Item): The item to check. Defaults to current item.
+            item (QTreeWidgetItem): The item to check. Defaults to current item.
         &#34;&#34;&#34;
         valid = True
         if item is None:
@@ -1170,7 +1170,7 @@ class Tree(QTreeWidget):
         Get the attributes of a stimulation.
 
         Args:
-            item (Tree Item): The item to get the attributes from.
+            item (QTreeWidgetItem): The item to get the attributes from.
             canal (int): The canal to get the attributes from. Defaults to 1.
         &#34;&#34;&#34;
         if canal == 1:
@@ -1226,7 +1226,7 @@ class Tree(QTreeWidget):
         Set the icon of a tree item.
 
         Args:
-            item (Tree Item): The item to set the icon for.
+            item (QTreeWidgetItem): The item to set the icon for.
             valid (bool): Whether the item is valid or not.
         &#34;&#34;&#34;
         try:
@@ -1309,7 +1309,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Check if a block is valid.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to check. Defaults to current item.</dd>
 </dl></div>
 <details class="source">
@@ -1321,7 +1321,7 @@ class Tree(QTreeWidget):
     Check if a block is valid.
 
     Args:
-        item (Tree Item): The item to check. Defaults to current item.
+        item (QTreeWidgetItem): The item to check. Defaults to current item.
     &#34;&#34;&#34;
     valid = True
     if item is None:
@@ -1346,7 +1346,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Check if an item is a valid stimulation/block.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to check. Defaults to the root item.</dd>
 </dl></div>
 <details class="source">
@@ -1358,7 +1358,7 @@ class Tree(QTreeWidget):
     Check if an item is a valid stimulation/block.
 
     Args:
-        item (Tree Item): The item to check. Defaults to the root item.
+        item (QTreeWidgetItem): The item to check. Defaults to the root item.
     &#34;&#34;&#34;
     if item is None:
         item = self.invisibleRootItem()
@@ -1381,7 +1381,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Check if a stimulation is valid.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to check. Defaults to current item.</dd>
 </dl></div>
 <details class="source">
@@ -1393,7 +1393,7 @@ class Tree(QTreeWidget):
     Check if a stimulation is valid.
 
     Args:
-        item (Tree Item): The item to check. Defaults to current item.
+        item (QTreeWidgetItem): The item to check. Defaults to current item.
     &#34;&#34;&#34;
     valid = True
     if item is None:
@@ -1463,7 +1463,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Recursively create blocks from tree items</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to create blocks from. Defaults to current item.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -1479,7 +1479,7 @@ class Tree(QTreeWidget):
     &#34;&#34;&#34; Recursively create blocks from tree items
     
     Args:
-        item (Tree Item): The item to create blocks from. Defaults to current item.
+        item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
     
     Returns:
         Block: A master block containing all the children blocks
@@ -1612,7 +1612,7 @@ class Tree(QTreeWidget):
 <dl>
 <dt><strong><code>block</code></strong> :&ensp;<code>dict</code></dt>
 <dd>The dictionary containing the blocks to create</dd>
-<dt><strong><code>parent</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>parent</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The parent of the block to print. Defaults to None.</dd>
 </dl></div>
 <details class="source">
@@ -1625,7 +1625,7 @@ class Tree(QTreeWidget):
 
     Args:
         block (dict): The dictionary containing the blocks to create
-        parent (Tree Item): The parent of the block to print. Defaults to None.
+        parent (QTreeWidgetItem): The parent of the block to print. Defaults to None.
     &#34;&#34;&#34;
     if block[&#34;type&#34;] == &#34;Block&#34;:
         if block[&#34;name&#34;] == &#34;root&#34;:
@@ -1688,7 +1688,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Get the attributes of a stimulation.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to get the attributes from.</dd>
 <dt><strong><code>canal</code></strong> :&ensp;<code>int</code></dt>
 <dd>The canal to get the attributes from. Defaults to 1.</dd>
@@ -1702,7 +1702,7 @@ class Tree(QTreeWidget):
     Get the attributes of a stimulation.
 
     Args:
-        item (Tree Item): The item to get the attributes from.
+        item (QTreeWidgetItem): The item to get the attributes from.
         canal (int): The canal to get the attributes from. Defaults to 1.
     &#34;&#34;&#34;
     if canal == 1:
@@ -1761,7 +1761,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Generate the x and y values for an item in the tree</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to graph. Defaults to current item.</dd>
 </dl></div>
 <details class="source">
@@ -1773,7 +1773,7 @@ class Tree(QTreeWidget):
     Generate the x and y values for an item in the tree
 
     Args:
-        item (Tree Item): The item to graph. Defaults to current item.
+        item (QTreeWidgetItem): The item to graph. Defaults to current item.
     &#34;&#34;&#34;
     try:
         if item == self.currentItem() or item == self.invisibleRootItem():
@@ -1930,7 +1930,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Set the attributes of a block in the tree</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>tree_item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>tree_item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The tree item on which to apply the attributes</dd>
 <dt><strong><code>dictionary</code></strong> :&ensp;<code>dict</code></dt>
 <dd>The dictionary containing the attributes</dd>
@@ -1943,7 +1943,7 @@ class Tree(QTreeWidget):
     &#34;&#34;&#34; Set the attributes of a block in the tree
 
     Args:
-        tree_item (Tree Item): The tree item on which to apply the attributes
+        tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
         dictionary (dict): The dictionary containing the attributes
     &#34;&#34;&#34;
     tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;package.png&#34;)))
@@ -1982,7 +1982,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Set the icon of a tree item.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The item to set the icon for.</dd>
 <dt><strong><code>valid</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Whether the item is valid or not.</dd>
@@ -1996,7 +1996,7 @@ class Tree(QTreeWidget):
     Set the icon of a tree item.
 
     Args:
-        item (Tree Item): The item to set the icon for.
+        item (QTreeWidgetItem): The item to set the icon for.
         valid (bool): Whether the item is valid or not.
     &#34;&#34;&#34;
     try:
@@ -2019,7 +2019,7 @@ class Tree(QTreeWidget):
 <div class="desc"><p>Set the attributes of a stimulation in the tree</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>tree_item</code></strong> :&ensp;<code><a title="Widefield-Imaging-Acquisition.src.tree.Tree" href="#Widefield-Imaging-Acquisition.src.tree.Tree">Tree</a> Item</code></dt>
+<dt><strong><code>tree_item</code></strong> :&ensp;<code>QTreeWidgetItem</code></dt>
 <dd>The tree item on which to apply the attributes</dd>
 <dt><strong><code>dictionary</code></strong> :&ensp;<code>dict</code></dt>
 <dd>The dictionary containing the attributes</dd>
@@ -2032,7 +2032,7 @@ class Tree(QTreeWidget):
     &#34;&#34;&#34; Set the attributes of a stimulation in the tree
     
     Args:
-        tree_item (Tree Item): The tree item on which to apply the attributes
+        tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
         dictionary (dict): The dictionary containing the attributes
     &#34;&#34;&#34;
     tree_item.setIcon(0, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;wave-square.png&#34;)))

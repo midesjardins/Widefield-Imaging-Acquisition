@@ -241,9 +241,14 @@ class DAQ:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
-                        s_task.ao_channels.add_ao_voltage_chan(
-                            f&#34;{self.name}/{stimulus.port}&#34;
-                        )
+                        if &#34;a0&#34; in stimulus.name or &#34;a1&#34; in stimulus.name:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
+                        else:
+                            s_task.do_channels.add_do_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
                         null_lights.append([False, False])
@@ -729,9 +734,14 @@ Equal to None if original size is kept</dd>
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
-                        s_task.ao_channels.add_ao_voltage_chan(
-                            f&#34;{self.name}/{stimulus.port}&#34;
-                        )
+                        if &#34;a0&#34; in stimulus.name or &#34;a1&#34; in stimulus.name:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
+                        else:
+                            s_task.do_channels.add_do_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
                     for light in self.lights:
                         l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
                         null_lights.append([False, False])
@@ -1201,9 +1211,14 @@ Equal to None if original size is kept</dd>
                 null_lights = [[False, False]]
                 self.tasks = [l_task, s_task]
                 for stimulus in self.stimuli:
-                    s_task.ao_channels.add_ao_voltage_chan(
-                        f&#34;{self.name}/{stimulus.port}&#34;
-                    )
+                    if &#34;a0&#34; in stimulus.name or &#34;a1&#34; in stimulus.name:
+                        s_task.ao_channels.add_ao_voltage_chan(
+                            f&#34;{self.name}/{stimulus.port}&#34;
+                        )
+                    else:
+                        s_task.do_channels.add_do_chan(
+                            f&#34;{self.name}/{stimulus.port}&#34;
+                        )
                 for light in self.lights:
                     l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
                     null_lights.append([False, False])

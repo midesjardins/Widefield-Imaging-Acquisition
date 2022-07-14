@@ -1122,9 +1122,9 @@ class App(QWidget):
         except Exception:
             self.camera = None
         self.stimuli = [
-            Instrument(&#34;ao0&#34;, &#34;air-pump&#34;),
-            Instrument(&#34;ao1&#34;, &#34;air-pump2&#34;),
-            Instrument(&#34;ao3&#34;, &#34;air-pump3&#34;),
+            Instrument(self.ports[&#34;analog0&#34;], &#34;air-pump&#34;),
+            Instrument(self.ports[&#34;analog1&#34;], &#34;air-pump2&#34;),
+            Instrument(self.ports[&#34;co2&#34;], &#34;air-pump3&#34;),
         ]
         # TODO verify that said port exists
         self.daq = DAQ(
@@ -2866,9 +2866,9 @@ if __name__ == &#34;__main__&#34;:
         except Exception:
             self.camera = None
         self.stimuli = [
-            Instrument(&#34;ao0&#34;, &#34;air-pump&#34;),
-            Instrument(&#34;ao1&#34;, &#34;air-pump2&#34;),
-            Instrument(&#34;ao3&#34;, &#34;air-pump3&#34;),
+            Instrument(self.ports[&#34;analog0&#34;], &#34;air-pump&#34;),
+            Instrument(self.ports[&#34;analog1&#34;], &#34;air-pump2&#34;),
+            Instrument(self.ports[&#34;co2&#34;], &#34;air-pump3&#34;),
         ]
         # TODO verify that said port exists
         self.daq = DAQ(
@@ -4136,9 +4136,9 @@ if __name__ == &#34;__main__&#34;:
     except Exception:
         self.camera = None
     self.stimuli = [
-        Instrument(&#34;ao0&#34;, &#34;air-pump&#34;),
-        Instrument(&#34;ao1&#34;, &#34;air-pump2&#34;),
-        Instrument(&#34;ao3&#34;, &#34;air-pump3&#34;),
+        Instrument(self.ports[&#34;analog0&#34;], &#34;air-pump&#34;),
+        Instrument(self.ports[&#34;analog1&#34;], &#34;air-pump2&#34;),
+        Instrument(self.ports[&#34;co2&#34;], &#34;air-pump3&#34;),
     ]
     # TODO verify that said port exists
     self.daq = DAQ(

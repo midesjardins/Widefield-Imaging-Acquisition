@@ -8,8 +8,8 @@ import time
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames
     
-    Arguments:
-        array (np.array): Array of frames
+    Args:
+        array (array): Array of frames
         extents (list): List of extents to shrink the array to
         
     Returns:
@@ -56,9 +56,12 @@ def reduce_stack(stack, indices):
 def separate_images(lights, frames):
     """ Separate images into different light channels 
     
-    Arguments:
+    Args:
         lights (list): List of lights
-        frames (np.array): Array of frames"""
+        frames (array): Array of frames
+        
+    Returns:
+        list: List of separated images"""
     separated_images = []
     for index in range(len(lights)):
         separated_images.append(frames[index :: len(lights), :, :])
@@ -68,9 +71,9 @@ def separate_images(lights, frames):
 def separate_vectors(lights, vector):
     """ Separate vectors into different light channels
     
-    Arguments:
+    Args:
         lights (list): List of lights
-        vector (np.array): Vector containing the stimulation data
+        vector (array): Vector containing the stimulation data
     
     Returns:
         list: List of separated vectors"""
@@ -83,7 +86,7 @@ def separate_vectors(lights, vector):
 def extract_from_path(path):
     """ Extract lights, frames and vector files from a given path 
     
-    Arguments:
+    Args:
         path (str): Path to the directory containing the files
         
     Returns:
@@ -103,7 +106,7 @@ def extract_from_path(path):
 def extend_light_signal(lights, camera):
     """ Extend the light signal to be wider the camera signal 
     
-    Arguments:
+    Args:
         lights (array): Array of light signals
         camera (array): Array of camera frames
         
@@ -141,7 +144,7 @@ def frames_acquired_from_camera_signal(camera_signal):
 def average_baseline(frame_list, light_count=1, start_index=0):
     """ Average the baselines of a list of frames 
     
-    Arguments:
+    Args:
         frame_list (list): List of frames
         light_count (int): Number of lights
         start_index (int): Light index of the first frame in list
@@ -171,7 +174,7 @@ def average_baseline(frame_list, light_count=1, start_index=0):
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
     """ Get the start/end baseline indices in terms of frames acquired 
     
-    Arguments:
+    Args:
         baseline_indices (list of tuples): List of baseline indices tuples
         frames_acquired (list): List of frames acquired
         
