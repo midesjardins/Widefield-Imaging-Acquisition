@@ -1576,7 +1576,6 @@ class App(QWidget):
         except Exception:
             boolean_check = False
         self.exposure_warning_label.setHidden(boolean_check)
-        self.check_run()
 
     def check_if_thread_is_alive(self):
         """ Check what threads are alive"""
