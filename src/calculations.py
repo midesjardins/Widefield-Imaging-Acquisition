@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import json
 import time
+import dask.array as da
 
 
 def shrink_array(array, extents):
@@ -23,6 +24,11 @@ def shrink_array(array, extents):
 def get_array(directory):
     """ Get array from NPY file """
     return np.array(np.load(directory))
+
+def get_dask_array(directory):
+    """ Get dask array from NPY file """
+    print(directory)
+    return da.from_npy_stack(directory)
 
 
 def get_dictionary(directory):
@@ -200,5 +206,20 @@ def timeit(method):
         te = time.time()
         print("%r  %2.2f ms" % (method.__name__, (te - ts) * 1000))
         return result
-
     return timed
+
+def get_timecourse(frames, start_index, end_index):
+    """ Get an array of the mean of each frame 
+    
+    Args:
+        frames (array): Array of frames
+        start_index (int): Start index of the timecourse
+        end_index (int): End index of the timecourse
+        
+    Returns:
+        array: Array of the mean of each frame"""
+    
+    first_mean = np.mean(frames[start_index : end_index+1], axis=1)
+    print(first_mean.shape)
+    return np.mean(first_mean, axis=1)
+

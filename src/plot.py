@@ -48,6 +48,9 @@ class PlotWindow(QDialog):
             index (int): The index of the axis to plot on
             """
         plt.figure(self.figure.number)
-        self.axis[index].plot(x, y)
+        try:
+            self.axis[index].plot(x, y)
+        except Exception:
+            plt.plot(x, y)
         if root:
             self.vertical_lines.append(self.axis[index].axvline(x=0, color="red"))
