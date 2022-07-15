@@ -213,7 +213,7 @@ class DAQ:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for stimulus in self.stimuli:
-                        if "a0" in stimulus.name or "a1" in stimulus.name:
+                        if "ao0" in stimulus.name or "ao1" in stimulus.name:
                             s_task.ao_channels.add_ao_voltage_chan(
                                 f"{self.name}/{stimulus.port}"
                             )
