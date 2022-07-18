@@ -419,7 +419,7 @@ class Tree(QTreeWidget):
         """
         if item is None:
             item = self.invisibleRootItem()
-            if self.check_block_validity(item):
+            if self.check_block_validity(item) and self.app.daq_generated:
                 self.app.enable_run()
             else:
                 self.app.disable_run()

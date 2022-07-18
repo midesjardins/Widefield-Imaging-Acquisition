@@ -52,6 +52,7 @@ class App(QWidget):
         self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
+        self.daq_generated = False
         self.onlyFloat = QDoubleValidator()
         self.onlyFloat.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
@@ -1100,7 +1101,6 @@ class App(QWidget):
             Instrument(self.ports["analog1"], "air-pump2"),
             Instrument(self.ports["co2"], "air-pump3"),
         ]
-        # TODO verify that said port exists
         self.daq = DAQ(
             "dev1",
             [],
@@ -1109,6 +1109,9 @@ class App(QWidget):
             int(self.framerate_cell.text()),
             int(self.exposure_cell.text()) / 1000,
         )
+
+        self.daq_generated = True
+        self.tree.check_global_validity()
 
     def actualize_daq(self):
         """ Actualize the DAQ with the current settings"""
