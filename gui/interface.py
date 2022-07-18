@@ -831,6 +831,7 @@ class App(QWidget):
 
     def run(self):
         """ Run the experiment"""
+        print(self.check_override())
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.tree.create_blocks()
@@ -843,12 +844,15 @@ class App(QWidget):
                     self.tree.stim3_values,
                 ],
             )
+            print("root signal")
+            print(self.root_signal)
             self.draw(root=True)
             self.actualize_daq()
             self.open_live_saving_thread()
             self.open_live_preview_thread()
             self.open_baseline_check_thread()
-            self.open_signal_preview_thread()
+            #self.open_signal_preview_thread()
+            print("open start experiment thread")
             self.open_start_experiment_thread()
 
     def check_override(self):
@@ -936,6 +940,7 @@ class App(QWidget):
             name=self.experiment_name_cell.text(),
         )
         self.save_files_after_stop = True
+        print("about to launch daq")
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         if (
             not self.daq.stop_signal

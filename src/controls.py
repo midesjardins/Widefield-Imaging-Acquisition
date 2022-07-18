@@ -49,7 +49,8 @@ class Camera(Instrument):
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
-            # print(err)
+            print("cam init err")
+            print(err)
             pass
 
     def initialize(self, daq):
@@ -145,15 +146,18 @@ class DAQ:
             time_values (array): A array containing the time values
             stim_values (array): A array containing the stimulation values
         """
+        print("daq launched")
         self.reset_daq()
         self.experiment_name = name
         self.time_values = time_values
         self.stim_values = stim_values
         self.generate_stim_wave()
         if len(self.lights) > 0:
+            print("light check passed")
             self.generate_light_wave()
             self.generate_camera_wave()
             self.extend_light_wave()
+        print("about to write waveforms")
         self.write_waveforms()
 
     def set_trigger(self, port):
@@ -167,10 +171,15 @@ class DAQ:
 
     def generate_stim_wave(self):
         """Create a stack of the stimulation signals and set the last values to zero"""
-        self.stim_signal = np.stack((self.stim_values))
+        print(self.stim_values)
+        self.stim_signal = np.stack((self.stim_values[:-1]))
+        self.d_stim_signal = self.stim_values[-1]
+        print("dstims signals")
+        print(self.d_stim_signal)
+        print(self.d_stim_signal[0])
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
-        self.stim_signal[2][-1] = 0
+        self.d_stim_signal[-1] = False
 
     def generate_light_wave(self):
         """Generate a light signal for each light used and set the last value to zero"""
@@ -197,6 +206,8 @@ class DAQ:
         except ValueError:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+        self.allz_signals = np.stack(self.light_signals + [self.camera_signal] + [self.d_stim_signal])
+        print(self.allz_signals)
 
     def extend_light_wave(self):
         """Extend the light signal to be wider than the camera signal"""
@@ -210,67 +221,71 @@ class DAQ:
             with nidaqmx.Task(new_task_name="lights") as l_task:
                 self.control_task = l_task
                 with nidaqmx.Task(new_task_name="a_stimuli") as s_task:
-                    with nidaqmx.Task(new_task_name="d_stimuli") as ds_task:
-                        null_lights = [[False, False]]
-                        self.tasks = [l_task, s_task]
-                        for stimulus in self.stimuli:
-                            if "ao0" in stimulus.port or "ao1" in stimulus.port:
-                                s_task.ao_channels.add_ao_voltage_chan(
-                                    f"{self.name}/{stimulus.port}"
-                                )
-                            else:
-                                ds_task.do_channels.add_do_chan(
-                                    f"{self.name}/{stimulus.port}"
-                                )
-                        for light in self.lights:
-                            l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
-                            null_lights.append([False, False])
+                    null_lights = [[False, False]]
+                    self.tasks = [l_task, s_task]
+                    for light in self.lights:
+                        print("adding light")
+                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                        null_lights.append([False, False])
+                    if len(self.lights) > 0:
+                        print("cam channel added")
+                        print("cam port")
+                        print(self.camera.port)
                         l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
-                        self.camera.initialize(self)
-                        self.sample([s_task, ds_task, l_task])
-                        if len(self.lights) > 0:
-                            self.write(
-                                [s_task, ds_task, l_task], [self.stim_signal[:-1], [self.stim_signal[-1]], self.all_signals]
+                    for stimulus in self.stimuli:
+                        if "ao0" in stimulus.port or "ao1" in stimulus.port:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f"{self.name}/{stimulus.port}"
                             )
-                            self.camera.delete_frames()
-                            if self.trigger_activated:
-                                with nidaqmx.Task(new_task_name="trigger") as t_task:
-                                    t_task.di_channels.add_di_chan(
-                                        (f"{self.name}/{self.trigger_port}")
-                                    )
-                                    while True:
-                                        time.sleep(0.001)
-                                        if t_task.read():
-                                            break
-                            self.start([s_task, l_task])
-                            self.camera.loop(l_task)
-                            self.stop([s_task, l_task])
-                            s_task.write([[0, 0], [0, 0]])
-                            ds_task.write([[0,0]])
-                            l_task.write(null_lights)
-                            self.start([s_task, ds_task, l_task])
                         else:
-                            self.write([s_task, ds_task], [self.stim_signal[:-1], [self.stim_signal[-1]]])
-                            self.camera.delete_frames()
-                            if self.trigger_activated:
-                                with nidaqmx.Task(new_task_name="trigger") as t_task:
-                                    t_task.di_channels.add_di_chan(
-                                        (f"{self.name}/{self.trigger_port}")
-                                    )
-                                    while True:
-                                        time.sleep(0.001)
-                                        if t_task.read():
-                                            break
-                            self.start([s_task, ds_task])
-                            while (
-                                s_task.is_task_done() is False and self.stop_signal is False
-                            ):
-                                time.sleep(0.01)
-                                pass
-                            self.stop([s_task, ds_task])
-                            s_task.write([[0, 0], [0, 0]])
-                            ds_task.write([[0, 0]])
-                            self.start([s_task, ds_task])
+                            l_task.do_channels.add_do_chan(
+                                f"{self.name}/{stimulus.port}"
+                            )
+                            null_lights.append([False, False])
+                    self.camera.initialize(self)
+                    self.sample([s_task, l_task])
+                    if len(self.lights) > 0:
+                        self.write(
+                            [s_task, l_task], [self.stim_signal, self.allz_signals]
+                        )
+                        self.camera.delete_frames()
+                        if self.trigger_activated:
+                            with nidaqmx.Task(new_task_name="trigger") as t_task:
+                                t_task.di_channels.add_di_chan(
+                                    (f"{self.name}/{self.trigger_port}")
+                                )
+                                while True:
+                                    time.sleep(0.001)
+                                    if t_task.read():
+                                        break
+                        self.start([s_task, l_task])
+                        self.camera.loop(l_task)
+                        self.stop([s_task, l_task])
+                        s_task.write([[0, 0], [0, 0]])
+                        l_task.write(null_lights)
+                        self.start([s_task, l_task])
+                    else:
+                        self.write([s_task, l_task], [self.stim_signal, self.d_stim_signal])
+                        self.camera.delete_frames()
+                        if self.trigger_activated:
+                            with nidaqmx.Task(new_task_name="trigger") as t_task:
+                                t_task.di_channels.add_di_chan(
+                                    (f"{self.name}/{self.trigger_port}")
+                                )
+                                while True:
+                                    time.sleep(0.001)
+                                    if t_task.read():
+                                        break
+                        self.start([s_task, l_task])
+                        while (
+                            s_task.is_task_done() is False and self.stop_signal is False
+                        ):
+                            time.sleep(0.01)
+                            pass
+                        self.stop([s_task, l_task])
+                        s_task.write([[0, 0], [0, 0]])
+                        l_task.write([False, False])
+                        self.start([s_task, l_task])
 
         else:
             time.sleep(2)
@@ -340,6 +355,7 @@ class DAQ:
             content (list): A list of arrays to write
         """
         for i, task in enumerate(tasks):
+            print(content[i])
             task.write(content[i])
 
     def stop(self, tasks):

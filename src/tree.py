@@ -1,7 +1,7 @@
 import os
 import random
 import numpy as np
-from src.waveforms import make_signal
+from src.waveforms import digital_square, make_signal
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 from PyQt5.QtGui import QBrush, QColor, QIcon
 from src.blocks import Block, Stimulation
@@ -161,7 +161,7 @@ class Tree(QTreeWidget):
                 self.x_values = []
                 self.stim1_values = []
                 self.stim2_values = []
-                self.stim3_values = []
+                self.stim3_values = np.empty(0, dtype=bool)
                 self.baseline_values = []
             if item.childCount() > 0:
                 if item == self.invisibleRootItem():
@@ -181,11 +181,12 @@ class Tree(QTreeWidget):
                         int(round(delay * 3000)),
                     )
                     data = np.zeros(len(time_values))
+                    ddata = np.full(len(time_values), False)
                     self.elapsed_time += delay
                     self.x_values = np.concatenate((self.x_values, time_values))
                     self.stim1_values = np.concatenate((self.stim1_values, data))
                     self.stim2_values = np.concatenate((self.stim2_values, data))
-                    self.stim3_values = np.concatenate((self.stim3_values, data))
+                    self.stim3_values = np.concatenate((self.stim3_values, ddata))
             else:
                 duration = float(item.text(6))
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
@@ -251,7 +252,18 @@ class Tree(QTreeWidget):
                         duty3,
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
-                    data3 = make_signal(
+
+                    print("attributes")
+                    print(frequency3)
+                    print(duty3)
+
+                    print("time_values")
+                    print(time_values)
+
+                    data3 = digital_square(time_values, frequency3, duty3)
+                    print("data 3")
+                    print(data3)
+                    """data3 = make_signal(
                         time_values,
                         sign_type3,
                         width3,
@@ -260,12 +272,13 @@ class Tree(QTreeWidget):
                         frequency3,
                         duty3,
                         heigth3,
-                    )
+                    )"""
                     self.stim3_values = np.concatenate((self.stim3_values, data3))
                 else:
                     self.stim3_values = np.concatenate(
-                        (self.stim3_values, np.zeros(len(time_values)))
+                        (self.stim3_values, np.full(len(time_values), False))
                     )
+
 
                 if (
                     item.text(18) == "False"
@@ -286,7 +299,7 @@ class Tree(QTreeWidget):
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []
-            self.stim3_values = []
+            self.stim3_values = np.empty(0, dtype=bool)
             self.elapsed_time = 0
 
     def create_blocks(self, item=None):
@@ -576,10 +589,9 @@ class Tree(QTreeWidget):
             try:
                 frequency = float(item.text(27))
                 duty = float(item.text(28)) / 100
-                heigth = float(item.text(29))
             except Exception:
-                frequency, duty, heigth = 0, 0, 0
-            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+                frequency, duty = 1, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, 0)
 
     def set_icon(self, item, valid):
         """

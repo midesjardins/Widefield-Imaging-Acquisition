@@ -32,6 +32,8 @@ def digital_square(time, frequency, duty, delay=0):
     Returns:
         array of bool: The generated signal
     """
+    if duty == 0:
+        return np.full(len(time), False)
     pulses = np.ma.make_mask(
         np.array(square(2 * np.pi * frequency * time, duty)).clip(min=0)
     )

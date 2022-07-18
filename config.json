@@ -7,6 +7,6 @@
     "trigger": "port1/line0",
     "analog0":"ao0",
     "analog1":"ao1",
-    "co2": "port1/line1"},
+    "co2": "port0/line5"},
 "Debug": false
 }
