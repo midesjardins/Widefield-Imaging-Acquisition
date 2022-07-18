@@ -49,8 +49,6 @@ class Camera(Instrument):
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
-            print("cam init err")
-            print(err)
             pass
 
     def initialize(self, daq):
@@ -146,18 +144,15 @@ class DAQ:
             time_values (array): A array containing the time values
             stim_values (array): A array containing the stimulation values
         """
-        print("daq launched")
         self.reset_daq()
         self.experiment_name = name
         self.time_values = time_values
         self.stim_values = stim_values
         self.generate_stim_wave()
         if len(self.lights) > 0:
-            print("light check passed")
             self.generate_light_wave()
             self.generate_camera_wave()
             self.extend_light_wave()
-        print("about to write waveforms")
         self.write_waveforms()
 
     def set_trigger(self, port):
@@ -171,12 +166,8 @@ class DAQ:
 
     def generate_stim_wave(self):
         """Create a stack of the stimulation signals and set the last values to zero"""
-        print(self.stim_values)
         self.stim_signal = np.stack((self.stim_values[:-1]))
         self.d_stim_signal = self.stim_values[-1]
-        print("dstims signals")
-        print(self.d_stim_signal)
-        print(self.d_stim_signal[0])
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
         self.d_stim_signal[-1] = False
@@ -207,7 +198,6 @@ class DAQ:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
         self.allz_signals = np.stack(self.light_signals + [self.camera_signal] + [self.d_stim_signal])
-        print(self.allz_signals)
 
     def extend_light_wave(self):
         """Extend the light signal to be wider than the camera signal"""
@@ -224,13 +214,9 @@ class DAQ:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for light in self.lights:
-                        print("adding light")
                         l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                         null_lights.append([False, False])
                     if len(self.lights) > 0:
-                        print("cam channel added")
-                        print("cam port")
-                        print(self.camera.port)
                         l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
                     for stimulus in self.stimuli:
                         if "ao0" in stimulus.port or "ao1" in stimulus.port:
@@ -355,7 +341,6 @@ class DAQ:
             content (list): A list of arrays to write
         """
         for i, task in enumerate(tasks):
-            print(content[i])
             task.write(content[i])
 
     def stop(self, tasks):

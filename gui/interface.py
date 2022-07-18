@@ -36,6 +36,7 @@ from src.calculations import (
     get_baseline_frame_indices,
     average_baseline,
 )
+from multiprocessing import Process
 
 
 class App(QWidget):
@@ -45,7 +46,6 @@ class App(QWidget):
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         self.config = get_dictionary(os.path.join(self.cwd, "config.json"))
         self.ports = self.config["Ports"]
-        self.baseline_values = []
         self.elapsed_time = 0
         self.files_saved = False
         self.save_files_after_stop = False
@@ -64,9 +64,8 @@ class App(QWidget):
         try:
             self.daq.stop_signal = True
             self.daq.camera.cam.stop_acquisition()
-            print("Closed")
+            print("Program Closed")
         except Exception as err:
-            print(err)
             pass
         self.check_if_thread_is_alive()
 
@@ -831,11 +830,12 @@ class App(QWidget):
 
     def run(self):
         """ Run the experiment"""
-        print(self.check_override())
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.tree.create_blocks()
+            self.tree.baseline_values = []
             self.tree.graph(item=self.tree.invisibleRootItem())
+            print(self.tree.baseline_values)
             self.root_time, self.root_signal = (
                 self.tree.x_values,
                 [
@@ -844,15 +844,12 @@ class App(QWidget):
                     self.tree.stim3_values,
                 ],
             )
-            print("root signal")
-            print(self.root_signal)
             self.draw(root=True)
             self.actualize_daq()
             self.open_live_saving_thread()
             self.open_live_preview_thread()
             self.open_baseline_check_thread()
-            #self.open_signal_preview_thread()
-            print("open start experiment thread")
+            self.open_signal_preview_thread()
             self.open_start_experiment_thread()
 
     def check_override(self):
@@ -891,9 +888,8 @@ class App(QWidget):
                 pass
             frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
             baseline_indices = get_baseline_frame_indices(
-                self.baseline_values, frames_acquired
+                self.tree.baseline_values, frames_acquired
             )
-            print(baseline_indices)
             for baseline_pair in baseline_indices:
                 while not self.daq.stop_signal:
                     try:
@@ -906,7 +902,6 @@ class App(QWidget):
                             self.camera.adding_frames
                             and self.camera.frames_read >= baseline_pair[1]
                         ):
-                            print("about to average")
                             self.camera.baseline_read_list = []
                             self.camera.average_baseline = average_baseline(
                                 self.camera.baseline_data,
@@ -919,7 +914,6 @@ class App(QWidget):
                             self.camera.frames_read_list = []
                             break
                     except Exception as err:
-                        print(err)
                         pass
                     time.sleep(0.01)
 
@@ -940,7 +934,6 @@ class App(QWidget):
             name=self.experiment_name_cell.text(),
         )
         self.save_files_after_stop = True
-        print("about to launch daq")
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
         if (
             not self.daq.stop_signal
@@ -977,7 +970,7 @@ class App(QWidget):
                     )
                 )
             except Exception as err:
-                print(err)
+                pass
             while self.camera.video_running is False:
                 time.sleep(0.01)
                 pass
@@ -1054,12 +1047,11 @@ class App(QWidget):
                                 ]
                             )
                             self.plot_image.set(
-                                array=activation_map, clim=(-10, 10), cmap="seismic"
+                                array=activation_map, clim=(-self.max_exposure/200, self.max_exposure/200), cmap="seismic"
                             )
                     except Exception as err:
-                        print(err)
                         pass
-                    time.sleep(0.01)
+                    time.sleep(0.04)
             except Exception as err:
                 pass
 
@@ -1080,9 +1072,10 @@ class App(QWidget):
                 position = self.camera.frames_read / int(self.framerate_cell.text())
                 self.plot_window.vertical_lines[0].set_xdata(position)
                 self.plot_window.vertical_lines[1].set_xdata(position)
-                time.sleep(0.2)
+                self.plot_window.vertical_lines[2].set_xdata(position)
+                time.sleep(0.5)
             except Exception:
-                time.sleep(0.2)
+                time.sleep(0.5)
                 pass
 
     def change_preview_light_channel(self):
@@ -1410,7 +1403,6 @@ class App(QWidget):
             else:
                 self.deactivate_buttons(self.canal3buttons)
         except Exception as err:
-            print(err)
             pass
         self.canal_running = False
 
@@ -1518,7 +1510,6 @@ class App(QWidget):
             self.tree.stim3_values = []
             self.elapsed_time = 0
         except Exception as err:
-            print(err)
             pass
 
     def set_roi(self):

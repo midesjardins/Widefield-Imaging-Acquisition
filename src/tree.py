@@ -162,7 +162,6 @@ class Tree(QTreeWidget):
                 self.stim1_values = []
                 self.stim2_values = []
                 self.stim3_values = np.empty(0, dtype=bool)
-                self.baseline_values = []
             if item.childCount() > 0:
                 if item == self.invisibleRootItem():
                     jitter, block_delay, iterations = 0, 0, 1
@@ -253,26 +252,7 @@ class Tree(QTreeWidget):
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
 
-                    print("attributes")
-                    print(frequency3)
-                    print(duty3)
-
-                    print("time_values")
-                    print(time_values)
-
                     data3 = digital_square(time_values, frequency3, duty3)
-                    print("data 3")
-                    print(data3)
-                    """data3 = make_signal(
-                        time_values,
-                        sign_type3,
-                        width3,
-                        pulses3,
-                        jitter3,
-                        frequency3,
-                        duty3,
-                        heigth3,
-                    )"""
                     self.stim3_values = np.concatenate((self.stim3_values, data3))
                 else:
                     self.stim3_values = np.concatenate(
@@ -286,16 +266,17 @@ class Tree(QTreeWidget):
                     and item.text(30) == "False"
                     and item.text(17) == "True"
                 ):
+                    print("Adding baseline values to list")
                     baseline_start_index = len(self.x_values)
                     baseline_stop_index = len(self.x_values) + len(time_values)
                     self.baseline_values.append(
                         [baseline_start_index, baseline_stop_index]
                     )
+                    print(self.baseline_values)
                 time_values += self.elapsed_time
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
-            print(err)
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []

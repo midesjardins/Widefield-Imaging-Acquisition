@@ -49,10 +49,8 @@ class PlotWindow(QDialog):
             """
         try:
             plt.figure(self.figure.number)
-            print(x)
-            print(y)
             self.axis[index].plot(x, y)
-        except Exceptio as err:
+        except Exception as err:
             pass
         if root:
             self.vertical_lines.append(self.axis[index].axvline(x=0, color="red"))
