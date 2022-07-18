@@ -282,7 +282,6 @@ class App(QWidget):
 
         self.tree_window = QVBoxLayout()
         self.tree = Tree()
-        self.tree.set_app(self)
         self.tree.setHeaderLabels(
             [
                 "0 Name",
@@ -825,7 +824,7 @@ class App(QWidget):
         try:
             blocks = get_dictionary(file)["Blocks"]
             self.tree.create_tree_item(blocks)
-            self.tree.check_global_validity()
+            self.enable_run(self.tree.check_global_validity())
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
@@ -1111,7 +1110,7 @@ class App(QWidget):
         )
 
         self.daq_generated = True
-        self.tree.check_global_validity()
+        self.enable_run(self.tree.check_global_validity())
 
     def actualize_daq(self):
         """ Actualize the DAQ with the current settings"""
@@ -1253,7 +1252,7 @@ class App(QWidget):
 
     def type_to_tree(self):
         """ Transfer the type of the current item from the cell to the tree"""
-        self.tree.check_global_validity()
+        self.enable_run(self.tree.check_global_validity())
         self.different_signals_window.setCurrentIndex(
             self.stim_type_cell.currentIndex()
         )
@@ -1320,7 +1319,7 @@ class App(QWidget):
         self.tree.currentItem().setText(27, self.frequency_cell3.text())
         self.tree.currentItem().setText(28, self.duty_cell3.text())
         self.tree.currentItem().setText(29, self.heigth_cell3.text())
-        self.tree.check_global_validity()
+        self.enable_run(self.tree.check_global_validity())
         self.tree.graph(self.tree.currentItem())
         self.draw()
 
@@ -1363,7 +1362,7 @@ class App(QWidget):
         self.tree.currentItem().setText(1, self.block_iterations_cell.text())
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
-        self.tree.check_global_validity()
+        self.enable_run(self.tree.check_global_validity())
         self.tree.graph(self.tree.currentItem())
         self.draw()
 
@@ -1453,13 +1452,15 @@ class App(QWidget):
             )
             self.tree.currentItem().setText(30, str(self.third_canal_check.isChecked()))
             # self.pulses_cell2.setEnabled(self.second_canal_check.isChecked())
-            self.tree.check_global_validity()
+            self.enable_run(self.tree.check_global_validity())
             self.tree.graph(self.tree.currentItem())
             self.draw()
 
-    def enable_run(self):
+    def enable_run(self, boolean):
         """ Enable the run button"""
-        self.run_button.setDisabled(False)
+        if not self.daq_generated:
+            boolean = False
+        self.run_button.setEnabled(boolean)
 
     def disable_run(self):
         """ Disable the run button"""

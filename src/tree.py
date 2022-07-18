@@ -17,15 +17,10 @@ class Tree(QTreeWidget):
         self.baseline_values = []
         pass
 
-    def set_app(self, app):
-        """ Set the corresponding app instance"""
-        self.app = app
-
     def first_stimulation(self):
         """ Create the first stimulation in the tree """
         tree_item = QTreeWidgetItem()
         self.addTopLevelItem(tree_item)
-        self.app.tree_switch_window.setCurrentIndex(0)
         self.set_defaults(tree_item)
 
     def add_brother(self):
@@ -419,10 +414,10 @@ class Tree(QTreeWidget):
         """
         if item is None:
             item = self.invisibleRootItem()
-            if self.check_block_validity(item) and self.app.daq_generated:
-                self.app.enable_run()
+            if self.check_block_validity(item):
+                return True
             else:
-                self.app.disable_run()
+                return False
         elif item.childCount() > 0:
             self.set_icon(item, self.check_block_validity(item))
         else:
