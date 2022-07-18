@@ -261,13 +261,11 @@ class Tree(QTreeWidget):
                     and item.text(30) == "False"
                     and item.text(17) == "True"
                 ):
-                    print("Adding baseline values to list")
                     baseline_start_index = len(self.x_values)
                     baseline_stop_index = len(self.x_values) + len(time_values)
                     self.baseline_values.append(
                         [baseline_start_index, baseline_stop_index]
                     )
-                    print(self.baseline_values)
                 time_values += self.elapsed_time
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
@@ -362,7 +360,7 @@ class Tree(QTreeWidget):
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
                 else:
-                    sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
+                    sign_type3, pulses3, jitter3, width3, frequency3, duty3, heigth3 = (
                         "",
                         0,
                         0,
@@ -371,7 +369,7 @@ class Tree(QTreeWidget):
                         0,
                         0,
                     )
-                    canal2 = False
+                    canal3 = False
                 dictionary = {
                     "type": "Stimulation",
                     "name": item.text(0),
@@ -403,6 +401,7 @@ class Tree(QTreeWidget):
                 }
                 return Stimulation(dictionary)
         except Exception as err:
+            print(err)
             pass
 
     def check_global_validity(self, item=None):
@@ -490,6 +489,7 @@ class Tree(QTreeWidget):
                 pass
             else:
                 valid = False
+        self.set_icon(item, valid)
         return valid
 
     def check_block_validity(self, item=None):
@@ -512,6 +512,7 @@ class Tree(QTreeWidget):
         for child_index in range(item.childCount()):
             if not self.check_block_validity(item.child(child_index)):
                 valid = False
+        self.set_icon(item, valid)
         return valid
 
     def get_attributes(self, item, canal=1):

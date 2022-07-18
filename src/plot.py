@@ -32,8 +32,11 @@ class PlotWindow(QDialog):
         """ Clear each axis of the plot """
         plt.figure(self.figure.number)
         plt.ion()
-        for axis in range(3):
-            self.axis[axis].clear()
+        try:
+            for axis in range(3):
+                self.axis[axis].clear()
+        except Exception:
+            plt.clf()
         self.vertical_lines = []
 
     def plot(self, x, y, root, index=0):

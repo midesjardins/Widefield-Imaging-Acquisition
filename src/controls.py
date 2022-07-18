@@ -278,6 +278,12 @@ class DAQ:
             self.stop_signal = True
             pass
 
+    def return_lights(self):
+        lights = []
+        for light in self.lights:
+            lights.append(light.name)
+        return lights
+
     def save(self, directory):
         """Save the light and stimulation data for each frame as a NPY file
 

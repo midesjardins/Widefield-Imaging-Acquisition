@@ -269,7 +269,7 @@ class App(QWidget):
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, cmap="binary_r", vmin=0, vmax=4096)
+        self.plot_image = plt.imshow(self.numpy, cmap="binary_r", vmin=0, vmax=4096, origin="lower")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -837,7 +837,6 @@ class App(QWidget):
             self.master_block = self.tree.create_blocks()
             self.tree.baseline_values = []
             self.tree.graph(item=self.tree.invisibleRootItem())
-            print(self.tree.baseline_values)
             self.root_time, self.root_signal = (
                 self.tree.x_values,
                 [
@@ -1563,6 +1562,7 @@ class App(QWidget):
         self.roi_buttons.setCurrentIndex(0)
         plt.figure(self.image_view.figure.number)
         plt.ion()
+        print(self.roi_extent)
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
         self.rect_selector.clear()

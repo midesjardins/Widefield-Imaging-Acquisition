@@ -45,9 +45,6 @@ class App(QWidget):
         """ Initialize the application """
         super().__init__()
         self.cwd = os.path.dirname(os.path.dirname(__file__))
-
-        #self.frames = np.random.randint(0, 4096, (50, 1024, 1024))
-        #self.frame_number = self.frames.shape[0]
         self.roi_extent = None
         self.image_index = 0
         self.previous_index = 0
@@ -204,7 +201,7 @@ class App(QWidget):
     # -------------
         #self.graphics_layout =QHBoxLayout()
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(np.zeros((4096, 4096)), cmap="binary_r", vmin=0, vmax=4096)
+        self.plot_image = plt.imshow(np.zeros((1024, 1024)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
         self.grid_layout.addWidget(self.image_view, 1, 0)
@@ -235,13 +232,19 @@ class App(QWidget):
         self.import_thread.start()
     
     def import_frames(self):
-        potential_files = os.listdir(self.directory)
-        for file in potential_files:
-            if ".npy" in file:
-                self.concatenate_frames(file)
-        self.frame_number = self.frames.shape[0]
-        self.end_index.setText(f"{self.frame_number-1}")
-        self.time_slider.setRange(0, self.frame_number-1)
+        try:
+            self.frames = []
+            self.time_slider.setEnabled(False)
+            potential_files = os.listdir(self.directory)
+            for file in potential_files:
+                if ".npy" in file:
+                    self.concatenate_frames(file)
+            self.frame_number = self.frames.shape[0]
+            self.end_index.setText(f"{self.frame_number-1}")
+            self.time_slider.setRange(0, self.frame_number-1)
+            self.time_slider.setEnabled(True)
+        except Exception:
+            pass
 
     def concatenate_frames(self, file): 
         """ Concatenate the frames in the directory"""
@@ -259,6 +262,7 @@ class App(QWidget):
         def onselect_function(eclick, erelease):
             """ Save the ROI dimensions as attributes"""
             self.roi_extent = self.rect_selector.extents
+            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(
@@ -276,6 +280,8 @@ class App(QWidget):
     def reset_roi(self):
         """ Reset the ROI"""
         plt.figure(self.image_view.figure.number)
+        plt.ion()
+        print(self.frames[0].shape)
         plt.xlim(0, 1024)
         plt.ylim(0, 1024)
         self.roi_extent = None
@@ -320,11 +326,14 @@ class App(QWidget):
 
     def live_preview(self):
         plt.ion()
-        while self.files_to_read:
-            if self.image_index != self.previous_index:
-                self.previous_index = self.image_index
-                self.plot_image.set(array=self.frames[self.image_index])
-            time.sleep(0.1)
+        try:
+            while self.files_to_read:
+                if self.image_index != self.previous_index:
+                    self.previous_index = self.image_index
+                    self.plot_image.set(array=self.frames[self.image_index])
+                time.sleep(0.1)
+        except Exception as err:
+            print(err)
 
     def make_time_course(self):
         try:
