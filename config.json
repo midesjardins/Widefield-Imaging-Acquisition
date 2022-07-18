@@ -8,5 +8,5 @@
     "analog0":"ao0",
     "analog1":"ao1",
     "co2": "port0/line5"},
-"Debug": true
+"Debug": false
 }

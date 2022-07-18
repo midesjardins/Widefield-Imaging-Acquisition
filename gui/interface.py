@@ -2,7 +2,7 @@ import sys
 import time
 import os
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import Qt, QLocale
+from PyQt5.QtCore import QModelIndex, Qt, QLocale
 import numpy as np
 from PyQt5.QtWidgets import (
     QVBoxLayout,
@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QApplication,
     QSlider,
+    QHeaderView
 )
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
 from matplotlib.widgets import RectangleSelector
@@ -322,8 +323,9 @@ class App(QWidget):
             for i in range(21, 31):
                 self.tree.header().hideSection(i)
             self.tree.setHeaderHidden(True)
-            self.tree.setColumnWidth(0, 330)
-            self.tree.setColumnWidth(20, 20)
+            self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.tree.header().setStretchLastSection(False)
+            self.tree.setColumnWidth(20, 40)
         self.tree.currentItemChanged.connect(self.actualize_window)
         self.tree_window.addWidget(self.tree)
 
