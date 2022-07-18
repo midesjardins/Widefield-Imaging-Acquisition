@@ -195,7 +195,9 @@ Created by Maxence Pelletier-Lebrun - maxencepelletierlebrun@gmail.com
 
 For a research internship at Michèle Desjardins' Laboratory 
 
-Project Link: [https://github.com/midesjardins/Widefield-Imaging-Acquisition](https://github.com/midesjardins/Widefield-Imaging-Acquisition)
+Research Page: [https://www.crchudequebec.ulaval.ca/recherche/chercheurs/michele-desjardins/](https://www.crchudequebec.ulaval.ca/recherche/chercheurs/michele-desjardins/)
+
+Project Page: [https://github.com/midesjardins/Widefield-Imaging-Acquisition](https://github.com/midesjardins/Widefield-Imaging-Acquisition)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -204,11 +206,11 @@ Project Link: [https://github.com/midesjardins/Widefield-Imaging-Acquisition](ht
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-This project was made possible with the help of these people and open-source ressources:
+This project was made possible with the help of these open-source ressources:
 
 * [Tabler Icons](https://tabler-icons.io/)
-* [Alexey Shkarin -  creator of Pylablib](hhttps://github.com/AlexShkarin)
-* [Othneil Drew - Creator of Best-README-Template](https://github.com/othneildrew)
+* [Pylablib](hhttps://github.com/AlexShkarin)
+* [Best-README-Template](https://github.com/othneildrew)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
