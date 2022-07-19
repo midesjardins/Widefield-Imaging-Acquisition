@@ -124,7 +124,7 @@ class App(QWidget):
             print("Program Closed")
         except Exception as err:
             pass
-        self.check_if_thread_is_alive()
+        #self.check_if_thread_is_alive()
 
     def initUI(self):
         """ Initialize the user interface """
@@ -1024,9 +1024,13 @@ class App(QWidget):
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+        #if (
+        #    not self.daq.stop_signal
+        #    and self.save_files_after_stop
+        #    and self.directory_save_files_checkbox.isChecked()
+        #):
         if (
-            not self.daq.stop_signal
-            and self.save_files_after_stop
+             self.save_files_after_stop
             and self.directory_save_files_checkbox.isChecked()
         ):
             try:
@@ -1163,14 +1167,12 @@ class App(QWidget):
                     position = self.camera.frames_read / int(self.framerate_cell.text())
                 else:
                     position = time.time() - self.daq.start_time
-                print(position)
                 self.plot_window.vertical_lines[0].set_xdata(position)
                 self.plot_window.vertical_lines[1].set_xdata(position)
                 self.plot_window.vertical_lines[2].set_xdata(position)
                 time.sleep(0.5)
             except Exception as err:
                 time.sleep(0.5)
-                print(err)
                 pass
 
     def change_preview_light_channel(self):

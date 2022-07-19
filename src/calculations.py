@@ -16,6 +16,7 @@ def shrink_array(array, extents):
     Returns:
         array: Reduced array of frames
     """
+
     return np.array(array)[
         :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
     ]

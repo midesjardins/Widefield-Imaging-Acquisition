@@ -36,7 +36,8 @@ from src.calculations import (
     get_baseline_frame_indices,
     average_baseline,
     get_timecourse,
-    get_dask_array
+    get_dask_array,
+    separate_images
 )
 
 
@@ -49,6 +50,7 @@ class App(QWidget):
         self.image_index = 0
         self.previous_index = 0
         self.files_to_read = True
+        self.live_preview_light_index = 0
 
         self.initUI()
 
@@ -92,63 +94,25 @@ class App(QWidget):
 
         self.settings_window.addLayout(self.directory_window)
 
+
+# ---- 
+        self.light_channel_layout = QHBoxLayout()
+        self.preview_light_label = QLabel("Light Channel Preview")
+        self.light_channel_layout.addWidget(self.preview_light_label)
+        self.preview_light_combo = QComboBox()
+        self.preview_light_combo.setEnabled(False)
+        self.preview_light_combo.currentIndexChanged.connect(
+            self.change_preview_light_channel
+        )
+        self.light_channel_layout.addWidget(self.preview_light_combo)
+        self.settings_window.addLayout(self.light_channel_layout)
+
         #self.import_window = QHBoxLayout()
         #self.import_progress = QLabel("0% Imported")
         #self.import_window.addWidget(self.import_progress)
         #self.settings_window.addLayout(self.import_window)
 
-# ----
-
-        self.roi_buttons = QStackedLayout()
-        self.roi_buttons.setAlignment(Qt.AlignLeft)
-        self.roi_buttons.setAlignment(Qt.AlignTop)
-        #self.roi_buttons.setContentsMargins(0, 0, 0, 0)
-        self.roi_layout1 = QHBoxLayout()
-        self.roi_layout1.setAlignment(Qt.AlignLeft)
-        self.roi_layout1.setAlignment(Qt.AlignTop)
-        #self.roi_layout1.setContentsMargins(0, 0, 0, 0)
-        self.reset_roi_button = QPushButton("Reset ROI")
-        self.reset_roi_button.setIcon(
-            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-out-area.png"))
-        )
-        self.reset_roi_button.setEnabled(False)
-        self.reset_roi_button.clicked.connect(self.reset_roi)
-        self.roi_layout1.addWidget(self.reset_roi_button)
-
-        self.set_roi_button = QPushButton("Set ROI")
-        self.set_roi_button.setIcon(
-            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-in-area.png"))
-        )
-        self.set_roi_button.clicked.connect(self.set_roi)
-        self.roi_layout1.addWidget(self.set_roi_button)
-
-        self.roi_layout1_container = QWidget()
-        self.roi_layout1_container.setLayout(self.roi_layout1)
-
-        self.roi_layout2 = QHBoxLayout()
-        self.roi_layout2.setAlignment(Qt.AlignLeft)
-        self.roi_layout2.setAlignment(Qt.AlignTop)
-        #self.roi_layout2.setContentsMargins(0, 0, 0, 0)
-        self.cancel_roi_button = QPushButton("Cancel")
-        self.cancel_roi_button.setIcon(
-            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-cancel.png"))
-        )
-        self.cancel_roi_button.clicked.connect(self.cancel_roi)
-        self.roi_layout2.addWidget(self.cancel_roi_button)
-
-        self.save_roi_button = QPushButton("Save ROI")
-        self.save_roi_button.setIcon(
-            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-check.png"))
-        )
-        self.save_roi_button.clicked.connect(self.save_roi)
-        self.roi_layout2.addWidget(self.save_roi_button)
-        self.roi_layout2_container = QWidget()
-        self.roi_layout2_container.setLayout(self.roi_layout2)
-
-        self.roi_buttons.addWidget(self.roi_layout1_container)
-        self.roi_buttons.addWidget(self.roi_layout2_container)
-
-        self.grid_layout.addLayout(self.roi_buttons, 2, 0)
+# --
 
         # -------------
         
@@ -200,11 +164,6 @@ class App(QWidget):
 
     # -------------
         #self.graphics_layout =QHBoxLayout()
-        self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(np.zeros((1024, 1024)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
-        self.plot_image.axes.get_xaxis().set_visible(False)
-        self.plot_image.axes.axes.get_yaxis().set_visible(False)
-        self.grid_layout.addWidget(self.image_view, 1, 0)
 
         #self.graphics_layout.addWidget(self.image_view)
 
@@ -214,17 +173,96 @@ class App(QWidget):
         #self.grid_layout.addLayout(self.graphics_layout, 1, 0)
 
     # -------------
-
-
-        self.open_live_preview_thread()
         self.show()
+
+    def initialize_roi(self):
+        self.roi_buttons = QStackedLayout()
+        self.roi_buttons.setAlignment(Qt.AlignLeft)
+        self.roi_buttons.setAlignment(Qt.AlignTop)
+        #self.roi_buttons.setContentsMargins(0, 0, 0, 0)
+        self.roi_layout1 = QHBoxLayout()
+        self.roi_layout1.setAlignment(Qt.AlignLeft)
+        self.roi_layout1.setAlignment(Qt.AlignTop)
+        #self.roi_layout1.setContentsMargins(0, 0, 0, 0)
+        self.reset_roi_button = QPushButton("Reset ROI")
+        self.reset_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-out-area.png"))
+        )
+        self.reset_roi_button.setEnabled(False)
+        self.reset_roi_button.clicked.connect(self.reset_roi)
+        self.roi_layout1.addWidget(self.reset_roi_button)
+
+        self.set_roi_button = QPushButton("Set ROI")
+        self.set_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-in-area.png"))
+        )
+        self.set_roi_button.clicked.connect(self.set_roi)
+        self.roi_layout1.addWidget(self.set_roi_button)
+
+        self.roi_layout1_container = QWidget()
+        self.roi_layout1_container.setLayout(self.roi_layout1)
+
+        self.roi_layout2 = QHBoxLayout()
+        self.roi_layout2.setAlignment(Qt.AlignLeft)
+        self.roi_layout2.setAlignment(Qt.AlignTop)
+        #self.roi_layout2.setContentsMargins(0, 0, 0, 0)
+        self.cancel_roi_button = QPushButton("Cancel")
+        self.cancel_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-cancel.png"))
+        )
+        self.cancel_roi_button.clicked.connect(self.cancel_roi)
+        self.roi_layout2.addWidget(self.cancel_roi_button)
+
+        self.save_roi_button = QPushButton("Save ROI")
+        self.save_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-check.png"))
+        )
+        self.save_roi_button.clicked.connect(self.save_roi)
+        self.roi_layout2.addWidget(self.save_roi_button)
+        self.roi_layout2_container = QWidget()
+        self.roi_layout2_container.setLayout(self.roi_layout2)
+
+        self.roi_buttons.addWidget(self.roi_layout1_container)
+        self.roi_buttons.addWidget(self.roi_layout2_container)
+
+        self.grid_layout.addLayout(self.roi_buttons, 2, 0)
+
+    def change_preview_light_channel(self):
+        """ Change the light channel for the live preview"""
+        self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        self.adjust_time()
+
+    def actualize_lights(self):
+        """ Update the lights list in the combo box"""
+        self.preview_light_combo.clear()
+        if len(self.dictionary["Lights"]) == 0:
+            self.preview_light_combo.setEnabled(False)
+        else:
+            self.preview_light_combo.setEnabled(True)
+        for light in self.dictionary["Lights"]:
+            self.preview_light_combo.addItem(light)
+        self.preview_light_combo.setCurrentIndex(0)
 
     def choose_directory(self):
         """ Choose the directory where to save the files"""
         self.directory = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(self.directory)
         self.frames = []
+        potential_dic = os.listdir(self.directory)
+        for file in potential_dic:
+            if ".json" in file:
+                self.dictionary = get_dictionary(os.path.join(self.directory, file))
+        self.dimensions = self.dictionary["Dimensions"]
+        self.initialize_plot()
+        self.initialize_roi()
         self.open_import_thread()
+
+    def initialize_plot(self):
+        self.image_view = PlotWindow()
+        self.plot_image = plt.imshow(np.zeros((self.dimensions[1], self.dimensions[0])), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
+        self.plot_image.axes.get_xaxis().set_visible(False)
+        self.plot_image.axes.axes.get_yaxis().set_visible(False)
+        self.grid_layout.addWidget(self.image_view, 1, 0)
 
     def open_import_thread(self):
         """ Open the thread that will import the frames"""
@@ -235,23 +273,25 @@ class App(QWidget):
         try:
             self.frames = []
             self.time_slider.setEnabled(False)
-            potential_files = os.listdir(self.directory)
-            for file in potential_files:
+            potential_data = os.listdir(os.path.join(self.directory, "data"))
+            for file in potential_data:
                 if ".npy" in file:
                     self.concatenate_frames(file)
             self.frame_number = self.frames.shape[0]
+            self.split_frames = separate_images(self.dictionary["Lights"], self.frames)
             self.end_index.setText(f"{self.frame_number-1}")
             self.time_slider.setRange(0, self.frame_number-1)
             self.time_slider.setEnabled(True)
-        except Exception:
+            self.actualize_lights()
+        except Exception as err:
+            print(err)
             pass
-
     def concatenate_frames(self, file): 
         """ Concatenate the frames in the directory"""
         if len(self.frames) == 0:
-            self.frames = np.load(os.path.join(self.directory, file))
+            self.frames = np.load(os.path.join(self.directory, "data", file))
         else:
-            self.frames = np.concatenate((self.frames, np.load(os.path.join(self.directory, file))))
+            self.frames = np.concatenate((self.frames, np.load(os.path.join(self.directory, "data", file))))
 
     def set_roi(self):
         """ Set the ROI"""
@@ -262,7 +302,6 @@ class App(QWidget):
         def onselect_function(eclick, erelease):
             """ Save the ROI dimensions as attributes"""
             self.roi_extent = self.rect_selector.extents
-            print(self.roi_extent)
             self.save_roi_button.setEnabled(True)
 
         self.rect_selector = RectangleSelector(
@@ -281,9 +320,8 @@ class App(QWidget):
         """ Reset the ROI"""
         plt.figure(self.image_view.figure.number)
         plt.ion()
-        print(self.frames[0].shape)
-        plt.xlim(0, 1024)
-        plt.ylim(0, 1024)
+        plt.xlim(0, 200)
+        plt.ylim(0, 200)
         self.roi_extent = None
         self.reset_roi_button.setEnabled(False)
         self.set_roi_button.setEnabled(True)
@@ -317,30 +355,31 @@ class App(QWidget):
             pass
 
     def adjust_time(self):
-        self.image_index = self.time_slider.value()
-        self.current_index.setText(str(self.image_index))
+        plt.ion()
+        try:
+            self.image_index = self.time_slider.value()
+            self.current_index.setText(str(self.image_index))
+            self.open_live_preview_thread()
+        except Exception as err:
+            print(err)
+            pass
 
     def open_live_preview_thread(self):
+        """ Open the thread that will show the live preview"""
         self.live_preview_thread = Thread(target=self.live_preview)
         self.live_preview_thread.start()
 
     def live_preview(self):
-        plt.ion()
-        try:
-            while self.files_to_read:
-                if self.image_index != self.previous_index:
-                    self.previous_index = self.image_index
-                    self.plot_image.set(array=self.frames[self.image_index])
-                time.sleep(0.1)
-        except Exception as err:
-            print(err)
+        self.plot_image.set(array=self.split_frames[self.live_preview_light_index][self.image_index//len(self.dictionary["Lights"])])
+
 
     def make_time_course(self):
         try:
             if self.roi_extent:
-                y_values = get_timecourse(shrink_array(self.frames, self.roi_extent), int(self.start_index.text()), int(self.end_index.text()))
+                print(shrink_array(self.split_frames[self.live_preview_light_index], self.roi_extent))
+                y_values = get_timecourse(shrink_array(self.split_frames[self.live_preview_light_index], self.roi_extent), int(self.start_index.text())//len(self.dictionary["Lights"]), int(self.end_index.text())//len(self.dictionary["Lights"]))
             else:
-                y_values = get_timecourse(self.frames, int(self.start_index.text()), int(self.end_index.text()))
+                y_values = get_timecourse(self.split_frames[self.live_preview_light_index], int(self.start_index.text())//len(self.dictionary["Lights"]), int(self.end_index.text())//len(self.dictionary["Lights"]))
             plt.figure(self.time_course.figure.number)
             plt.ion()
             plt.clf()

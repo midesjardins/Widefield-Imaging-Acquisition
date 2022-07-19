@@ -221,7 +221,6 @@ class DAQ:
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
-        self.stop_signal = False
         if WIDEFIELD_COMPUTER:
             with nidaqmx.Task(new_task_name="lights") as l_task:
                 self.control_task = l_task
