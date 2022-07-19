@@ -5,27 +5,23 @@ import sys
 import os
 from threading import Thread
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from src.data_handling import extract_from_path, separate_images, separate_vectors
+from src.calculations import extract_from_path, separate_images, separate_vectors
 import numpy as np
 
 
 class App(QWidget):
 
     def __init__(self):
+        """ Initialize the app instance"""
         super().__init__()
         self.title = 'Widefield Post Processing'
-        self.left = 10
-        self.top = 10
-        self.width = 600
-        self.height = 150
+        self.dimensions = (10,10,600,150)
         self.initUI()
 
-    def closeEvent(self, *args, **kwargs):
-        print("Closed")
-
     def initUI(self):
+        """ Initialize the UI """
         self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.setGeometry(*self.dimensions)
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
         self.main_layout.setAlignment(Qt.AlignTop)
@@ -53,6 +49,7 @@ class App(QWidget):
         self.show()
 
     def choose_directory(self):
+        """ Open a file dialog to choose a directory """
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(folder)
         self.split_button.setEnabled(True)
@@ -60,6 +57,7 @@ class App(QWidget):
         self.progress_bar_label.setText(f"")
 
     def open_split_thread(self):
+        """ Open a thread to split the arrays """
         self.choose_directory_button.setEnabled(False)
         self.split_button.setEnabled(False)
         self.split_arrays_thread = Thread(target=self.split_arrays)
@@ -67,6 +65,7 @@ class App(QWidget):
 
 
     def split_arrays(self):
+        """ Split the arrays found in selected directory"""
         path = self.directory_cell.text()
         self.progress_bar_label.setText(f"Extracting Files...")
         lights, frames, vector = extract_from_path(path)

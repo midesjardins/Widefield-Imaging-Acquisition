@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>Widefield-Imaging-Acquisition.src.calculations API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>Widefield-Imaging-Acquisition.src.calculations</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import numpy as np
+import matplotlib.pyplot as plt
+import os
+import json
+import time
+
+
+def shrink_array(array, extents):
+    &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames
+    
+    Args:
+        array (array): Array of frames
+        extents (list): List of extents to shrink the array to
+        
+    Returns:
+        array: Reduced array of frames
+    &#34;&#34;&#34;
+    return np.array(array)[
+        :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
+    ]
+
+
+def get_array(directory):
+    &#34;&#34;&#34; Get array from NPY file &#34;&#34;&#34;
+    return np.array(np.load(directory))
+
+
+def get_dictionary(directory):
+    &#34;&#34;&#34; Get dictionary from json file &#34;&#34;&#34;
+    with open(directory, &#34;r&#34;) as file:
+        dictionary = json.load(file)
+    return dictionary
+
+
+def find_rising_indices(array):
+    &#34;&#34;&#34; Find indices of rising edges in an array &#34;&#34;&#34;
+    dy = np.diff(array)
+    return np.concatenate(([0], np.where(dy == 1)[0][1::2] + 1))
+
+
+def create_complete_stack(first_stack, second_stack):
+    &#34;&#34;&#34; Create a stack with the first stack as the first half and the second stack as the second half &#34;&#34;&#34;
+    array = []
+    for new_array in first_stack:
+        array.append(new_array)
+    for new_array in second_stack:
+        array.append(new_array)
+    return np.stack(array)
+
+
+def reduce_stack(stack, indices):
+    &#34;&#34;&#34; Reduce the stack to only include the frames at the given indices &#34;&#34;&#34;
+    return stack[:, indices]
+
+
+def separate_images(lights, frames):
+    &#34;&#34;&#34; Separate images into different light channels 
+    
+    Args:
+        lights (list): List of lights
+        frames (array): Array of frames
+        
+    Returns:
+        list: List of separated images&#34;&#34;&#34;
+    separated_images = []
+    for index in range(len(lights)):
+        separated_images.append(frames[index :: len(lights), :, :])
+    return separated_images
+
+
+def separate_vectors(lights, vector):
+    &#34;&#34;&#34; Separate vectors into different light channels
+    
+    Args:
+        lights (list): List of lights
+        vector (array): Vector containing the stimulation data
+    
+    Returns:
+        list: List of separated vectors&#34;&#34;&#34;
+    separated_vectors = []
+    for index in range(len(lights)):
+        separated_vectors.append(vector[:, index :: len(lights)])
+    return separated_vectors
+
+
+def extract_from_path(path):
+    &#34;&#34;&#34; Extract lights, frames and vector files from a given path 
+    
+    Args:
+        path (str): Path to the directory containing the files
+        
+    Returns:
+        tuple: Tuple containing the lights, frames and vector files
+    &#34;&#34;&#34;
+    files_list = os.listdir(path)
+    for file_name in files_list:
+        if &#34;-data&#34; in file_name:
+            frames = get_array(os.path.join(path, file_name))
+        if &#34;-metadata&#34; in file_name and &#34;json&#34; in file_name:
+            lights = get_dictionary(os.path.join(path, file_name))[&#34;Lights&#34;]
+        if &#34;-signal_data&#34; in file_name:
+            vector = get_array(os.path.join(path, file_name))
+    return (lights, frames, vector)
+
+
+def extend_light_signal(lights, camera):
+    &#34;&#34;&#34; Extend the light signal to be wider the camera signal 
+    
+    Args:
+        lights (array): Array of light signals
+        camera (array): Array of camera frames
+        
+    Returns:
+        array: Array of extended light signals
+    &#34;&#34;&#34;
+    camera_dy = np.diff(camera)
+    camera_indices = np.where(abs(camera_dy) &gt; 0)[0]
+    difference = camera_indices[1] - camera_indices[0]
+    extend = round(0.4 * difference)
+    signal_list = []
+    for signal in lights:
+        dy = np.diff(signal)
+        differential_indices = np.where(abs(dy) &gt; 0)[0]
+        new_signal = np.copy(signal)
+        for index in differential_indices:
+            new_signal[index - extend : index + extend] = True
+        signal_list.append(new_signal)
+    return np.stack(signal_list)
+
+
+def frames_acquired_from_camera_signal(camera_signal):
+    &#34;&#34;&#34; Generate an array of frames acquired from the camera signal at each timepoint &#34;&#34;&#34;
+    dy = np.diff(camera_signal)
+    indices = np.where(abs(dy) &gt; 0)[0][1::2]
+    y_values = np.zeros(len(camera_signal))
+    try:
+        for index in indices:
+            y_values[index:] += 1
+    except Exception:
+        pass
+    return y_values
+
+
+def average_baseline(frame_list, light_count=1, start_index=0):
+    &#34;&#34;&#34; Average the baselines of a list of frames 
+    
+    Args:
+        frame_list (list): List of frames
+        light_count (int): Number of lights
+        start_index (int): Light index of the first frame in list
+        
+    Returns:
+        list: List of averaged baselines&#34;&#34;&#34;
+    try:
+        baselines = []
+        for light_index in range(light_count):
+            baselines.append(
+                np.mean(
+                    np.array(
+                        frame_list[
+                            (light_count - start_index) % light_count
+                            + light_index :: light_count
+                        ]
+                    ),
+                    axis=0,
+                )
+            )
+    except Exception as err:
+        print(&#34;Baseline Error&#34;)
+        print(err)
+    return baselines
+
+
+def get_baseline_frame_indices(baseline_indices, frames_acquired):
+    &#34;&#34;&#34; Get the start/end baseline indices in terms of frames acquired 
+    
+    Args:
+        baseline_indices (list of tuples): List of baseline indices tuples
+        frames_acquired (list): List of frames acquired
+        
+    Returns:
+        list of tuples: List of start/end baseline indices in terms of frames acquired&#34;&#34;&#34;
+    list_of_indices = []
+    for index in baseline_indices:
+        list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
+    return list_of_indices
+
+
+def map_activation(frames, baseline):
+    &#34;&#34;&#34; Map the activation of each frame to the baseline&#34;&#34;&#34;
+    return np.array(frames) - np.array([baseline])
+
+
+def timeit(method):
+    &#34;&#34;&#34; Time the execution of a method &#34;&#34;&#34;
+
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        print(&#34;%r  %2.2f ms&#34; % (method.__name__, (te - ts) * 1000))
+        return result
+
+    return timed</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.average_baseline"><code class="name flex">
+<span>def <span class="ident">average_baseline</span></span>(<span>frame_list, light_count=1, start_index=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Average the baselines of a list of frames </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>frame_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of frames</dd>
+<dt><strong><code>light_count</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of lights</dd>
+<dt><strong><code>start_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>Light index of the first frame in list</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of averaged baselines</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def average_baseline(frame_list, light_count=1, start_index=0):
+    &#34;&#34;&#34; Average the baselines of a list of frames 
+    
+    Args:
+        frame_list (list): List of frames
+        light_count (int): Number of lights
+        start_index (int): Light index of the first frame in list
+        
+    Returns:
+        list: List of averaged baselines&#34;&#34;&#34;
+    try:
+        baselines = []
+        for light_index in range(light_count):
+            baselines.append(
+                np.mean(
+                    np.array(
+                        frame_list[
+                            (light_count - start_index) % light_count
+                            + light_index :: light_count
+                        ]
+                    ),
+                    axis=0,
+                )
+            )
+    except Exception as err:
+        print(&#34;Baseline Error&#34;)
+        print(err)
+    return baselines</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.create_complete_stack"><code class="name flex">
+<span>def <span class="ident">create_complete_stack</span></span>(<span>first_stack, second_stack)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a stack with the first stack as the first half and the second stack as the second half</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_complete_stack(first_stack, second_stack):
+    &#34;&#34;&#34; Create a stack with the first stack as the first half and the second stack as the second half &#34;&#34;&#34;
+    array = []
+    for new_array in first_stack:
+        array.append(new_array)
+    for new_array in second_stack:
+        array.append(new_array)
+    return np.stack(array)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.extend_light_signal"><code class="name flex">
+<span>def <span class="ident">extend_light_signal</span></span>(<span>lights, camera)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extend the light signal to be wider the camera signal </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lights</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of light signals</dd>
+<dt><strong><code>camera</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of camera frames</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array</code></dt>
+<dd>Array of extended light signals</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extend_light_signal(lights, camera):
+    &#34;&#34;&#34; Extend the light signal to be wider the camera signal 
+    
+    Args:
+        lights (array): Array of light signals
+        camera (array): Array of camera frames
+        
+    Returns:
+        array: Array of extended light signals
+    &#34;&#34;&#34;
+    camera_dy = np.diff(camera)
+    camera_indices = np.where(abs(camera_dy) &gt; 0)[0]
+    difference = camera_indices[1] - camera_indices[0]
+    extend = round(0.4 * difference)
+    signal_list = []
+    for signal in lights:
+        dy = np.diff(signal)
+        differential_indices = np.where(abs(dy) &gt; 0)[0]
+        new_signal = np.copy(signal)
+        for index in differential_indices:
+            new_signal[index - extend : index + extend] = True
+        signal_list.append(new_signal)
+    return np.stack(signal_list)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.extract_from_path"><code class="name flex">
+<span>def <span class="ident">extract_from_path</span></span>(<span>path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Extract lights, frames and vector files from a given path </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
+<dd>Path to the directory containing the files</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple</code></dt>
+<dd>Tuple containing the lights, frames and vector files</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def extract_from_path(path):
+    &#34;&#34;&#34; Extract lights, frames and vector files from a given path 
+    
+    Args:
+        path (str): Path to the directory containing the files
+        
+    Returns:
+        tuple: Tuple containing the lights, frames and vector files
+    &#34;&#34;&#34;
+    files_list = os.listdir(path)
+    for file_name in files_list:
+        if &#34;-data&#34; in file_name:
+            frames = get_array(os.path.join(path, file_name))
+        if &#34;-metadata&#34; in file_name and &#34;json&#34; in file_name:
+            lights = get_dictionary(os.path.join(path, file_name))[&#34;Lights&#34;]
+        if &#34;-signal_data&#34; in file_name:
+            vector = get_array(os.path.join(path, file_name))
+    return (lights, frames, vector)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.find_rising_indices"><code class="name flex">
+<span>def <span class="ident">find_rising_indices</span></span>(<span>array)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Find indices of rising edges in an array</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def find_rising_indices(array):
+    &#34;&#34;&#34; Find indices of rising edges in an array &#34;&#34;&#34;
+    dy = np.diff(array)
+    return np.concatenate(([0], np.where(dy == 1)[0][1::2] + 1))</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.frames_acquired_from_camera_signal"><code class="name flex">
+<span>def <span class="ident">frames_acquired_from_camera_signal</span></span>(<span>camera_signal)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Generate an array of frames acquired from the camera signal at each timepoint</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def frames_acquired_from_camera_signal(camera_signal):
+    &#34;&#34;&#34; Generate an array of frames acquired from the camera signal at each timepoint &#34;&#34;&#34;
+    dy = np.diff(camera_signal)
+    indices = np.where(abs(dy) &gt; 0)[0][1::2]
+    y_values = np.zeros(len(camera_signal))
+    try:
+        for index in indices:
+            y_values[index:] += 1
+    except Exception:
+        pass
+    return y_values</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.get_array"><code class="name flex">
+<span>def <span class="ident">get_array</span></span>(<span>directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get array from NPY file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_array(directory):
+    &#34;&#34;&#34; Get array from NPY file &#34;&#34;&#34;
+    return np.array(np.load(directory))</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.get_baseline_frame_indices"><code class="name flex">
+<span>def <span class="ident">get_baseline_frame_indices</span></span>(<span>baseline_indices, frames_acquired)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the start/end baseline indices in terms of frames acquired </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>baseline_indices</code></strong> :&ensp;<code>list</code> of <code>tuples</code></dt>
+<dd>List of baseline indices tuples</dd>
+<dt><strong><code>frames_acquired</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of frames acquired</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code> of <code>tuples</code></dt>
+<dd>List of start/end baseline indices in terms of frames acquired</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_baseline_frame_indices(baseline_indices, frames_acquired):
+    &#34;&#34;&#34; Get the start/end baseline indices in terms of frames acquired 
+    
+    Args:
+        baseline_indices (list of tuples): List of baseline indices tuples
+        frames_acquired (list): List of frames acquired
+        
+    Returns:
+        list of tuples: List of start/end baseline indices in terms of frames acquired&#34;&#34;&#34;
+    list_of_indices = []
+    for index in baseline_indices:
+        list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
+    return list_of_indices</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.get_dictionary"><code class="name flex">
+<span>def <span class="ident">get_dictionary</span></span>(<span>directory)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get dictionary from json file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_dictionary(directory):
+    &#34;&#34;&#34; Get dictionary from json file &#34;&#34;&#34;
+    with open(directory, &#34;r&#34;) as file:
+        dictionary = json.load(file)
+    return dictionary</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.map_activation"><code class="name flex">
+<span>def <span class="ident">map_activation</span></span>(<span>frames, baseline)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Map the activation of each frame to the baseline</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def map_activation(frames, baseline):
+    &#34;&#34;&#34; Map the activation of each frame to the baseline&#34;&#34;&#34;
+    return np.array(frames) - np.array([baseline])</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.reduce_stack"><code class="name flex">
+<span>def <span class="ident">reduce_stack</span></span>(<span>stack, indices)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reduce the stack to only include the frames at the given indices</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reduce_stack(stack, indices):
+    &#34;&#34;&#34; Reduce the stack to only include the frames at the given indices &#34;&#34;&#34;
+    return stack[:, indices]</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.separate_images"><code class="name flex">
+<span>def <span class="ident">separate_images</span></span>(<span>lights, frames)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Separate images into different light channels </p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lights</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of lights</dd>
+<dt><strong><code>frames</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of frames</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of separated images</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def separate_images(lights, frames):
+    &#34;&#34;&#34; Separate images into different light channels 
+    
+    Args:
+        lights (list): List of lights
+        frames (array): Array of frames
+        
+    Returns:
+        list: List of separated images&#34;&#34;&#34;
+    separated_images = []
+    for index in range(len(lights)):
+        separated_images.append(frames[index :: len(lights), :, :])
+    return separated_images</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.separate_vectors"><code class="name flex">
+<span>def <span class="ident">separate_vectors</span></span>(<span>lights, vector)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Separate vectors into different light channels</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lights</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of lights</dd>
+<dt><strong><code>vector</code></strong> :&ensp;<code>array</code></dt>
+<dd>Vector containing the stimulation data</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of separated vectors</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def separate_vectors(lights, vector):
+    &#34;&#34;&#34; Separate vectors into different light channels
+    
+    Args:
+        lights (list): List of lights
+        vector (array): Vector containing the stimulation data
+    
+    Returns:
+        list: List of separated vectors&#34;&#34;&#34;
+    separated_vectors = []
+    for index in range(len(lights)):
+        separated_vectors.append(vector[:, index :: len(lights)])
+    return separated_vectors</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.shrink_array"><code class="name flex">
+<span>def <span class="ident">shrink_array</span></span>(<span>array, extents)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reduce the dimensions of frames to match ROI and return a list of frames</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>array</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of frames</dd>
+<dt><strong><code>extents</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of extents to shrink the array to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array</code></dt>
+<dd>Reduced array of frames</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def shrink_array(array, extents):
+    &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames
+    
+    Args:
+        array (array): Array of frames
+        extents (list): List of extents to shrink the array to
+        
+    Returns:
+        array: Reduced array of frames
+    &#34;&#34;&#34;
+    return np.array(array)[
+        :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
+    ]</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.timeit"><code class="name flex">
+<span>def <span class="ident">timeit</span></span>(<span>method)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Time the execution of a method</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def timeit(method):
+    &#34;&#34;&#34; Time the execution of a method &#34;&#34;&#34;
+
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+        print(&#34;%r  %2.2f ms&#34; % (method.__name__, (te - ts) * 1000))
+        return result
+
+    return timed</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="Widefield-Imaging-Acquisition.src" href="index.html">Widefield-Imaging-Acquisition.src</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.average_baseline" href="#Widefield-Imaging-Acquisition.src.calculations.average_baseline">average_baseline</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.create_complete_stack" href="#Widefield-Imaging-Acquisition.src.calculations.create_complete_stack">create_complete_stack</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.extend_light_signal" href="#Widefield-Imaging-Acquisition.src.calculations.extend_light_signal">extend_light_signal</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.extract_from_path" href="#Widefield-Imaging-Acquisition.src.calculations.extract_from_path">extract_from_path</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.find_rising_indices" href="#Widefield-Imaging-Acquisition.src.calculations.find_rising_indices">find_rising_indices</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.frames_acquired_from_camera_signal" href="#Widefield-Imaging-Acquisition.src.calculations.frames_acquired_from_camera_signal">frames_acquired_from_camera_signal</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_array" href="#Widefield-Imaging-Acquisition.src.calculations.get_array">get_array</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_baseline_frame_indices" href="#Widefield-Imaging-Acquisition.src.calculations.get_baseline_frame_indices">get_baseline_frame_indices</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_dictionary" href="#Widefield-Imaging-Acquisition.src.calculations.get_dictionary">get_dictionary</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.map_activation" href="#Widefield-Imaging-Acquisition.src.calculations.map_activation">map_activation</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.reduce_stack" href="#Widefield-Imaging-Acquisition.src.calculations.reduce_stack">reduce_stack</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.separate_images" href="#Widefield-Imaging-Acquisition.src.calculations.separate_images">separate_images</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.separate_vectors" href="#Widefield-Imaging-Acquisition.src.calculations.separate_vectors">separate_vectors</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.shrink_array" href="#Widefield-Imaging-Acquisition.src.calculations.shrink_array">shrink_array</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.timeit" href="#Widefield-Imaging-Acquisition.src.calculations.timeit">timeit</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>
