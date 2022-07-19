@@ -931,10 +931,13 @@ class App(QWidget):
                 ],
             )
             self.draw(root=True)
-            self.actualize_daq()
-            self.open_live_saving_thread()
-            self.open_live_preview_thread()
-            self.open_baseline_check_thread()
+            if self.acquisition_mode:
+                self.actualize_daq()
+                self.open_live_saving_thread()
+                self.open_live_preview_thread()
+                self.open_baseline_check_thread()
+            else:
+                self.daq.stop_signal = False
             self.open_signal_preview_thread()
             self.open_start_experiment_thread()
 
@@ -1153,15 +1156,21 @@ class App(QWidget):
     def actualize_progression(self):
         """ Actualize the position of the progress bar"""
         plt.ion()
+        print("actualizing progression")
         while self.daq.stop_signal is False:
             try:
-                position = self.camera.frames_read / int(self.framerate_cell.text())
+                if self.acquisition_mode:
+                    position = self.camera.frames_read / int(self.framerate_cell.text())
+                else:
+                    position = time.time() - self.daq.start_time
+                print(position)
                 self.plot_window.vertical_lines[0].set_xdata(position)
                 self.plot_window.vertical_lines[1].set_xdata(position)
                 self.plot_window.vertical_lines[2].set_xdata(position)
                 time.sleep(0.5)
-            except Exception:
+            except Exception as err:
                 time.sleep(0.5)
+                print(err)
                 pass
 
     def change_preview_light_channel(self):

@@ -16,7 +16,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 
 
 class Instrument:
@@ -221,6 +221,7 @@ class DAQ:
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
+        self.stop_signal = False
         if WIDEFIELD_COMPUTER:
             with nidaqmx.Task(new_task_name="lights") as l_task:
                 self.control_task = l_task
@@ -258,6 +259,7 @@ class DAQ:
                                     time.sleep(0.001)
                                     if t_task.read():
                                         break
+                        self.start_time = time.time()
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
@@ -276,6 +278,7 @@ class DAQ:
                                     time.sleep(0.001)
                                     if t_task.read():
                                         break
+                        self.start_time = time.time()
                         self.start([s_task, l_task])
                         while (
                             s_task.is_task_done() is False and self.stop_signal is False
@@ -288,7 +291,8 @@ class DAQ:
                         self.start([s_task, l_task])
 
         else:
-            time.sleep(2)
+            self.start_time = time.time()
+            time.sleep(len(self.stim_signal[0]) / 3000)
             self.stop_signal = True
             pass
 
