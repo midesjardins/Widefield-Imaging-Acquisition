@@ -154,7 +154,7 @@ class Experiment:
         with open(f"{self.directory}/experiment-metadata.txt", "w") as file:
             file.write(
                 f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}"
-            )
+            ) 
 
         dictionary = {
             "Blocks": self.blocks.to_json(),

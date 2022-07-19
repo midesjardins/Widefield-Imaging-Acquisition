@@ -16,7 +16,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 
 
 class Instrument:
@@ -221,6 +221,7 @@ class DAQ:
 
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
+
         if WIDEFIELD_COMPUTER:
             with nidaqmx.Task(new_task_name="lights") as l_task:
                 self.control_task = l_task
