@@ -2,7 +2,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import sys
 import os
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QCheckBox, QTabWidget
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 

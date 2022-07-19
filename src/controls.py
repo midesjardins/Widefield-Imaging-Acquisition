@@ -64,6 +64,20 @@ class Camera(Instrument):
         self.baseline_read_list = []
         self.frames_read = 0
 
+    def set_binning(self, binning):
+        """Set the binning of the camera
+
+        Args:
+            binning (int): The binning factor
+        """
+        self.cam.serial_write(f"sbm {binning} {binning}")
+        while True:
+            try:
+                self.cam.serial_read(1)
+            except Exception:
+                break
+        pass
+
     def delete_frames(self):
         """Read all frames in the buffer"""
         self.cam.read_multiple_images()
