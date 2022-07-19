@@ -46,9 +46,12 @@ class Camera(Instrument):
         self.video_running = False
         try:
             self.cam = IMAQ.IMAQCamera("img0")
+            print(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto"))
+            print(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto"))
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
+            print(err)
             pass
 
     def initialize(self, daq):
@@ -70,13 +73,8 @@ class Camera(Instrument):
         Args:
             binning (int): The binning factor
         """
-        self.cam.serial_write(f"sbm {binning} {binning}")
-        while True:
-            try:
-                self.cam.serial_read(1)
-            except Exception:
-                break
-        pass
+        self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", int(1024/binning), kind="auto")
+        self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", int(1024/binning), kind="auto")
 
     def delete_frames(self):
         """Read all frames in the buffer"""
@@ -93,6 +91,7 @@ class Camera(Instrument):
             try:
                 self.cam.wait_for_frame(timeout=0.1)
                 new_frames = self.cam.read_multiple_images()
+                print(len(new_frames[0]), len(new_frames[0][0]))
                 self.frames += new_frames
                 self.video_running = True
                 if self.adding_frames:
