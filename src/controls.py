@@ -13,6 +13,10 @@ from src.calculations import (
 from src.waveforms import digital_square
 from pylablib.devices import IMAQ
 import warnings
+import logging
+
+logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+
 
 warnings.filterwarnings("ignore")
 
@@ -46,8 +50,8 @@ class Camera(Instrument):
         self.video_running = False
         try:
             self.cam = IMAQ.IMAQCamera("img0")
-            print(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto"))
-            print(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto"))
+            logging.debug(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto"))
+            logging.debug(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto"))
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
