@@ -15,7 +15,7 @@ from pylablib.devices import IMAQ
 import warnings
 import logging
 
-logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='app.log', filemode='a', format='%(name)s - %(levelname)s - %(message)s')
 
 
 warnings.filterwarnings("ignore")
