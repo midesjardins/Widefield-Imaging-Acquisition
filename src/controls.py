@@ -9,6 +9,7 @@ from src.calculations import (
     shrink_array,
     find_rising_indices,
     reduce_stack,
+    get_dictionary
 )
 from src.waveforms import digital_square
 from pylablib.devices import IMAQ
@@ -22,6 +23,7 @@ warnings.filterwarnings("ignore")
 
 WIDEFIELD_COMPUTER = True
 
+config = get_dictionary(os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.json"))
 
 class Instrument:
     def __init__(self, port, name):
@@ -49,10 +51,12 @@ class Camera(Instrument):
         self.frames_read = 0
         self.video_running = False
         try:
+            self.set_binning(config["Binning"])
             self.cam = IMAQ.IMAQCamera("img0")
-            logging.debug(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto"))
-            logging.debug(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto"))
-            self.cam.setup_acquisition(nframes=100)
+            self.set_window(config["Binning"])
+            #logging.warning(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto"))
+            #logging.warning(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto"))
+            self.cam.setup_acquisition()
             self.cam.start_acquisition()
         except Exception as err:
             print(err)
@@ -70,6 +74,7 @@ class Camera(Instrument):
         self.frames_read_list = []
         self.baseline_read_list = []
         self.frames_read = 0
+        
 
     def set_binning(self, binning):
         """Set the binning of the camera
@@ -77,8 +82,21 @@ class Camera(Instrument):
         Args:
             binning (int): The binning factor
         """
+        lines = []
+        with open("C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd", "r") as read_file:
+            for i, line in enumerate(read_file):
+                if i == 17:
+                    lines.append(f"      MaxImageSize ({str(int(1024/binning))}, {str(int(1024/binning))})")
+                elif i == 2041:
+                    lines.append(f"                           Current ({binning}x{binning})")
+                else:
+                    lines.append(line.strip("\n"))
+            with open("C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd", "w") as write_file:
+                write_file.write("\n".join(lines))
+
+    def set_window(self, binning):
         self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", int(1024/binning), kind="auto")
-        self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", int(1024/binning), kind="auto")
+        self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", int(1024/binning) , kind="auto")
 
     def delete_frames(self):
         """Read all frames in the buffer"""
