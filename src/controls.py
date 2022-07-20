@@ -16,7 +16,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 
 
 class Instrument:
@@ -138,12 +138,12 @@ class DAQ:
             None,
         )
 
-    def close_all_lights(self):
+    def close_all_lights(self, ports):
         self.lights = [
-            Instrument(self.ports["infrared"], "ir"),
-            Instrument(self.ports["red"], "red"),
-            Instrument(self.ports["green"], "green"),
-            Instrument(self.ports["blue"], "blue")
+            Instrument(ports["infrared"], "ir"),
+            Instrument(ports["red"], "red"),
+            Instrument(ports["green"], "green"),
+            Instrument(ports["blue"], "blue")
         ]
 
         if WIDEFIELD_COMPUTER:
@@ -161,7 +161,7 @@ class DAQ:
                             l_task.do_channels.add_do_chan(
                                 f"{self.name}/{stimulus.port}"
                             )
-                    self.sample([s_task, l_task])
+                    self.sample([s_task, l_task], [False, False])
                     s_task.write([[0, 0], [0, 0]])
                     l_task.write([[False, False], [False, False], [False, False], [False, False], [False, False], [False, False]])
                     self.start([s_task, l_task])
@@ -266,7 +266,7 @@ class DAQ:
                             )
                             null_lights.append([False, False])
                     self.camera.initialize(self)
-                    self.sample([s_task, l_task])
+                    self.sample([s_task, l_task], self.stim_signal[0])
                     if len(self.lights) > 0:
                         self.write(
                             [s_task, l_task], [self.stim_signal, self.allz_signals]
@@ -363,7 +363,7 @@ class DAQ:
         for task in tasks:
             task.wait_until_done(timeout=1.5 * len(self.time_values) / 3000)
 
-    def sample(self, tasks):
+    def sample(self, tasks, signal):
         """Set the sampling rate for a list of nidaqmx tasks
 
         Args:
@@ -373,7 +373,7 @@ class DAQ:
             task.timing.cfg_samp_clk_timing(
                 3000,
                 sample_mode=AcquisitionType.FINITE,
-                samps_per_chan=len(self.stim_signal[0]),
+                samps_per_chan=len(signal),
             )
 
     def write(self, tasks, content):

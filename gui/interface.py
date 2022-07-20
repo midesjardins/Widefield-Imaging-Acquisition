@@ -1107,7 +1107,7 @@ class App(QWidget):
             int(self.framerate_cell.text()),
             int(self.exposure_cell.text()) / 1000,
         )
-        self.daq.close_all_lights()
+        self.daq.close_all_lights(self.ports)
         self.daq_generated = True
         self.enable_run(self.tree.check_global_validity())
 
