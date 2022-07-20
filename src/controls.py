@@ -138,6 +138,41 @@ class DAQ:
             None,
         )
 
+    def close_all_lights(self):
+        self.lights = [
+            Instrument(self.ports["infrared"], "ir"),
+            Instrument(self.ports["red"], "red"),
+            Instrument(self.ports["green"], "green"),
+            Instrument(self.ports["blue"], "blue")
+        ]
+
+        if WIDEFIELD_COMPUTER:
+            with nidaqmx.Task(new_task_name="lights") as l_task:
+                with nidaqmx.Task(new_task_name="a_stimuli") as s_task:
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                    l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
+                    for stimulus in self.stimuli:
+                        if "ao0" in stimulus.port or "ao1" in stimulus.port:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f"{self.name}/{stimulus.port}"
+                            )
+                        else:
+                            l_task.do_channels.add_do_chan(
+                                f"{self.name}/{stimulus.port}"
+                            )
+                    self.sample([s_task, l_task])
+                    s_task.write([[0, 0], [0, 0]])
+                    l_task.write([[False, False], [False, False], [False, False], [False, False], [False, False], [False, False]])
+                    self.start([s_task, l_task])
+
+        else:
+            time.sleep(2)
+            self.stop_signal = True
+            pass
+
+        self.lights = []
+
     def launch(self, name, time_values, stim_values):
         """Generate stimulation, light and camera signal and write them to the DAQ
 
