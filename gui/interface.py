@@ -1221,7 +1221,7 @@ class App(QWidget):
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
-        self.tree.graph(self.tree.currentItem())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def name_to_tree(self):
@@ -1274,7 +1274,7 @@ class App(QWidget):
         except Exception:
             pass
         try:
-            self.tree.graph(self.tree.currentItem())
+            self.tree.graph(self.tree.currentItem(), current=True)
             self.draw()
         except Exception:
             pass
@@ -1319,7 +1319,7 @@ class App(QWidget):
         self.tree.currentItem().setText(28, self.duty_cell3.text())
         self.tree.currentItem().setText(29, self.heigth_cell3.text())
         self.enable_run(self.tree.check_global_validity())
-        self.tree.graph(self.tree.currentItem())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def tree_to_signal(self):
@@ -1362,7 +1362,7 @@ class App(QWidget):
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
         self.enable_run(self.tree.check_global_validity())
-        self.tree.graph(self.tree.currentItem())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def tree_to_canal(self):
@@ -1452,7 +1452,7 @@ class App(QWidget):
             self.tree.currentItem().setText(30, str(self.third_canal_check.isChecked()))
             # self.pulses_cell2.setEnabled(self.second_canal_check.isChecked())
             self.enable_run(self.tree.check_global_validity())
-            self.tree.graph(self.tree.currentItem())
+            self.tree.graph(self.tree.currentItem(), current=True)
             self.draw()
 
     def enable_run(self, boolean):

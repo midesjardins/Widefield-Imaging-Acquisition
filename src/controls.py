@@ -46,6 +46,8 @@ class Camera(Instrument):
         self.video_running = False
         try:
             self.cam = IMAQ.IMAQCamera("img0")
+            self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto")
+            self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto")
             self.cam.setup_acquisition(nframes=100)
             self.cam.start_acquisition()
         except Exception as err:
