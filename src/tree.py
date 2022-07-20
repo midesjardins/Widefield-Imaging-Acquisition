@@ -28,11 +28,10 @@ class Tree(QTreeWidget):
         if self.currentItem():
             tree_item = QTreeWidgetItem()
             parent = self.selectedItems()[0].parent()
-            if parent:
-                index = parent.indexOfChild(self.selectedItems()[0])
-                parent.insertChild(index + 1, tree_item)
-            else:
-                self.addTopLevelItem(tree_item)
+            if not parent:
+                parent = self.invisibleRootItem()
+            index = parent.indexOfChild(self.selectedItems()[0])
+            parent.insertChild(index + 1, tree_item)
             self.set_defaults(tree_item)
 
     def add_child(self):

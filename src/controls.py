@@ -16,7 +16,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = True
+WIDEFIELD_COMPUTER = False
 
 
 class Instrument:

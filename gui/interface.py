@@ -1134,9 +1134,7 @@ class App(QWidget):
         """ Stop the experiment and reactivate the interface"""
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
-        self.deactivate_buttons(
-            [self.add_child_branch_button, self.tree.add_brother_branch_button]
-        )
+        self.tree.setCurrentItem(self.tree.topLevelItem(0))
         try:
             self.daq.stop_signal = True
         except Exception:
