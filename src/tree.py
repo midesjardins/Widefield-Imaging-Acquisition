@@ -136,7 +136,7 @@ class Tree(QTreeWidget):
         tree_item.setText(24, str(dictionary["pulses3"]))
         tree_item.setText(25, str(dictionary["jitter3"]))
         tree_item.setText(26, str(dictionary["width3"]))
-        tree_item.setText(29, str(dictionary["heigth3"]))
+        # tree_item.setText(29, str(dictionary["heigth3"]))
         tree_item.setText(27, str(dictionary["freq3"]))
         tree_item.setText(28, str(dictionary["duty3"]))
         tree_item.setText(18, str(dictionary["canal1"]))
@@ -477,7 +477,6 @@ class Tree(QTreeWidget):
                 item.text(23) == "square"
                 and item.text(27) != ""
                 and item.text(28) != ""
-                and item.text(29) != ""
             ):
                 pass
             elif (
@@ -568,7 +567,7 @@ class Tree(QTreeWidget):
                 duty = float(item.text(28)) / 100
             except Exception:
                 frequency, duty = 1, 0
-            return (sign_type, pulses, jitter, width, frequency, duty, 0)
+            return (sign_type, pulses, jitter, width, frequency, duty, 5)
 
     def set_icon(self, item, valid):
         """

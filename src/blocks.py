@@ -150,10 +150,11 @@ class Experiment:
         Args:
             extents (list): Positions of the ROI corners used for the experiment
         """
+        print("saving exeperiment")
         with open(f"{self.directory}/experiment-metadata.txt", "w") as file:
             file.write(
                 f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}"
-            )
+            ) 
 
         dictionary = {
             "Blocks": self.blocks.to_json(),
@@ -161,6 +162,7 @@ class Experiment:
             "Framerate": self.framerate,
             "Exposition": self.exposition,
             "Mouse ID": self.mouse_id,
+            "Dimensions": [round(extents[1])-round(extents[0]), round(extents[3])-round(extents[2])]
         }
 
         with open(f"{self.directory}/experiment-metadata.json", "w") as file:
