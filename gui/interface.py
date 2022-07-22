@@ -2,7 +2,7 @@ import sys
 import time
 import os
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import QModelIndex, Qt, QLocale
+from PyQt5.QtCore import QModelIndex, Qt, QLocale, qInstallMessageHandler
 import numpy as np
 from PyQt5.QtWidgets import (
     QVBoxLayout,
@@ -39,13 +39,16 @@ from src.calculations import (
     get_baseline_frame_indices,
     average_baseline,
 )
-from multiprocessing import Process
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 class App(QWidget):
     def __init__(self):
         """ Initialize the application """
         super().__init__()
+        qInstallMessageHandler(self.handler)
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         self.config = get_dictionary(os.path.join(self.cwd, "config.json"))
         self.ports = self.config["Ports"]
@@ -125,6 +128,9 @@ class App(QWidget):
         except Exception as err:
             pass
         #self.check_if_thread_is_alive()
+
+    def handler(*args, **kwargs):
+        pass
 
     def initUI(self):
         """ Initialize the user interface """
@@ -221,18 +227,6 @@ class App(QWidget):
         self.image_settings_main_window = QVBoxLayout()
         self.image_settings_main_window.setAlignment(Qt.AlignLeft)
         self.image_settings_main_window.setAlignment(Qt.AlignTop)
-
-        self.binning_window = QHBoxLayout()
-        self.binning_label = QLabel("Binning")
-        self.binning_window.addWidget(self.binning_label)
-        self.binning_combo = QComboBox()
-        self.binning_combo.addItem("1x1")
-        self.binning_combo.addItem("2x2")
-        self.binning_combo.addItem("4x4")
-        self.binning_combo.addItem("8x8")
-        self.binning_combo.currentIndexChanged.connect(self.set_binning)
-        self.binning_window.addWidget(self.binning_combo)
-        self.image_settings_main_window.addLayout(self.binning_window)
 
         self.image_settings_second_window = QHBoxLayout()
         self.ir_checkbox = QCheckBox("Infrared")
