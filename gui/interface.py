@@ -122,12 +122,14 @@ class App(QWidget):
         """ Stop all processes when closing the application """
         self.video_running = False
         try:
+            self.camera.stop_signal = True
+            self.camera.video_running = False
             self.daq.stop_signal = True
             self.daq.camera.cam.stop_acquisition()
             print("Program Closed")
         except Exception as err:
             pass
-        #self.check_if_thread_is_alive()
+        self.check_if_thread_is_alive()
 
     def handler(*args, **kwargs):
         pass
@@ -210,6 +212,12 @@ class App(QWidget):
         self.trigger_activated = False
         self.trigger_checkbox.stateChanged.connect(self.set_trigger)
         # self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+
+        self.save_config_button = QPushButton("Save Config")
+        self.save_config_button.setIcon(QIcon(os.path.join(self.cwd, "gui", "icons", "save.png")))
+        self.save_config_button.clicked.connect(self.save_config)
+        self.save_config_button.setEnabled(False)
+        self.experiment_settings_main_window.addWidget(self.save_config_button)
 
 
         self.experiment_settings_main_window.addStretch()
@@ -1004,6 +1012,21 @@ class App(QWidget):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
+    def save_config(self):
+        folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        if folder != "":
+            self.master_block = self.tree.create_blocks()
+            self.experiment = Experiment(
+                self.master_block,
+                int(self.framerate_cell.text()),
+                int(self.exposure_cell.text()),
+                self.mouse_id_cell.text(),
+                folder,
+                self.daq,
+                name=self.experiment_name_cell.text(), config=self.config
+            )
+            self.experiment.save_config([int(1024/self.config["Binning"]), int(1024/self.config["Binning"])])
+
     def run_stimulation(self):
         """ Run the stimulation in parallel with the lights"""
         self.experiment = Experiment(
@@ -1013,7 +1036,7 @@ class App(QWidget):
             self.mouse_id_cell.text(),
             self.directory_cell.text(),
             self.daq,
-            name=self.experiment_name_cell.text(),
+            name=self.experiment_name_cell.text(), config=self.config
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
@@ -1027,8 +1050,13 @@ class App(QWidget):
             and self.directory_save_files_checkbox.isChecked()
         ):
             try:
+                print("this is the extent")
+                print(self.roi_extent)
                 self.experiment.save(self.roi_extent)
-            except Exception:
+            except Exception as err:
+                print("err after saving first")
+                print(err)
+                print("err before entering")
                 self.experiment.save()
         self.stop()
 
@@ -1057,7 +1085,7 @@ class App(QWidget):
                 )
             except Exception as err:
                 pass
-            while self.camera.video_running is False:
+            while self.camera.video_running is False and not self.camera.stop_signal:
                 time.sleep(0.01)
                 pass
             while self.camera.video_running is True:
@@ -1569,10 +1597,12 @@ class App(QWidget):
         """ Enable the run button"""
         if not self.daq_generated:
             boolean = False
+        self.save_config_button.setEnabled(boolean)
         self.run_button.setEnabled(boolean)
 
     def disable_run(self):
         """ Disable the run button"""
+        self.save_config_button.setDisabled(True)
         self.run_button.setDisabled(True)
 
     def count_lights(self):

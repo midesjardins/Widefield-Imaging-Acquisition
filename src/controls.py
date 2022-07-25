@@ -54,6 +54,7 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames = []
         self.baseline_frames = []
+        self.stop_signal = False
         self.frames_read = 0
         self.video_running = False
         try:
@@ -146,13 +147,16 @@ class Camera(Instrument):
             extents (tuple): The positions of the corners used to resize the frames
                              Equal to None if original size is kept
         """
-        if extents:
-            self.frames = shrink_array(self.frames, extents)
-        if self.is_saving:
-            while self.is_saving:
-                pass
-        np.save(os.path.join(directory, "data",
-                             f"{self.file_index}.npy"), self.frames)
+        try:
+            if extents:
+                self.frames = shrink_array(self.frames, extents)
+            if self.is_saving:
+                while self.is_saving:
+                    pass
+                np.save(os.path.join(directory, "data",
+                                f"{self.file_index}.npy"), self.frames)
+        except Exception:
+            pass
 
 
 class DAQ:

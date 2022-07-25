@@ -9,5 +9,5 @@
     "analog1":"ao1",
     "co2": "port0/line5"},
 "Debug": false,
-"Binning": 1
+"Binning": 4
 }
