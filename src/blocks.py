@@ -166,8 +166,11 @@ class Experiment:
             print(err)
             print("*slicing failed")
             dimensions = [int(1024/self.config["Binning"]), int(1024/self.config["Binning"])]
+            print(dimensions)
         self.save_config(dimensions)
+        print("just saved config")
         self.daq.camera.save(self.directory, extents)
+        print("just saved camera")
         self.daq.save(self.directory)
 
     def save_config(self, dimensions):

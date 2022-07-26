@@ -357,7 +357,7 @@ class App(QWidget):
         self.live_preview_label = QLabel("Live Preview")
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(np.zeros((1024, 1024)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
+        self.plot_image = plt.imshow(np.zeros((int(1024/self.config["Binning"]), int(1024/self.config["Binning"]))), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
@@ -1231,27 +1231,6 @@ class App(QWidget):
         """ Change the light channel for the live preview"""
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
 
-    def set_binning(self):
-        try:
-            plt.figure(self.image_view.figure.number)
-            plt.ion()
-            binning_text = self.binning_combo.currentText()
-            if binning_text == "1x1":
-                self.plot_image = plt.imshow(np.zeros((1024, 1024)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
-                self.camera.set_binning(1)
-            elif binning_text == "2x2":
-                self.plot_image = plt.imshow(np.zeros((512, 512)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
-                self.camera.set_binning(2)
-            elif binning_text == "4x4":
-                self.plot_image = plt.imshow(np.zeros((256, 256)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
-                self.camera.set_binning(4)
-            elif binning_text == "8x8":
-                self.plot_image = plt.imshow(np.zeros((128, 128)), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
-                self.camera.set_binning(8)
-
-        except Exception as err:
-            print(err)
-            pass
     def open_daq_generation_thread(self):
         """ Open the thread for the DAQ generation"""
         self.daq_generation_thread = Thread(target=self.generate_daq)

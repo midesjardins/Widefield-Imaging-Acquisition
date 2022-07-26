@@ -25,7 +25,7 @@ logging.basicConfig(filename='app.log', filemode='a',
 
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = False
+WIDEFIELD_COMPUTER = True
 
 config = get_dictionary(os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "config.json"))
@@ -152,10 +152,14 @@ class Camera(Instrument):
                 self.frames = shrink_array(self.frames, extents)
             if self.is_saving:
                 while self.is_saving:
+                    print("is saving")
                     pass
-                np.save(os.path.join(directory, "data",
+            print(len(self.frames))
+            np.save(os.path.join(directory, "data",
                                 f"{self.file_index}.npy"), self.frames)
-        except Exception:
+        except Exception as err:
+            print("cam save err")
+            print(err)
             pass
 
 
