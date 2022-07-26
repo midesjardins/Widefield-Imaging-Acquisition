@@ -144,7 +144,13 @@ class App(QWidget):
             QIcon(os.path.join(self.cwd, "gui", "icons", "chart-line.png"))
         )
         self.make_time_course_button.clicked.connect(self.make_time_course)
-        self.grid_layout.addWidget(self.make_time_course_button, 2 ,1)
+        self.make_time_course_layout = QHBoxLayout()
+        self.make_time_course_layout.setAlignment(Qt.AlignLeft)
+        self.make_time_course_layout.setAlignment(Qt.AlignTop)
+        self.make_time_course_layout.addWidget(self.make_time_course_button)
+        self.make_time_course_container = QWidget()
+        self.make_time_course_container.setLayout(self.make_time_course_layout)
+        self.grid_layout.addWidget(self.make_time_course_container, 2 ,1)
 
    # -------
         self.slider_layout = QHBoxLayout()
@@ -258,11 +264,14 @@ class App(QWidget):
         self.open_import_thread()
 
     def initialize_plot(self):
-        self.image_view = PlotWindow()
+        try:
+            self.image_view
+        except Exception:
+            self.image_view = PlotWindow()
+            self.grid_layout.addWidget(self.image_view, 1, 0)
         self.plot_image = plt.imshow(np.zeros((self.dimensions[1], self.dimensions[0])), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
-        self.grid_layout.addWidget(self.image_view, 1, 0)
 
     def open_import_thread(self):
         """ Open the thread that will import the frames"""
@@ -320,8 +329,8 @@ class App(QWidget):
         """ Reset the ROI"""
         plt.figure(self.image_view.figure.number)
         plt.ion()
-        plt.xlim(0, 200)
-        plt.ylim(0, 200)
+        plt.xlim(0, self.dimensions[0])
+        plt.ylim(0, self.dimensions[1])
         self.roi_extent = None
         self.reset_roi_button.setEnabled(False)
         self.set_roi_button.setEnabled(True)
