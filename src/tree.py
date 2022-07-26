@@ -28,11 +28,10 @@ class Tree(QTreeWidget):
         if self.currentItem():
             tree_item = QTreeWidgetItem()
             parent = self.selectedItems()[0].parent()
-            if parent:
-                index = parent.indexOfChild(self.selectedItems()[0])
-                parent.insertChild(index + 1, tree_item)
-            else:
-                self.addTopLevelItem(tree_item)
+            if not parent:
+                parent = self.invisibleRootItem()
+            index = parent.indexOfChild(self.selectedItems()[0])
+            parent.insertChild(index + 1, tree_item)
             self.set_defaults(tree_item)
 
     def add_child(self):
@@ -143,7 +142,7 @@ class Tree(QTreeWidget):
         tree_item.setText(19, str(dictionary["canal2"]))
         tree_item.setText(30, str(dictionary["canal3"]))
 
-    def graph(self, item=None):
+    def graph(self, item=None, current=False):
         """
         Generate the x and y values for an item in the tree
 
@@ -151,7 +150,8 @@ class Tree(QTreeWidget):
             item (QTreeWidgetItem): The item to graph. Defaults to current item.
         """
         try:
-            if item == self.currentItem() or item == self.invisibleRootItem():
+            if item == self.invisibleRootItem() or current:
+                print("root")
                 self.elapsed_time = 0
                 self.x_values = []
                 self.stim1_values = []
@@ -182,7 +182,10 @@ class Tree(QTreeWidget):
                     self.stim2_values = np.concatenate((self.stim2_values, data))
                     self.stim3_values = np.concatenate((self.stim3_values, ddata))
             else:
+                print(item.text(0))
+                print(item.text(6))
                 duration = float(item.text(6))
+                # PROBLEMATIC
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
                 if item.text(18) == "True":
                     (
@@ -270,6 +273,8 @@ class Tree(QTreeWidget):
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
+            print("graph err")
+            print(err)
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []
@@ -556,12 +561,7 @@ class Tree(QTreeWidget):
 
         elif canal == 3:
             sign_type = item.text(23)
-            try:
-                pulses = int(item.text(23))
-                jitter = float(item.text(25))
-                width = float(item.text(26))
-            except Exception:
-                pulses, jitter, width = 0, 0, 0
+            pulses, jitter, width = 0, 0, 0
             try:
                 frequency = float(item.text(27))
                 duty = float(item.text(28)) / 100

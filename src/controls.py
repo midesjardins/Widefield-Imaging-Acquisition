@@ -61,8 +61,6 @@ class Camera(Instrument):
             self.set_binning(config["Binning"])
             self.cam = IMAQ.IMAQCamera("img0")
             self.set_window(config["Binning"])
-            #logging.warning(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_HEIGHT", 1024, kind="auto"))
-            #logging.warning(self.cam.set_grabber_attribute_value("IMG_ATTR_ACQWINDOW_WIDTH", 1024, kind="auto"))
             self.cam.setup_acquisition()
             self.cam.start_acquisition()
         except Exception as err:
@@ -188,6 +186,41 @@ class DAQ:
             None,
         )
 
+    def close_all_lights(self, ports):
+        self.lights = [
+            Instrument(ports["infrared"], "ir"),
+            Instrument(ports["red"], "red"),
+            Instrument(ports["green"], "green"),
+            Instrument(ports["blue"], "blue")
+        ]
+
+        if WIDEFIELD_COMPUTER:
+            with nidaqmx.Task(new_task_name="lights") as l_task:
+                with nidaqmx.Task(new_task_name="a_stimuli") as s_task:
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
+                    l_task.do_channels.add_do_chan(f"{self.name}/{self.camera.port}")
+                    for stimulus in self.stimuli:
+                        if "ao0" in stimulus.port or "ao1" in stimulus.port:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f"{self.name}/{stimulus.port}"
+                            )
+                        else:
+                            l_task.do_channels.add_do_chan(
+                                f"{self.name}/{stimulus.port}"
+                            )
+                    self.sample([s_task, l_task], [False, False])
+                    s_task.write([[0, 0], [0, 0]])
+                    l_task.write([[False, False], [False, False], [False, False], [False, False], [False, False], [False, False]])
+                    self.start([s_task, l_task])
+
+        else:
+            time.sleep(2)
+            self.stop_signal = True
+            pass
+
+        self.lights = []
+
     def launch(self, name, time_values, stim_values):
         """Generate stimulation, light and camera signal and write them to the DAQ
 
@@ -286,7 +319,7 @@ class DAQ:
                             )
                             null_lights.append([False, False])
                     self.camera.initialize(self)
-                    self.sample([s_task, l_task])
+                    self.sample([s_task, l_task], self.stim_signal[0])
                     if len(self.lights) > 0:
                         self.write(
                             [s_task, l_task], [self.stim_signal, self.allz_signals]
@@ -389,7 +422,7 @@ class DAQ:
         for task in tasks:
             task.wait_until_done(timeout=1.5 * len(self.time_values) / 3000)
 
-    def sample(self, tasks):
+    def sample(self, tasks, signal):
         """Set the sampling rate for a list of nidaqmx tasks
 
         Args:
@@ -399,7 +432,7 @@ class DAQ:
             task.timing.cfg_samp_clk_timing(
                 3000,
                 sample_mode=AcquisitionType.FINITE,
-                samps_per_chan=len(self.stim_signal[0]),
+                samps_per_chan=len(signal),
             )
 
     def write(self, tasks, content):
