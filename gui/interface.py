@@ -2,7 +2,7 @@ import sys
 import time
 import os
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import QModelIndex, Qt, QLocale
+from PyQt5.QtCore import QModelIndex, Qt, QLocale, qInstallMessageHandler
 import numpy as np
 from PyQt5.QtWidgets import (
     QVBoxLayout,
@@ -19,9 +19,11 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QApplication,
     QSlider,
-    QHeaderView
+    QHeaderView,
+    QDialog,
+    QWizard,
 )
-from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
+from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor, QPixmap
 from matplotlib.widgets import RectangleSelector
 from threading import Thread
 
@@ -37,13 +39,16 @@ from src.calculations import (
     get_baseline_frame_indices,
     average_baseline,
 )
-from multiprocessing import Process
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 class App(QWidget):
     def __init__(self):
         """ Initialize the application """
         super().__init__()
+        qInstallMessageHandler(self.handler)
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         self.config = get_dictionary(os.path.join(self.cwd, "config.json"))
         self.ports = self.config["Ports"]
@@ -58,18 +63,76 @@ class App(QWidget):
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
         self.onlyFramerate = QIntValidator(1, 57, self)
         self.onlyExposure = QIntValidator(1, 900, self)
+        self.start_container  = QWidget()
+        self.start_layout = QVBoxLayout()
+        self.start_container.setLayout(self.start_layout)
+        self.start_title = QLabel("Welcome to WideBrain!")
+        self.start_title.setFont(QFont("IBM Plex Sans", 20, QFont.Bold))
+        self.start_title.setAlignment(Qt.AlignCenter)
+        self.start_image = QLabel()
+        self.start_image.setPixmap(QPixmap(os.path.join(self.cwd, "assets", "logo-small.png")))
+        self.start_image.setAlignment(Qt.AlignCenter)
+        self.start_description = QLabel("Choose the type of experiment you want to run")
+        self.start_description.setFont(QFont("IBM Plex Sans", 14, QFont.Light))
+        self.start_description.setWordWrap(True)
+        self.start_description.setAlignment(Qt.AlignCenter)
+
+        self.trigger_mode_button = QPushButton("Start in Trigger Mode")
+        self.trigger_mode_button.setIcon(
+            QIcon(os.path.join(self.cwd, "gui", "icons", "bolt.png"))
+        )
+        self.trigger_mode_button.setFont(QFont("IBM Plex Sans", 15, QFont.Light))
+        self.trigger_mode_button.clicked.connect(self.start_in_trigger_mode)
+
+        self.acquisition_mode_button = QPushButton("Start in Acquisition Mode")
+        self.acquisition_mode_button.setIcon(
+            QIcon(os.path.join(self.cwd, "gui", "icons", "camera.png"))
+        )
+        self.acquisition_mode_button.setFont(QFont("IBM Plex Sans", 15, QFont.Light))
+        self.acquisition_mode_button.clicked.connect(self.start_in_acquisition_mode)
+
+        self.start_buttons = QHBoxLayout()
+        self.start_buttons.addWidget(self.trigger_mode_button)
+        self.start_buttons.addWidget(self.acquisition_mode_button)
+
+
+        self.start_layout.addWidget(self.start_title)
+        self.start_layout.addWidget(self.start_image)
+        self.start_layout.addWidget(self.start_description)
+        self.start_layout.addLayout(self.start_buttons)
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.addWidget(self.start_container, 0, 0)
+        
+        self.setLayout(self.grid_layout)
+        self.show()
+        #self.initUI()
+
+    def start_in_trigger_mode(self):
+        self.start_container.setParent(None)
+        self.acquisition_mode = False
         self.initUI()
 
+    def start_in_acquisition_mode(self):
+        self.start_container.setParent(None)
+        self.acquisition_mode = True
+        self.initUI()
+    
     def closeEvent(self, *args, **kwargs):
         """ Stop all processes when closing the application """
         self.video_running = False
         try:
+            self.camera.stop_signal = True
+            self.camera.video_running = False
             self.daq.stop_signal = True
             self.daq.camera.cam.stop_acquisition()
             print("Program Closed")
         except Exception as err:
             pass
         self.check_if_thread_is_alive()
+
+    def handler(*args, **kwargs):
+        pass
 
     def initUI(self):
         """ Initialize the user interface """
@@ -78,8 +141,8 @@ class App(QWidget):
         self.setWindowTitle(self.title)
         self.setGeometry(*self.dimensions)
 
-        self.grid_layout = QGridLayout()
-        self.setLayout(self.grid_layout)
+        #self.grid_layout = QGridLayout()
+        #self.setLayout(self.grid_layout)
         self.grid_layout.setAlignment(Qt.AlignTop)
 
         self.experiment_settings_label = QLabel("Experiment Settings")
@@ -101,6 +164,33 @@ class App(QWidget):
         self.mouse_id_window.addWidget(self.mouse_id_cell)
         self.experiment_settings_main_window.addLayout(self.mouse_id_window)
 
+        self.framerate_exposure_window = QHBoxLayout()
+        self.exposure_window = QHBoxLayout()
+        self.exposure_label = QLabel("Exposure (ms)")
+        self.exposure_window.addWidget(self.exposure_label)
+        self.exposure_cell = QLineEdit("10")
+        self.exposure_cell.setValidator(self.onlyExposure)
+        self.exposure_cell.textChanged.connect(self.verify_exposure)
+        self.exposure_window.addWidget(self.exposure_cell)
+        self.framerate_exposure_window.addLayout(self.exposure_window)
+        self.framerate_window = QHBoxLayout()
+        self.framerate_label = QLabel("Framerate")
+        self.framerate_window.addWidget(self.framerate_label)
+        self.framerate_cell = QLineEdit("30")
+        self.framerate_cell.setValidator(self.onlyFramerate)
+        self.framerate_cell.textChanged.connect(self.verify_exposure)
+        self.framerate_window.addWidget(self.framerate_cell)
+        self.framerate_exposure_window.addLayout(self.framerate_window)
+
+        if self.acquisition_mode:
+            self.experiment_settings_main_window.addLayout(self.framerate_exposure_window)
+
+        self.exposure_warning_label = QLabel("Invalid Exposure / Frame Rate")
+        if self.acquisition_mode:
+            self.experiment_settings_main_window.addWidget(self.exposure_warning_label)
+        self.exposure_warning_label.setStyleSheet("color: red")
+        self.exposure_warning_label.setHidden(True)
+
         self.directory_window = QHBoxLayout()
         self.directory_save_files_checkbox = QCheckBox()
         self.directory_save_files_checkbox.setText("Save")
@@ -121,42 +211,30 @@ class App(QWidget):
         self.trigger_checkbox = QCheckBox("Wait for Trigger")
         self.trigger_activated = False
         self.trigger_checkbox.stateChanged.connect(self.set_trigger)
-        self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+        # self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+
+        self.save_config_button = QPushButton("Save Config")
+        self.save_config_button.setIcon(QIcon(os.path.join(self.cwd, "gui", "icons", "save.png")))
+        self.save_config_button.clicked.connect(self.save_config)
+        self.save_config_button.setEnabled(False)
+        self.experiment_settings_main_window.addWidget(self.save_config_button)
+
 
         self.experiment_settings_main_window.addStretch()
 
-        self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+        if self.acquisition_mode:
+            self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+        else:
+            self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0, 1, 2)
 
         self.image_settings_label = QLabel("Image Settings")
         self.image_settings_label.setFont(QFont("IBM Plex Sans", 17))
-        self.grid_layout.addWidget(self.image_settings_label, 0, 1)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.image_settings_label, 0, 1)
 
         self.image_settings_main_window = QVBoxLayout()
         self.image_settings_main_window.setAlignment(Qt.AlignLeft)
         self.image_settings_main_window.setAlignment(Qt.AlignTop)
-
-        self.framerate_window = QHBoxLayout()
-        self.framerate_label = QLabel("Framerate")
-        self.framerate_window.addWidget(self.framerate_label)
-        self.framerate_cell = QLineEdit("30")
-        self.framerate_cell.setValidator(self.onlyFramerate)
-        self.framerate_cell.textChanged.connect(self.verify_exposure)
-        self.framerate_window.addWidget(self.framerate_cell)
-        self.image_settings_main_window.addLayout(self.framerate_window)
-
-        self.exposure_window = QHBoxLayout()
-        self.exposure_label = QLabel("Exposure (ms)")
-        self.exposure_window.addWidget(self.exposure_label)
-        self.exposure_cell = QLineEdit("10")
-        self.exposure_cell.setValidator(self.onlyExposure)
-        self.exposure_cell.textChanged.connect(self.verify_exposure)
-        self.exposure_window.addWidget(self.exposure_cell)
-        self.image_settings_main_window.addLayout(self.exposure_window)
-
-        self.exposure_warning_label = QLabel("Invalid Exposure / Frame Rate")
-        self.image_settings_main_window.addWidget(self.exposure_warning_label)
-        self.exposure_warning_label.setStyleSheet("color: red")
-        self.exposure_warning_label.setHidden(True)
 
         self.image_settings_second_window = QHBoxLayout()
         self.ir_checkbox = QCheckBox("Infrared")
@@ -181,11 +259,20 @@ class App(QWidget):
             self.change_preview_light_channel
         )
         self.light_channel_layout.addWidget(self.preview_light_combo)
-        self.activation_map_checkbox = QCheckBox("Show Activation Map")
+        #self.activation_map_checkbox = QCheckBox("Show Activation Map")
+        self.activation_map_window = QHBoxLayout()
+        self.activation_map_label = QLabel("Activation Map")
+        self.activation_map_window.addWidget(self.activation_map_label)
+        self.activation_map_combo = QComboBox()
+        self.activation_map_combo.addItem("None")
+        self.activation_map_combo.addItem("Normal")
+        self.activation_map_combo.addItem("Logarithmic")
+        self.activation_map_window.addWidget(self.activation_map_combo)
 
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         self.image_settings_main_window.addLayout(self.light_channel_layout)
-        self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+        #self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+        self.image_settings_main_window.addLayout(self.activation_map_window)
 
         self.roi_buttons = QStackedLayout()
 
@@ -235,10 +322,11 @@ class App(QWidget):
         self.roi_layout2_container = QWidget()
         self.roi_layout2_container.setLayout(self.roi_layout2)
 
-        self.roi_buttons.addWidget(self.roi_layout1_container)
-        self.roi_buttons.addWidget(self.roi_layout2_container)
 
-        self.image_settings_main_window.addLayout(self.roi_buttons)
+        if self.acquisition_mode:
+            self.roi_buttons.addWidget(self.roi_layout1_container)
+            self.roi_buttons.addWidget(self.roi_layout2_container)
+            self.image_settings_main_window.addLayout(self.roi_buttons)
 
         self.exposure_slider = QSlider(Qt.Horizontal, self)
         self.exposure_slider.setRange(0, 4096)
@@ -263,18 +351,19 @@ class App(QWidget):
 
         self.image_settings_main_window.addStretch()
 
-        self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
+        if self.acquisition_mode:
+            self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
         self.live_preview_label = QLabel("Live Preview")
         self.live_preview_label.setFont(QFont("IBM Plex Sans", 17))
-        self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, cmap="binary_r", vmin=0, vmax=4096, origin="lower")
+        self.plot_image = plt.imshow(np.zeros((int(1024/self.config["Binning"]), int(1024/self.config["Binning"]))), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
-        self.grid_layout.addWidget(self.live_preview_label, 0, 2)
-        self.grid_layout.addWidget(self.image_view, 1, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.live_preview_label, 0, 2)
+            self.grid_layout.addWidget(self.image_view, 1, 2)
 
         self.tree_label = QLabel("Stimulation Tree")
         self.tree_label.setFont(QFont("IBM Plex Sans", 17))
@@ -325,7 +414,6 @@ class App(QWidget):
             self.tree.setHeaderHidden(True)
             self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
             self.tree.header().setStretchLastSection(False)
-            self.tree.setColumnWidth(20, 40)
         self.tree.currentItemChanged.connect(self.actualize_window)
         self.tree_window.addWidget(self.tree)
 
@@ -433,7 +521,7 @@ class App(QWidget):
         self.stim_type_cell3.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window3 = QHBoxLayout()
         self.stimulation_type_window3.addWidget(self.third_canal_check)
-        self.stimulation_type_window3.addWidget(self.stim_type_cell3)
+        #self.stimulation_type_window3.addWidget(self.stim_type_cell3)
         self.canal_window.addLayout(self.stimulation_type_window3)
 
         self.different_signals_window3 = QStackedLayout()
@@ -458,7 +546,8 @@ class App(QWidget):
 
         self.baseline_checkbox = QCheckBox("Baseline")
         self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
-        self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
+        if self.acquisition_mode: 
+            self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
         self.stimulation_edit_layout.addLayout(self.canal_window)
 
         self.first_signal_type_window = QVBoxLayout()
@@ -677,7 +766,7 @@ class App(QWidget):
         self.second_signal_type_window2.addLayout(self.frequency_window2)
         self.second_signal_type_window2.addLayout(self.duty_window2)
 
-        self.second_signal_type_window3.addLayout(self.heigth_window3)
+        #self.second_signal_type_window3.addLayout(self.heigth_window3)
         self.second_signal_type_window3.addLayout(self.frequency_window3)
         self.second_signal_type_window3.addLayout(self.duty_window3)
 
@@ -770,7 +859,10 @@ class App(QWidget):
 
         self.signal_preview_label = QLabel("Signal Preview")
         self.signal_preview_label.setFont(QFont("IBM Plex Sans", 17))
-        self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+        else:
+            self.grid_layout.addWidget(self.signal_preview_label, 0, 2)
 
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton("Stop")
@@ -788,7 +880,10 @@ class App(QWidget):
         self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
         self.plot_window = PlotWindow(subplots=True)
-        self.grid_layout.addWidget(self.plot_window, 3, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.plot_window, 3, 2)
+        else:
+            self.grid_layout.addWidget(self.plot_window, 1, 2, 3, 1)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
         self.open_daq_generation_thread()
         self.initialize_buttons()
@@ -811,7 +906,7 @@ class App(QWidget):
 
     def set_trigger(self):
         """ Set the trigger for the DAQ"""
-        if self.trigger_checkbox.isChecked():
+        if not self.acquisition_mode:
             self.run_button.setText("Run at Trigger")
             self.daq.set_trigger(self.ports["trigger"])
         else:
@@ -846,10 +941,13 @@ class App(QWidget):
                 ],
             )
             self.draw(root=True)
-            self.actualize_daq()
-            self.open_live_saving_thread()
-            self.open_live_preview_thread()
-            self.open_baseline_check_thread()
+            if self.acquisition_mode:
+                self.actualize_daq()
+                self.open_live_saving_thread()
+                self.open_live_preview_thread()
+                self.open_baseline_check_thread()
+            else:
+                self.daq.stop_signal = False
             self.open_signal_preview_thread()
             self.open_start_experiment_thread()
 
@@ -923,6 +1021,21 @@ class App(QWidget):
         self.start_experiment_thread = Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
+    def save_config(self):
+        folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
+        if folder != "":
+            self.master_block = self.tree.create_blocks()
+            self.experiment = Experiment(
+                self.master_block,
+                int(self.framerate_cell.text()),
+                int(self.exposure_cell.text()),
+                self.mouse_id_cell.text(),
+                folder,
+                self.daq,
+                name=self.experiment_name_cell.text(), config=self.config
+            )
+            self.experiment.save_config([int(1024/self.config["Binning"]), int(1024/self.config["Binning"])])
+
     def run_stimulation(self):
         """ Run the stimulation in parallel with the lights"""
         self.experiment = Experiment(
@@ -932,18 +1045,27 @@ class App(QWidget):
             self.mouse_id_cell.text(),
             self.directory_cell.text(),
             self.daq,
-            name=self.experiment_name_cell.text(),
+            name=self.experiment_name_cell.text(), config=self.config
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+        #if (
+        #    not self.daq.stop_signal
+        #    and self.save_files_after_stop
+        #    and self.directory_save_files_checkbox.isChecked()
+        #):
         if (
-            not self.daq.stop_signal
-            and self.save_files_after_stop
+             self.save_files_after_stop
             and self.directory_save_files_checkbox.isChecked()
         ):
             try:
+                print("this is the extent")
+                print(self.roi_extent)
                 self.experiment.save(self.roi_extent)
-            except Exception:
+            except Exception as err:
+                print("err after saving first")
+                print(err)
+                print("err before entering")
                 self.experiment.save()
         self.stop()
 
@@ -972,7 +1094,7 @@ class App(QWidget):
                 )
             except Exception as err:
                 pass
-            while self.camera.video_running is False:
+            while self.camera.video_running is False and not self.camera.stop_signal:
                 time.sleep(0.01)
                 pass
             while self.camera.video_running is True:
@@ -1018,7 +1140,7 @@ class App(QWidget):
                     try:
                         if (
                             not self.camera.baseline_completed
-                            or not self.activation_map_checkbox.isChecked()
+                            or self.activation_map_combo.currentIndex() == 0
                         ):
                             self.plot_image.set(
                                 array=self.camera.frames[
@@ -1029,7 +1151,7 @@ class App(QWidget):
                                 clim=(0, self.max_exposure),
                                 cmap="binary_r",
                             )
-                        else:
+                        elif self.activation_map_combo.currentIndex() == 1:
                             start_index = (
                                 self.camera.baseline_read_list[0]
                                 + self.live_preview_light_index
@@ -1050,6 +1172,28 @@ class App(QWidget):
                             self.plot_image.set(
                                 array=activation_map, clim=(-self.max_exposure/200, self.max_exposure/200), cmap="seismic"
                             )
+                        else:
+                            start_index = (
+                                self.camera.baseline_read_list[0]
+                                + self.live_preview_light_index
+                            ) % len(self.daq.lights)
+                            activation_map = np.log((
+                                (
+                                    self.camera.baseline_frames[
+                                        start_index :: len(self.daq.lights)
+                                    ][-1]
+                                    - self.camera.average_baseline[
+                                        self.live_preview_light_index
+                                    ]
+                                )
+                                / self.camera.average_baseline[
+                                    self.live_preview_light_index
+                                ]
+                            ))
+                            self.plot_image.set(
+                                array=activation_map, clim=(-self.max_exposure/2000, self.max_exposure/2000), cmap="seismic"
+                            )
+
                     except Exception as err:
                         pass
                     time.sleep(0.04)
@@ -1068,14 +1212,18 @@ class App(QWidget):
     def actualize_progression(self):
         """ Actualize the position of the progress bar"""
         plt.ion()
+        print("actualizing progression")
         while self.daq.stop_signal is False:
             try:
-                position = self.camera.frames_read / int(self.framerate_cell.text())
+                if self.acquisition_mode:
+                    position = self.camera.frames_read / int(self.framerate_cell.text())
+                else:
+                    position = time.time() - self.daq.start_time
                 self.plot_window.vertical_lines[0].set_xdata(position)
                 self.plot_window.vertical_lines[1].set_xdata(position)
                 self.plot_window.vertical_lines[2].set_xdata(position)
                 time.sleep(0.5)
-            except Exception:
+            except Exception as err:
                 time.sleep(0.5)
                 pass
 
@@ -1315,7 +1463,7 @@ class App(QWidget):
         self.tree.currentItem().setText(26, self.width_cell3.text())
         self.tree.currentItem().setText(27, self.frequency_cell3.text())
         self.tree.currentItem().setText(28, self.duty_cell3.text())
-        self.tree.currentItem().setText(29, self.heigth_cell3.text())
+        # self.tree.currentItem().setText(29, self.heigth_cell3.text())
         self.enable_run(self.tree.check_global_validity())
         self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
@@ -1341,7 +1489,7 @@ class App(QWidget):
             self.width_cell3.setText(self.tree.currentItem().text(26))
             self.frequency_cell3.setText(self.tree.currentItem().text(27))
             self.duty_cell3.setText(self.tree.currentItem().text(28))
-            self.heigth_cell3.setText(self.tree.currentItem().text(29))
+            # self.heigth_cell3.setText(self.tree.currentItem().text(29))
         except Exception as err:
             pass
 
@@ -1457,10 +1605,12 @@ class App(QWidget):
         """ Enable the run button"""
         if not self.daq_generated:
             boolean = False
+        self.save_config_button.setEnabled(boolean)
         self.run_button.setEnabled(boolean)
 
     def disable_run(self):
         """ Disable the run button"""
+        self.save_config_button.setDisabled(True)
         self.run_button.setDisabled(True)
 
     def count_lights(self):

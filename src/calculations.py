@@ -3,27 +3,28 @@ import matplotlib.pyplot as plt
 import os
 import json
 import time
-import dask.array as da
 
 
 def shrink_array(array, extents):
     """Reduce the dimensions of frames to match ROI and return a list of frames
-    
+
     Args:
         array (array): Array of frames
         extents (list): List of extents to shrink the array to
-        
+
     Returns:
         array: Reduced array of frames
     """
+
     return np.array(array)[
-        :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
+        :, round(extents[2]): round(extents[3]), round(extents[0]): round(extents[1])
     ]
 
 
 def get_array(directory):
     """ Get array from NPY file """
     return np.array(np.load(directory))
+
 
 def get_dask_array(directory):
     """ Get dask array from NPY file """
@@ -60,41 +61,41 @@ def reduce_stack(stack, indices):
 
 
 def separate_images(lights, frames):
-    """ Separate images into different light channels 
-    
+    """ Separate images into different light channels
+
     Args:
         lights (list): List of lights
         frames (array): Array of frames
-        
+
     Returns:
         list: List of separated images"""
     separated_images = []
     for index in range(len(lights)):
-        separated_images.append(frames[index :: len(lights), :, :])
+        separated_images.append(frames[index:: len(lights), :, :])
     return separated_images
 
 
 def separate_vectors(lights, vector):
     """ Separate vectors into different light channels
-    
+
     Args:
         lights (list): List of lights
         vector (array): Vector containing the stimulation data
-    
+
     Returns:
         list: List of separated vectors"""
     separated_vectors = []
     for index in range(len(lights)):
-        separated_vectors.append(vector[:, index :: len(lights)])
+        separated_vectors.append(vector[:, index:: len(lights)])
     return separated_vectors
 
 
 def extract_from_path(path):
-    """ Extract lights, frames and vector files from a given path 
-    
+    """ Extract lights, frames and vector files from a given path
+
     Args:
         path (str): Path to the directory containing the files
-        
+
     Returns:
         tuple: Tuple containing the lights, frames and vector files
     """
@@ -110,12 +111,12 @@ def extract_from_path(path):
 
 
 def extend_light_signal(lights, camera):
-    """ Extend the light signal to be wider the camera signal 
-    
+    """ Extend the light signal to be wider the camera signal
+
     Args:
         lights (array): Array of light signals
         camera (array): Array of camera frames
-        
+
     Returns:
         array: Array of extended light signals
     """
@@ -129,7 +130,7 @@ def extend_light_signal(lights, camera):
         differential_indices = np.where(abs(dy) > 0)[0]
         new_signal = np.copy(signal)
         for index in differential_indices:
-            new_signal[index - extend : index + extend] = True
+            new_signal[index - extend: index + extend] = True
         signal_list.append(new_signal)
     return np.stack(signal_list)
 
@@ -148,13 +149,13 @@ def frames_acquired_from_camera_signal(camera_signal):
 
 
 def average_baseline(frame_list, light_count=1, start_index=0):
-    """ Average the baselines of a list of frames 
-    
+    """ Average the baselines of a list of frames
+
     Args:
         frame_list (list): List of frames
         light_count (int): Number of lights
         start_index (int): Light index of the first frame in list
-        
+
     Returns:
         list: List of averaged baselines"""
     try:
@@ -165,7 +166,7 @@ def average_baseline(frame_list, light_count=1, start_index=0):
                     np.array(
                         frame_list[
                             (light_count - start_index) % light_count
-                            + light_index :: light_count
+                            + light_index:: light_count
                         ]
                     ),
                     axis=0,
@@ -178,17 +179,18 @@ def average_baseline(frame_list, light_count=1, start_index=0):
 
 
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
-    """ Get the start/end baseline indices in terms of frames acquired 
-    
+    """ Get the start/end baseline indices in terms of frames acquired
+
     Args:
         baseline_indices (list of tuples): List of baseline indices tuples
         frames_acquired (list): List of frames acquired
-        
+
     Returns:
         list of tuples: List of start/end baseline indices in terms of frames acquired"""
     list_of_indices = []
     for index in baseline_indices:
-        list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
+        list_of_indices.append(
+            [frames_acquired[index[0]], frames_acquired[index[1]]])
     return list_of_indices
 
 
@@ -208,18 +210,18 @@ def timeit(method):
         return result
     return timed
 
+
 def get_timecourse(frames, start_index, end_index):
-    """ Get an array of the mean of each frame 
-    
+    """ Get an array of the mean of each frame
+
     Args:
         frames (array): Array of frames
         start_index (int): Start index of the timecourse
         end_index (int): End index of the timecourse
-        
+
     Returns:
         array: Array of the mean of each frame"""
-    
-    first_mean = np.mean(frames[start_index : end_index+1], axis=1)
+
+    first_mean = np.mean(frames[start_index: end_index + 1], axis=1)
     print(first_mean.shape)
     return np.mean(first_mean, axis=1)
-

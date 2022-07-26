@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class Stimulation:
@@ -123,7 +124,7 @@ class Block:
 
 class Experiment:
     def __init__(
-        self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name"
+        self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name", config=None
     ):
         """ Initialize the experiment object
 
@@ -136,13 +137,17 @@ class Experiment:
             daq (str): DAQ used for the experiment
             name (str): Name of the experiment
         """
-        self.name = name
-        self.blocks = blocks
-        self.framerate = framerate
-        self.exposition = exposition
-        self.mouse_id = mouse_id
-        self.directory = directory + f"/{name}"
-        self.daq = daq
+        try:
+            self.name = name
+            self.blocks = blocks
+            self.framerate = framerate
+            self.exposition = exposition
+            self.mouse_id = mouse_id
+            self.directory = directory + f"/{name}"
+            self.daq = daq
+            self.config = config
+        except Exception as err:
+            print(err)
 
     def save(self, extents=None):
         """ Save the experiment object to multiple files
@@ -150,21 +155,36 @@ class Experiment:
         Args:
             extents (list): Positions of the ROI corners used for the experiment
         """
+        print("saving exeperiment")
         with open(f"{self.directory}/experiment-metadata.txt", "w") as file:
             file.write(
                 f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}"
-            )
+            ) 
+        try:
+            dimensions = [round(extents[1])-round(extents[0]), round(extents[3])-round(extents[2])]
+        except Exception as err:
+            print(err)
+            print("*slicing failed")
+            dimensions = [int(1024/self.config["Binning"]), int(1024/self.config["Binning"])]
+            print(dimensions)
+        self.save_config(dimensions)
+        print("just saved config")
+        self.daq.camera.save(self.directory, extents)
+        print("just saved camera")
+        self.daq.save(self.directory)
 
+    def save_config(self, dimensions):
+        try:
+            os.mkdir(self.directory)
+        except Exception:
+            pass
         dictionary = {
-            "Blocks": self.blocks.to_json(),
-            "Lights": self.daq.return_lights(),
-            "Framerate": self.framerate,
-            "Exposition": self.exposition,
-            "Mouse ID": self.mouse_id,
+        "Blocks": self.blocks.to_json(),
+        "Lights": self.daq.return_lights(),
+        "Framerate": self.framerate,
+        "Exposition": self.exposition,
+        "Mouse ID": self.mouse_id,
+        "Dimensions": dimensions
         }
-
         with open(f"{self.directory}/experiment-metadata.json", "w") as file:
             json.dump(dictionary, file)
-
-        self.daq.camera.save(self.directory, extents)
-        self.daq.save(self.directory)
