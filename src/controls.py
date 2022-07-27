@@ -120,7 +120,6 @@ class Camera(Instrument):
             try:
                 self.cam.wait_for_frame(timeout=0.1)
                 new_frames = self.cam.read_multiple_images()
-                print(len(new_frames[0]), len(new_frames[0][0]))
                 self.frames += new_frames
                 self.video_running = True
                 if self.adding_frames:

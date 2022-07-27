@@ -1195,6 +1195,7 @@ class App(QWidget):
                             )
 
                     except Exception as err:
+                        print(err)
                         pass
                     time.sleep(0.04)
             except Exception as err:
@@ -1692,8 +1693,8 @@ class App(QWidget):
     def reset_roi(self):
         """ Reset the ROI"""
         plt.figure(self.image_view.figure.number)
-        plt.xlim(0, 1024)
-        plt.ylim(0, 1024)
+        plt.xlim(0, int(1024/self.config["Binning"]))
+        plt.ylim(0, int(1024/self.config["Binning"]))
         self.roi_extent = None
         self.reset_roi_button.setEnabled(False)
 
