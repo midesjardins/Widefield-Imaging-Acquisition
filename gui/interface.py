@@ -917,13 +917,28 @@ class App(QWidget):
         """ Import a configuration file"""
         file = QFileDialog.getOpenFileName()[0]
         try:
-            blocks = get_dictionary(file)["Blocks"]
-            self.tree.create_tree_item(blocks)
+            dictionary = get_dictionary(file)
+            self.framerate_cell.setText(str(dictionary["Framerate"]))
+            self.exposure_cell.setText(str(dictionary["Exposition"]))
+            self.set_lights(dictionary["Lights"])
+            self.tree.create_tree_item(dictionary["Blocks"])
             self.enable_run(self.tree.check_global_validity())
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
             print(err)
+
+    def set_lights(self, lights):
+        """ Set the lights"""
+        for light in lights:
+            if light == "infrared":
+                self.ir_checkbox.setChecked(True)
+            elif light == "red":
+                self.red_checkbox.setChecked(True)
+            elif light == "green":
+                self.green_checkbox.setChecked(True)
+            elif light == "blue":
+                self.fluorescence_checkbox.setChecked(True)
 
     def run(self):
         """ Run the experiment"""
