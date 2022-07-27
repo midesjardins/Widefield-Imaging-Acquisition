@@ -57,6 +57,12 @@ class App(QWidget):
         self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
+        self.slider_values = {
+            "Infrared": {"None": 4096, "Normal": 4096, "Logarithmic": 4096},
+            "Red": {"None": 4096, "Normal": 4096, "Logarithmic": 4096},
+            "Green": {"None": 4096, "Normal": 4096, "Logarithmic": 4096},
+            "Blue": {"None": 4096, "Normal": 4096, "Logarithmic": 4096},
+        }
         self.daq_generated = False
         self.onlyFloat = QDoubleValidator()
         self.onlyFloat.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))
@@ -267,6 +273,7 @@ class App(QWidget):
         self.activation_map_combo.addItem("None")
         self.activation_map_combo.addItem("Normal")
         self.activation_map_combo.addItem("Logarithmic")
+        self.activation_map_combo.currentIndexChanged.connect(self.adjust_slider)
         self.activation_map_window.addWidget(self.activation_map_combo)
 
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
@@ -903,6 +910,8 @@ class App(QWidget):
     def adjust_exposure(self):
         """ Match the exposure of the image preview to the slider value"""
         self.max_exposure = self.exposure_slider.value()
+        self.slider_values[self.preview_light_combo.currentText()][self.activation_map_combo.currentText()] = self.max_exposure
+        
 
     def set_trigger(self):
         """ Set the trigger for the DAQ"""
@@ -1246,6 +1255,14 @@ class App(QWidget):
     def change_preview_light_channel(self):
         """ Change the light channel for the live preview"""
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        self.adjust_slider()
+
+    def adjust_slider(self):
+        try:
+            value = self.slider_values[self.preview_light_combo.currentText()][self.activation_map_combo.currentText()]
+            self.exposure_slider.setValue(value)
+        except Exception:
+            pass
 
     def open_daq_generation_thread(self):
         """ Open the thread for the DAQ generation"""
