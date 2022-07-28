@@ -32,7 +32,7 @@
   <p align="center">
     A Python program to acquire widefield brain images using laser speckle, GCaMP fluorescence and intrinsic optical imaging.
     <br />
-    <a href="https://github.com/midesjardins/Widefield-Imaging-Acquisition"><strong>Explore the docs »</strong></a>
+    <a href="https://midesjardins.github.io/Widefield-Imaging-Acquisition/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
   </p>
