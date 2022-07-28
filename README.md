@@ -7,9 +7,15 @@
 *** https://www.markdownguide.org/basic-syntax/#reference-style-links
 -->
 <div align="center">
-![Last Commit][last-commit-shield]
-![Issues][issues-shield]
-![MIT License][license-shield]
+<a >
+    <img src=https://img.shields.io/github/last-commit/midesjardins/Widefield-Imaging-Acquisition?style=for-the-badge>
+  </a>
+<a>
+  <img src=https://img.shields.io/github/issues/midesjardins/Widefield-Imaging-Acquisition?style=for-the-badge>
+</a>
+<a>
+  <img src=https://img.shields.io/github/license/midesjardins/Widefield-Imaging-Acquisition?style=for-the-badge>
+</a>
 </div>
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -218,6 +224,3 @@ This project was made possible with the help of these open-source ressources:
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[license-shield]: https://img.shields.io/github/license/midesjardins/Widefield-Imaging-Acquisition?style=for-the-badge
-[issues-shield]: https://img.shields.io/github/issues/midesjardins/Widefield-Imaging-Acquisition?style=for-the-badge
-[last-commit-shield]: https://img.shields.io/github/last-commit/midesjardins/Widefield-Imaging-Acquisition?style=for-the-badge
