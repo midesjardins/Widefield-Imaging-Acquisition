@@ -29,7 +29,7 @@ class Stimulation:
         elif self.dico["type1"] == "square" and self.dico["canal1"]:
             return_value.append(
                 indent
-                + f"{self.dico['name']} - Channel 1 --- Duration: {self.dico['duration']}, Heigth: {self.dico['heigth']}, Frequency: {self.dico['freq']}, Duty: {self.dioc['duty']}"
+                + f"{self.dico['name']} - Channel 1 --- Duration: {self.dico['duration']}, Heigth: {self.dico['heigth']}, Frequency: {self.dico['freq']}, Duty: {self.dico['duty']}"
             )
         if self.dico["type2"] == "random-square" and self.dico["canal2"]:
             return_value.append(
