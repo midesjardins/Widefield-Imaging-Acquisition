@@ -1242,9 +1242,6 @@ class App(QWidget):
                                         self.camera.baseline_frames[
                                             start_index :: len(self.daq.lights)
                                         ][-1]
-                                        - self.camera.average_baseline[
-                                            self.live_preview_light_index
-                                        ]
                                     )
                                     / self.camera.average_baseline[
                                         self.live_preview_light_index
