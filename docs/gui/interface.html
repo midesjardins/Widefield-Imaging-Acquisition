@@ -30,7 +30,7 @@
 import time
 import os
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import Qt, QLocale
+from PyQt5.QtCore import QModelIndex, Qt, QLocale, qInstallMessageHandler
 import numpy as np
 from PyQt5.QtWidgets import (
     QVBoxLayout,
@@ -47,8 +47,19 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QApplication,
     QSlider,
+    QHeaderView,
+    QDialog,
+    QWizard,
 )
-from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
+from PyQt5.QtGui import (
+    QIntValidator,
+    QDoubleValidator,
+    QFont,
+    QIcon,
+    QBrush,
+    QColor,
+    QPixmap,
+)
 from matplotlib.widgets import RectangleSelector
 from threading import Thread
 
@@ -64,48 +75,119 @@ from src.calculations import (
     get_baseline_frame_indices,
     average_baseline,
 )
+import warnings
+
+warnings.filterwarnings(&#34;ignore&#34;)
 
 
 class App(QWidget):
     def __init__(self):
-        &#34;&#34;&#34; Initialize the application &#34;&#34;&#34;
+        &#34;&#34;&#34;Initialize the application&#34;&#34;&#34;
         super().__init__()
+        qInstallMessageHandler(self.handler)
         self.cwd = os.path.dirname(os.path.dirname(__file__))
-        self.ports = get_dictionary(os.path.join(self.cwd, &#34;config.json&#34;))[&#34;Ports&#34;]
-        self.baseline_values = []
+        self.config = get_dictionary(os.path.join(self.cwd, &#34;config.json&#34;))
+        self.ports = self.config[&#34;Ports&#34;]
         self.elapsed_time = 0
         self.files_saved = False
         self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
+        self.slider_values = {
+            &#34;Infrared&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+            &#34;Red&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+            &#34;Green&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+            &#34;Blue&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+        }
+        self.daq_generated = False
         self.onlyFloat = QDoubleValidator()
         self.onlyFloat.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
         self.onlyFramerate = QIntValidator(1, 57, self)
         self.onlyExposure = QIntValidator(1, 900, self)
+        self.start_container = QWidget()
+        self.start_layout = QVBoxLayout()
+        self.start_container.setLayout(self.start_layout)
+        self.start_title = QLabel(&#34;Welcome to WideBrain!&#34;)
+        self.start_title.setFont(QFont(&#34;IBM Plex Sans&#34;, 20, QFont.Bold))
+        self.start_title.setAlignment(Qt.AlignCenter)
+        self.start_image = QLabel()
+        self.start_image.setPixmap(
+            QPixmap(os.path.join(self.cwd, &#34;assets&#34;, &#34;logo-small.png&#34;))
+        )
+        self.start_image.setAlignment(Qt.AlignCenter)
+        self.start_description = QLabel(&#34;Choose the type of experiment you want to run&#34;)
+        self.start_description.setFont(QFont(&#34;IBM Plex Sans&#34;, 14, QFont.Light))
+        self.start_description.setWordWrap(True)
+        self.start_description.setAlignment(Qt.AlignCenter)
+
+        self.trigger_mode_button = QPushButton(&#34;Start in Trigger Mode&#34;)
+        self.trigger_mode_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;bolt.png&#34;))
+        )
+        self.trigger_mode_button.setFont(QFont(&#34;IBM Plex Sans&#34;, 15, QFont.Light))
+        self.trigger_mode_button.clicked.connect(self.start_in_trigger_mode)
+
+        self.acquisition_mode_button = QPushButton(&#34;Start in Acquisition Mode&#34;)
+        self.acquisition_mode_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;camera.png&#34;))
+        )
+        self.acquisition_mode_button.setFont(QFont(&#34;IBM Plex Sans&#34;, 15, QFont.Light))
+        self.acquisition_mode_button.clicked.connect(self.start_in_acquisition_mode)
+
+        self.start_buttons = QHBoxLayout()
+        self.start_buttons.addWidget(self.trigger_mode_button)
+        self.start_buttons.addWidget(self.acquisition_mode_button)
+
+        self.start_layout.addWidget(self.start_title)
+        self.start_layout.addWidget(self.start_image)
+        self.start_layout.addWidget(self.start_description)
+        self.start_layout.addLayout(self.start_buttons)
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.addWidget(self.start_container, 0, 0)
+
+        self.setLayout(self.grid_layout)
+        self.show()
+
+    def start_in_trigger_mode(self):
+        &#34;&#34;&#34;Initialize the interface in trigger mode&#34;&#34;&#34;
+        self.start_container.setParent(None)
+        self.acquisition_mode = False
+        self.initUI()
+
+    def start_in_acquisition_mode(self):
+        &#34;&#34;&#34;Initialize the interface in acquisition mode&#34;&#34;&#34;
+        self.start_container.setParent(None)
+        self.acquisition_mode = True
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
-        &#34;&#34;&#34; Stop all processes when closing the application &#34;&#34;&#34;
+        &#34;&#34;&#34;Stop all processes when closing the application&#34;&#34;&#34;
         self.video_running = False
         try:
+            self.camera.stop_signal = True
+            self.camera.video_running = False
             self.daq.stop_signal = True
             self.daq.camera.cam.stop_acquisition()
-            print(&#34;Closed&#34;)
+            print(&#34;Program Closed&#34;)
         except Exception as err:
-            print(err)
             pass
         self.check_if_thread_is_alive()
 
+    def handler(*args, **kwargs):
+        &#34;&#34;&#34;Ignore Qt messages&#34;&#34;&#34;
+        pass
+
     def initUI(self):
-        &#34;&#34;&#34; Initialize the user interface &#34;&#34;&#34;
+        &#34;&#34;&#34;Initialize the user interface&#34;&#34;&#34;
         self.title = &#34;Widefield Imaging Aquisition&#34;
         self.dimensions = (10, 10, 640, 480)
         self.setWindowTitle(self.title)
         self.setGeometry(*self.dimensions)
 
-        self.grid_layout = QGridLayout()
-        self.setLayout(self.grid_layout)
+        # self.grid_layout = QGridLayout()
+        # self.setLayout(self.grid_layout)
         self.grid_layout.setAlignment(Qt.AlignTop)
 
         self.experiment_settings_label = QLabel(&#34;Experiment Settings&#34;)
@@ -127,6 +209,35 @@ class App(QWidget):
         self.mouse_id_window.addWidget(self.mouse_id_cell)
         self.experiment_settings_main_window.addLayout(self.mouse_id_window)
 
+        self.framerate_exposure_window = QHBoxLayout()
+        self.exposure_window = QHBoxLayout()
+        self.exposure_label = QLabel(&#34;Exposure (ms)&#34;)
+        self.exposure_window.addWidget(self.exposure_label)
+        self.exposure_cell = QLineEdit(&#34;10&#34;)
+        self.exposure_cell.setValidator(self.onlyExposure)
+        self.exposure_cell.textChanged.connect(self.verify_exposure)
+        self.exposure_window.addWidget(self.exposure_cell)
+        self.framerate_exposure_window.addLayout(self.exposure_window)
+        self.framerate_window = QHBoxLayout()
+        self.framerate_label = QLabel(&#34;Framerate&#34;)
+        self.framerate_window.addWidget(self.framerate_label)
+        self.framerate_cell = QLineEdit(&#34;30&#34;)
+        self.framerate_cell.setValidator(self.onlyFramerate)
+        self.framerate_cell.textChanged.connect(self.verify_exposure)
+        self.framerate_window.addWidget(self.framerate_cell)
+        self.framerate_exposure_window.addLayout(self.framerate_window)
+
+        if self.acquisition_mode:
+            self.experiment_settings_main_window.addLayout(
+                self.framerate_exposure_window
+            )
+
+        self.exposure_warning_label = QLabel(&#34;Invalid Exposure / Frame Rate&#34;)
+        if self.acquisition_mode:
+            self.experiment_settings_main_window.addWidget(self.exposure_warning_label)
+        self.exposure_warning_label.setStyleSheet(&#34;color: red&#34;)
+        self.exposure_warning_label.setHidden(True)
+
         self.directory_window = QHBoxLayout()
         self.directory_save_files_checkbox = QCheckBox()
         self.directory_save_files_checkbox.setText(&#34;Save&#34;)
@@ -147,42 +258,31 @@ class App(QWidget):
         self.trigger_checkbox = QCheckBox(&#34;Wait for Trigger&#34;)
         self.trigger_activated = False
         self.trigger_checkbox.stateChanged.connect(self.set_trigger)
-        self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+        # self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+
+        self.save_config_button = QPushButton(&#34;Save Config&#34;)
+        self.save_config_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;save.png&#34;))
+        )
+        self.save_config_button.clicked.connect(self.save_config)
+        self.save_config_button.setEnabled(False)
+        self.experiment_settings_main_window.addWidget(self.save_config_button)
 
         self.experiment_settings_main_window.addStretch()
 
-        self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+        if self.acquisition_mode:
+            self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+        else:
+            self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0, 1, 2)
 
         self.image_settings_label = QLabel(&#34;Image Settings&#34;)
         self.image_settings_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-        self.grid_layout.addWidget(self.image_settings_label, 0, 1)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.image_settings_label, 0, 1)
 
         self.image_settings_main_window = QVBoxLayout()
         self.image_settings_main_window.setAlignment(Qt.AlignLeft)
         self.image_settings_main_window.setAlignment(Qt.AlignTop)
-
-        self.framerate_window = QHBoxLayout()
-        self.framerate_label = QLabel(&#34;Framerate&#34;)
-        self.framerate_window.addWidget(self.framerate_label)
-        self.framerate_cell = QLineEdit(&#34;30&#34;)
-        self.framerate_cell.setValidator(self.onlyFramerate)
-        self.framerate_cell.textChanged.connect(self.verify_exposure)
-        self.framerate_window.addWidget(self.framerate_cell)
-        self.image_settings_main_window.addLayout(self.framerate_window)
-
-        self.exposure_window = QHBoxLayout()
-        self.exposure_label = QLabel(&#34;Exposure (ms)&#34;)
-        self.exposure_window.addWidget(self.exposure_label)
-        self.exposure_cell = QLineEdit(&#34;10&#34;)
-        self.exposure_cell.setValidator(self.onlyExposure)
-        self.exposure_cell.textChanged.connect(self.verify_exposure)
-        self.exposure_window.addWidget(self.exposure_cell)
-        self.image_settings_main_window.addLayout(self.exposure_window)
-
-        self.exposure_warning_label = QLabel(&#34;Invalid Exposure / Frame Rate&#34;)
-        self.image_settings_main_window.addWidget(self.exposure_warning_label)
-        self.exposure_warning_label.setStyleSheet(&#34;color: red&#34;)
-        self.exposure_warning_label.setHidden(True)
 
         self.image_settings_second_window = QHBoxLayout()
         self.ir_checkbox = QCheckBox(&#34;Infrared&#34;)
@@ -207,11 +307,21 @@ class App(QWidget):
             self.change_preview_light_channel
         )
         self.light_channel_layout.addWidget(self.preview_light_combo)
-        self.activation_map_checkbox = QCheckBox(&#34;Show Activation Map&#34;)
+        # self.activation_map_checkbox = QCheckBox(&#34;Show Activation Map&#34;)
+        self.activation_map_window = QHBoxLayout()
+        self.activation_map_label = QLabel(&#34;Activation Map&#34;)
+        self.activation_map_window.addWidget(self.activation_map_label)
+        self.activation_map_combo = QComboBox()
+        self.activation_map_combo.addItem(&#34;None&#34;)
+        self.activation_map_combo.addItem(&#34;Normal&#34;)
+        self.activation_map_combo.addItem(&#34;Logarithmic&#34;)
+        self.activation_map_combo.currentIndexChanged.connect(self.adjust_slider)
+        self.activation_map_window.addWidget(self.activation_map_combo)
 
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         self.image_settings_main_window.addLayout(self.light_channel_layout)
-        self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+        # self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+        self.image_settings_main_window.addLayout(self.activation_map_window)
 
         self.roi_buttons = QStackedLayout()
 
@@ -261,10 +371,10 @@ class App(QWidget):
         self.roi_layout2_container = QWidget()
         self.roi_layout2_container.setLayout(self.roi_layout2)
 
-        self.roi_buttons.addWidget(self.roi_layout1_container)
-        self.roi_buttons.addWidget(self.roi_layout2_container)
-
-        self.image_settings_main_window.addLayout(self.roi_buttons)
+        if self.acquisition_mode:
+            self.roi_buttons.addWidget(self.roi_layout1_container)
+            self.roi_buttons.addWidget(self.roi_layout2_container)
+            self.image_settings_main_window.addLayout(self.roi_buttons)
 
         self.exposure_slider = QSlider(Qt.Horizontal, self)
         self.exposure_slider.setRange(0, 4096)
@@ -289,18 +399,27 @@ class App(QWidget):
 
         self.image_settings_main_window.addStretch()
 
-        self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
+        if self.acquisition_mode:
+            self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
         self.live_preview_label = QLabel(&#34;Live Preview&#34;)
         self.live_preview_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-        self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, cmap=&#34;binary_r&#34;, vmin=0, vmax=4096)
+        self.plot_image = plt.imshow(
+            np.zeros(
+                (int(1024 / self.config[&#34;Binning&#34;]), int(1024 / self.config[&#34;Binning&#34;]))
+            ),
+            cmap=&#34;binary_r&#34;,
+            vmin=0,
+            vmax=4096,
+            origin=&#34;lower&#34;,
+        )
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
-        self.grid_layout.addWidget(self.live_preview_label, 0, 2)
-        self.grid_layout.addWidget(self.image_view, 1, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.live_preview_label, 0, 2)
+            self.grid_layout.addWidget(self.image_view, 1, 2)
 
         self.tree_label = QLabel(&#34;Stimulation Tree&#34;)
         self.tree_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
@@ -308,7 +427,6 @@ class App(QWidget):
 
         self.tree_window = QVBoxLayout()
         self.tree = Tree()
-        self.tree.set_app(self)
         self.tree.setHeaderLabels(
             [
                 &#34;0 Name&#34;,
@@ -344,13 +462,14 @@ class App(QWidget):
                 &#34;30 Canal 3&#34;,
             ]
         )
-        for i in range(1, 20):
-            self.tree.header().hideSection(i)
-        for i in range(21, 31):
-            self.tree.header().hideSection(i)
-        self.tree.setHeaderHidden(True)
-        self.tree.setColumnWidth(0, 330)
-        self.tree.setColumnWidth(20, 20)
+        if not self.config[&#34;Debug&#34;]:
+            for i in range(1, 20):
+                self.tree.header().hideSection(i)
+            for i in range(21, 31):
+                self.tree.header().hideSection(i)
+            self.tree.setHeaderHidden(True)
+            self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.tree.header().setStretchLastSection(False)
         self.tree.currentItemChanged.connect(self.actualize_window)
         self.tree_window.addWidget(self.tree)
 
@@ -363,12 +482,12 @@ class App(QWidget):
         )
         self.delete_item_button.clicked.connect(self.tree.delete_item)
         self.tree_second_window.addWidget(self.delete_item_button)
-        self.tree.add_brother_branch_button = QPushButton(&#34;Add Sibling&#34;)
-        self.tree.add_brother_branch_button.clicked.connect(self.tree.add_brother)
-        self.tree.add_brother_branch_button.setIcon(
+        self.add_brother_branch_button = QPushButton(&#34;Add Sibling&#34;)
+        self.add_brother_branch_button.clicked.connect(self.tree.add_brother)
+        self.add_brother_branch_button.setIcon(
             QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;arrow-bar-down.png&#34;))
         )
-        self.tree_second_window.addWidget(self.tree.add_brother_branch_button)
+        self.tree_second_window.addWidget(self.add_brother_branch_button)
         self.add_child_branch_button = QPushButton(&#34;Add Child&#34;)
         self.add_child_branch_button.clicked.connect(self.tree.add_child)
         self.add_child_branch_button.setIcon(
@@ -458,7 +577,7 @@ class App(QWidget):
         self.stim_type_cell3.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window3 = QHBoxLayout()
         self.stimulation_type_window3.addWidget(self.third_canal_check)
-        self.stimulation_type_window3.addWidget(self.stim_type_cell3)
+        # self.stimulation_type_window3.addWidget(self.stim_type_cell3)
         self.canal_window.addLayout(self.stimulation_type_window3)
 
         self.different_signals_window3 = QStackedLayout()
@@ -483,7 +602,8 @@ class App(QWidget):
 
         self.baseline_checkbox = QCheckBox(&#34;Baseline&#34;)
         self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
-        self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
+        if self.acquisition_mode:
+            self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
         self.stimulation_edit_layout.addLayout(self.canal_window)
 
         self.first_signal_type_window = QVBoxLayout()
@@ -702,7 +822,7 @@ class App(QWidget):
         self.second_signal_type_window2.addLayout(self.frequency_window2)
         self.second_signal_type_window2.addLayout(self.duty_window2)
 
-        self.second_signal_type_window3.addLayout(self.heigth_window3)
+        # self.second_signal_type_window3.addLayout(self.heigth_window3)
         self.second_signal_type_window3.addLayout(self.frequency_window3)
         self.second_signal_type_window3.addLayout(self.duty_window3)
 
@@ -795,7 +915,10 @@ class App(QWidget):
 
         self.signal_preview_label = QLabel(&#34;Signal Preview&#34;)
         self.signal_preview_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-        self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+        else:
+            self.grid_layout.addWidget(self.signal_preview_label, 0, 2)
 
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton(&#34;Stop&#34;)
@@ -813,30 +936,42 @@ class App(QWidget):
         self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
         self.plot_window = PlotWindow(subplots=True)
-        self.grid_layout.addWidget(self.plot_window, 3, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.plot_window, 3, 2)
+        else:
+            self.grid_layout.addWidget(self.plot_window, 1, 2, 3, 1)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
 
     def deactivate_channels(self):
-        &#34;&#34;&#34; Deactivate canal checkboxes if the baseline checkbox is checked&#34;&#34;&#34;
+        &#34;&#34;&#34;Deactivate canal checkboxes if the baseline checkbox is checked&#34;&#34;&#34;
         if self.baseline_checkbox.isChecked():
             self.deactivate_buttons(
-                [self.first_canal_check, self.second_canal_check,]
+                [
+                    self.first_canal_check,
+                    self.second_canal_check,
+                ]
             )
         else:
             self.activate_buttons(
-                [self.first_canal_check, self.second_canal_check,]
+                [
+                    self.first_canal_check,
+                    self.second_canal_check,
+                ]
             )
 
     def adjust_exposure(self):
-        &#34;&#34;&#34; Match the exposure of the image preview to the slider value&#34;&#34;&#34;
+        &#34;&#34;&#34;Match the exposure of the image preview to the slider value&#34;&#34;&#34;
         self.max_exposure = self.exposure_slider.value()
+        self.slider_values[self.preview_light_combo.currentText()][
+            self.activation_map_combo.currentText()
+        ] = self.max_exposure
 
     def set_trigger(self):
-        &#34;&#34;&#34; Set the trigger for the DAQ&#34;&#34;&#34;
-        if self.trigger_checkbox.isChecked():
+        &#34;&#34;&#34;Set the trigger for the DAQ&#34;&#34;&#34;
+        if not self.acquisition_mode:
             self.run_button.setText(&#34;Run at Trigger&#34;)
             self.daq.set_trigger(self.ports[&#34;trigger&#34;])
         else:
@@ -844,22 +979,38 @@ class App(QWidget):
             self.daq.remove_trigger()
 
     def import_config(self):
-        &#34;&#34;&#34; Import a configuration file&#34;&#34;&#34;
+        &#34;&#34;&#34;Import a configuration file&#34;&#34;&#34;
         file = QFileDialog.getOpenFileName()[0]
         try:
-            blocks = get_dictionary(file)[&#34;Blocks&#34;]
-            self.tree.create_tree_item(blocks)
-            self.tree.check_global_validity()
+            dictionary = get_dictionary(file)
+            self.framerate_cell.setText(str(dictionary[&#34;Framerate&#34;]))
+            self.exposure_cell.setText(str(dictionary[&#34;Exposition&#34;]))
+            self.set_lights(dictionary[&#34;Lights&#34;])
+            self.tree.create_tree_item(dictionary[&#34;Blocks&#34;])
+            self.enable_run(self.tree.check_global_validity())
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
             print(err)
 
+    def set_lights(self, lights):
+        &#34;&#34;&#34;Set the lights&#34;&#34;&#34;
+        for light in lights:
+            if light == &#34;infrared&#34;:
+                self.ir_checkbox.setChecked(True)
+            elif light == &#34;red&#34;:
+                self.red_checkbox.setChecked(True)
+            elif light == &#34;green&#34;:
+                self.green_checkbox.setChecked(True)
+            elif light == &#34;blue&#34;:
+                self.fluorescence_checkbox.setChecked(True)
+
     def run(self):
-        &#34;&#34;&#34; Run the experiment&#34;&#34;&#34;
+        &#34;&#34;&#34;Run the experiment&#34;&#34;&#34;
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.tree.create_blocks()
+            self.tree.baseline_values = []
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.x_values,
@@ -870,15 +1021,18 @@ class App(QWidget):
                 ],
             )
             self.draw(root=True)
-            self.actualize_daq()
-            self.open_live_saving_thread()
-            self.open_live_preview_thread()
-            self.open_baseline_check_thread()
+            if self.acquisition_mode:
+                self.actualize_daq()
+                self.open_live_saving_thread()
+                self.open_live_preview_thread()
+                self.open_baseline_check_thread()
+            else:
+                self.daq.stop_signal = False
             self.open_signal_preview_thread()
             self.open_start_experiment_thread()
 
     def check_override(self):
-        &#34;&#34;&#34; Check if experiment with the same name already exists&#34;&#34;&#34;
+        &#34;&#34;&#34;Check if experiment with the same name already exists&#34;&#34;&#34;
         if os.path.isfile(
             os.path.join(
                 self.directory_cell.text(),
@@ -899,12 +1053,12 @@ class App(QWidget):
             return True
 
     def open_baseline_check_thread(self):
-        &#34;&#34;&#34; Open the thread for the baseline check&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the baseline check&#34;&#34;&#34;
         self.baseline_check_thread = Thread(target=self.check_baseline)
         self.baseline_check_thread.start()
 
     def check_baseline(self):
-        &#34;&#34;&#34; Monitor the incoming frames and check if the baseline is reached&#34;&#34;&#34;
+        &#34;&#34;&#34;Monitor the incoming frames and check if the baseline is reached&#34;&#34;&#34;
         if len(self.daq.lights) &gt; 0:
             self.camera.baseline_data = []
             self.camera.adding_frames = False
@@ -913,9 +1067,8 @@ class App(QWidget):
                 pass
             frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
             baseline_indices = get_baseline_frame_indices(
-                self.baseline_values, frames_acquired
+                self.tree.baseline_values, frames_acquired
             )
-            print(baseline_indices)
             for baseline_pair in baseline_indices:
                 while not self.daq.stop_signal:
                     try:
@@ -928,7 +1081,6 @@ class App(QWidget):
                             self.camera.adding_frames
                             and self.camera.frames_read &gt;= baseline_pair[1]
                         ):
-                            print(&#34;about to average&#34;)
                             self.camera.baseline_read_list = []
                             self.camera.average_baseline = average_baseline(
                                 self.camera.baseline_data,
@@ -941,17 +1093,35 @@ class App(QWidget):
                             self.camera.frames_read_list = []
                             break
                     except Exception as err:
-                        print(err)
                         pass
                     time.sleep(0.01)
 
     def open_start_experiment_thread(self):
-        &#34;&#34;&#34; Open the thread for the start of the experiment&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the start of the experiment&#34;&#34;&#34;
         self.start_experiment_thread = Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
+    def save_config(self):
+        &#34;&#34;&#34;Save the current configuration to a JSON file&#34;&#34;&#34;
+        folder = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
+        if folder != &#34;&#34;:
+            self.master_block = self.tree.create_blocks()
+            self.experiment = Experiment(
+                self.master_block,
+                int(self.framerate_cell.text()),
+                int(self.exposure_cell.text()),
+                self.mouse_id_cell.text(),
+                folder,
+                self.daq,
+                name=self.experiment_name_cell.text(),
+                config=self.config,
+            )
+            self.experiment.save_config(
+                [int(1024 / self.config[&#34;Binning&#34;]), int(1024 / self.config[&#34;Binning&#34;])]
+            )
+
     def run_stimulation(self):
-        &#34;&#34;&#34; Run the stimulation in parallel with the lights&#34;&#34;&#34;
+        &#34;&#34;&#34;Run the stimulation in parallel with the lights&#34;&#34;&#34;
         self.experiment = Experiment(
             self.master_block,
             int(self.framerate_cell.text()),
@@ -960,27 +1130,37 @@ class App(QWidget):
             self.directory_cell.text(),
             self.daq,
             name=self.experiment_name_cell.text(),
+            config=self.config,
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+        # if (
+        #    not self.daq.stop_signal
+        #    and self.save_files_after_stop
+        #    and self.directory_save_files_checkbox.isChecked()
+        # ):
         if (
-            not self.daq.stop_signal
-            and self.save_files_after_stop
+            self.save_files_after_stop
             and self.directory_save_files_checkbox.isChecked()
         ):
             try:
+                print(&#34;this is the extent&#34;)
+                print(self.roi_extent)
                 self.experiment.save(self.roi_extent)
-            except Exception:
+            except Exception as err:
+                print(&#34;err after saving first&#34;)
+                print(err)
+                print(&#34;err before entering&#34;)
                 self.experiment.save()
         self.stop()
 
     def open_live_saving_thread(self):
-        &#34;&#34;&#34; Open the thread for the live saving&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the live saving&#34;&#34;&#34;
         self.live_save_thread = Thread(target=self.live_save)
         self.live_save_thread.start()
 
     def live_save(self):
-        &#34;&#34;&#34; Save NPY chunked files when the number of frames is over 1200&#34;&#34;&#34;
+        &#34;&#34;&#34;Save NPY chunked files when the number of frames is over 1200&#34;&#34;&#34;
         self.camera.file_index = 0
         self.camera.is_saving = False
         if self.directory_save_files_checkbox.isChecked():
@@ -998,8 +1178,8 @@ class App(QWidget):
                     )
                 )
             except Exception as err:
-                print(err)
-            while self.camera.video_running is False:
+                pass
+            while self.camera.video_running is False and not self.camera.stop_signal:
                 time.sleep(0.01)
                 pass
             while self.camera.video_running is True:
@@ -1027,12 +1207,12 @@ class App(QWidget):
                 time.sleep(0.01)
 
     def open_live_preview_thread(self):
-        &#34;&#34;&#34; Open the thread for the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the live preview&#34;&#34;&#34;
         self.live_preview_thread = Thread(target=self.start_live)
         self.live_preview_thread.start()
 
     def start_live(self):
-        &#34;&#34;&#34; Start the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Start the live preview&#34;&#34;&#34;
         plt.ion()
         self.memory = []
         self.camera.baseline_completed = False
@@ -1045,7 +1225,7 @@ class App(QWidget):
                     try:
                         if (
                             not self.camera.baseline_completed
-                            or not self.activation_map_checkbox.isChecked()
+                            or self.activation_map_combo.currentIndex() == 0
                         ):
                             self.plot_image.set(
                                 array=self.camera.frames[
@@ -1056,67 +1236,113 @@ class App(QWidget):
                                 clim=(0, self.max_exposure),
                                 cmap=&#34;binary_r&#34;,
                             )
-                        else:
+                        elif self.activation_map_combo.currentIndex() == 1:
                             start_index = (
                                 self.camera.baseline_read_list[0]
                                 + self.live_preview_light_index
                             ) % len(self.daq.lights)
                             activation_map = (
+                                self.camera.baseline_frames[
+                                    start_index :: len(self.daq.lights)
+                                ][-1]
+                                - self.camera.average_baseline[
+                                    self.live_preview_light_index
+                                ]
+                            ) / self.camera.average_baseline[
+                                self.live_preview_light_index
+                            ]
+                            self.plot_image.set(
+                                array=activation_map,
+                                clim=(
+                                    -self.max_exposure / 200,
+                                    self.max_exposure / 200,
+                                ),
+                                cmap=&#34;seismic&#34;,
+                            )
+                        else:
+                            start_index = (
+                                self.camera.baseline_read_list[0]
+                                + self.live_preview_light_index
+                            ) % len(self.daq.lights)
+                            activation_map = np.log(
                                 (
-                                    self.camera.baseline_frames[
-                                        start_index :: len(self.daq.lights)
-                                    ][-1]
-                                    - self.camera.average_baseline[
+                                    (
+                                        self.camera.baseline_frames[
+                                            start_index :: len(self.daq.lights)
+                                        ][-1]
+                                        - self.camera.average_baseline[
+                                            self.live_preview_light_index
+                                        ]
+                                    )
+                                    / self.camera.average_baseline[
                                         self.live_preview_light_index
                                     ]
                                 )
-                                / self.camera.average_baseline[
-                                    self.live_preview_light_index
-                                ]
                             )
                             self.plot_image.set(
-                                array=activation_map, clim=(-10, 10), cmap=&#34;seismic&#34;
+                                array=activation_map,
+                                clim=(
+                                    -self.max_exposure / 2000,
+                                    self.max_exposure / 2000,
+                                ),
+                                cmap=&#34;seismic&#34;,
                             )
+
                     except Exception as err:
                         print(err)
                         pass
-                    time.sleep(0.01)
+                    time.sleep(0.04)
             except Exception as err:
                 pass
 
     def stop_live(self):
-        &#34;&#34;&#34; Stop the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Stop the live preview&#34;&#34;&#34;
         self.camera.video_running = False
 
     def open_signal_preview_thread(self):
-        &#34;&#34;&#34; Open the thread for the signal preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the signal preview&#34;&#34;&#34;
         self.signal_preview_thread = Thread(target=self.actualize_progression)
         self.signal_preview_thread.start()
 
     def actualize_progression(self):
-        &#34;&#34;&#34; Actualize the position of the progress bar&#34;&#34;&#34;
+        &#34;&#34;&#34;Actualize the position of the progress bar&#34;&#34;&#34;
         plt.ion()
         while self.daq.stop_signal is False:
             try:
-                position = self.camera.frames_read / int(self.framerate_cell.text())
+                if self.acquisition_mode:
+                    position = self.camera.frames_read / int(self.framerate_cell.text())
+                else:
+                    position = time.time() - self.daq.start_time
                 self.plot_window.vertical_lines[0].set_xdata(position)
                 self.plot_window.vertical_lines[1].set_xdata(position)
-                time.sleep(0.2)
-            except Exception:
-                time.sleep(0.2)
+                self.plot_window.vertical_lines[2].set_xdata(position)
+                time.sleep(0.5)
+            except Exception as err:
+                time.sleep(0.5)
                 pass
 
     def change_preview_light_channel(self):
-        &#34;&#34;&#34; Change the light channel for the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Change the light channel for the live preview&#34;&#34;&#34;
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        self.adjust_slider()
+
+    def adjust_slider(self):
+        &#34;&#34;&#34;Adjust the saturation slider using corresponding value in dictionary&#34;&#34;&#34;
+        try:
+            value = self.slider_values[self.preview_light_combo.currentText()][
+                self.activation_map_combo.currentText()
+            ]
+            self.exposure_slider.setValue(value)
+        except Exception:
+            pass
 
     def open_daq_generation_thread(self):
-        &#34;&#34;&#34; Open the thread for the DAQ generation&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the DAQ generation&#34;&#34;&#34;
         self.daq_generation_thread = Thread(target=self.generate_daq)
         self.daq_generation_thread.start()
 
     def generate_daq(self):
-        &#34;&#34;&#34; Generate the DAQ&#34;&#34;&#34;
+        &#34;&#34;&#34;Generate the DAQ&#34;&#34;&#34;
         try:
             self.camera = Camera(self.ports[&#34;camera&#34;], &#34;name&#34;)
         except Exception:
@@ -1126,7 +1352,6 @@ class App(QWidget):
             Instrument(self.ports[&#34;analog1&#34;], &#34;air-pump2&#34;),
             Instrument(self.ports[&#34;co2&#34;], &#34;air-pump3&#34;),
         ]
-        # TODO verify that said port exists
         self.daq = DAQ(
             &#34;dev1&#34;,
             [],
@@ -1135,9 +1360,12 @@ class App(QWidget):
             int(self.framerate_cell.text()),
             int(self.exposure_cell.text()) / 1000,
         )
+        self.daq.close_all_lights(self.ports)
+        self.daq_generated = True
+        self.enable_run(self.tree.check_global_validity())
 
     def actualize_daq(self):
-        &#34;&#34;&#34; Actualize the DAQ with the current settings&#34;&#34;&#34;
+        &#34;&#34;&#34;Actualize the DAQ with the current settings&#34;&#34;&#34;
         try:
             self.daq.lights = []
             if self.ir_checkbox.isChecked():
@@ -1156,25 +1384,23 @@ class App(QWidget):
             pass
 
     def stop(self):
-        &#34;&#34;&#34; Stop the experiment and reactivate the interface&#34;&#34;&#34;
+        &#34;&#34;&#34;Stop the experiment and reactivate the interface&#34;&#34;&#34;
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
-        self.deactivate_buttons(
-            [self.add_child_branch_button, self.tree.add_brother_branch_button]
-        )
+        self.tree.setCurrentItem(self.tree.topLevelItem(0))
         try:
             self.daq.stop_signal = True
         except Exception:
             pass
 
     def stop_while_running(self):
-        &#34;&#34;&#34; Stop the experiment while it is running&#34;&#34;&#34;
+        &#34;&#34;&#34;Stop the experiment while it is running&#34;&#34;&#34;
         if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
         self.stop()
 
     def stop_stimulation_dialog(self):
-        &#34;&#34;&#34; Ask if user wants to keep the files after experiment is stopped&#34;&#34;&#34;
+        &#34;&#34;&#34;Ask if user wants to keep the files after experiment is stopped&#34;&#34;&#34;
         button = QMessageBox.question(
             self, &#34;Save Files&#34;, &#34;Do you want to save the current files?&#34;
         )
@@ -1184,17 +1410,17 @@ class App(QWidget):
             self.save_files_after_stop = False
 
     def show_buttons(self, buttons):
-        &#34;&#34;&#34; Show the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Show the buttons in a list&#34;&#34;&#34;
         for button in buttons:
             button.setVisible(True)
 
     def hide_buttons(self, buttons):
-        &#34;&#34;&#34; Hide the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Hide the buttons in a list&#34;&#34;&#34;
         for button in buttons:
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
-        &#34;&#34;&#34; Activate the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Activate the buttons in a list&#34;&#34;&#34;
         for button in buttons:
             button.setEnabled(True)
         if buttons == self.enabled_buttons:
@@ -1207,7 +1433,7 @@ class App(QWidget):
             self.stop_button.setDisabled(True)
 
     def deactivate_buttons(self, buttons):
-        &#34;&#34;&#34; Deactivate the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Deactivate the buttons in a list&#34;&#34;&#34;
         if buttons == self.enabled_buttons:
             self.stop_button.setEnabled(True)
             self.tree.clearSelection()
@@ -1215,20 +1441,20 @@ class App(QWidget):
             button.setDisabled(True)
 
     def choose_directory(self):
-        &#34;&#34;&#34; Choose the directory where to save the files&#34;&#34;&#34;
+        &#34;&#34;&#34;Choose the directory where to save the files&#34;&#34;&#34;
         folder = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
         self.directory_cell.setText(folder)
 
     def enable_directory(self):
-        &#34;&#34;&#34; Enable the directory cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Enable the directory cell&#34;&#34;&#34;
         self.files_saved = self.directory_save_files_checkbox.isChecked()
         self.directory_choose_button.setEnabled(self.files_saved)
         self.directory_cell.setEnabled(self.files_saved)
 
     def actualize_window(self):
-        &#34;&#34;&#34; Actualize the &#39;Stimulation Edit&#39; and &#39;Signal Preview&#39; windows&#34;&#34;&#34;
+        &#34;&#34;&#34;Actualize the &#39;Stimulation Edit&#39; and &#39;Signal Preview&#39; windows&#34;&#34;&#34;
         self.activate_buttons(
-            [self.add_child_branch_button, self.tree.add_brother_branch_button]
+            [self.add_child_branch_button, self.add_brother_branch_button]
         )
         if self.tree.currentItem():
             self.tree_switch_window.setCurrentIndex(0)
@@ -1246,11 +1472,11 @@ class App(QWidget):
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
-        self.tree.graph(self.tree.currentItem())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def name_to_tree(self):
-        &#34;&#34;&#34; Transfer the name of the current item from the cell to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the name of the current item from the cell to the tree&#34;&#34;&#34;
         branch = self.tree.currentItem()
         branch.setForeground(0, QBrush(QColor(0, 0, 0)))
         if branch.childCount() &gt; 0:
@@ -1259,7 +1485,7 @@ class App(QWidget):
             branch.setText(0, self.stimulation_name_cell.text())
 
     def tree_to_name(self):
-        &#34;&#34;&#34; Transfer the name of the current item from the tree to the cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the name of the current item from the tree to the cell&#34;&#34;&#34;
         try:
             if self.tree.currentItem().childCount() &gt; 0:
                 if self.tree.currentItem().text(0) != &#34;No Name&#34;:
@@ -1275,8 +1501,8 @@ class App(QWidget):
             pass
 
     def type_to_tree(self):
-        &#34;&#34;&#34; Transfer the type of the current item from the cell to the tree&#34;&#34;&#34;
-        self.tree.check_global_validity()
+        &#34;&#34;&#34;Transfer the type of the current item from the cell to the tree&#34;&#34;&#34;
+        self.enable_run(self.tree.check_global_validity())
         self.different_signals_window.setCurrentIndex(
             self.stim_type_cell.currentIndex()
         )
@@ -1299,13 +1525,13 @@ class App(QWidget):
         except Exception:
             pass
         try:
-            self.tree.graph(self.tree.currentItem())
+            self.tree.graph(self.tree.currentItem(), current=True)
             self.draw()
         except Exception:
             pass
 
     def tree_to_type(self):
-        &#34;&#34;&#34; Transfer the type of the current item from the tree to the cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the type of the current item from the tree to the cell&#34;&#34;&#34;
         dico = {&#34;square&#34;: 0, &#34;random-square&#34;: 1, &#34;Third&#34;: 2}
         try:
             self.stim_type_cell.setCurrentIndex(dico[self.tree.currentItem().text(4)])
@@ -1323,7 +1549,7 @@ class App(QWidget):
             self.stim_type_cell3.setCurrentIndex(0)
 
     def signal_to_tree(self):
-        &#34;&#34;&#34; Transfer the signal of the current item from the cell to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the signal of the current item from the cell to the tree&#34;&#34;&#34;
         self.tree.currentItem().setText(6, self.duration_cell.text())
         self.tree.currentItem().setText(5, self.pulses_cell.text())
         self.tree.currentItem().setText(7, self.jitter_cell.text())
@@ -1342,13 +1568,12 @@ class App(QWidget):
         self.tree.currentItem().setText(26, self.width_cell3.text())
         self.tree.currentItem().setText(27, self.frequency_cell3.text())
         self.tree.currentItem().setText(28, self.duty_cell3.text())
-        self.tree.currentItem().setText(29, self.heigth_cell3.text())
-        self.tree.check_global_validity()
-        self.tree.graph(self.tree.currentItem())
+        self.enable_run(self.tree.check_global_validity())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def tree_to_signal(self):
-        &#34;&#34;&#34; Transfer the signal of the current item from the tree to the cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the signal of the current item from the tree to the cell&#34;&#34;&#34;
         try:
             self.pulses_cell.setText(self.tree.currentItem().text(5))
             self.duration_cell.setText(self.tree.currentItem().text(6))
@@ -1368,12 +1593,11 @@ class App(QWidget):
             self.width_cell3.setText(self.tree.currentItem().text(26))
             self.frequency_cell3.setText(self.tree.currentItem().text(27))
             self.duty_cell3.setText(self.tree.currentItem().text(28))
-            self.heigth_cell3.setText(self.tree.currentItem().text(29))
         except Exception as err:
             pass
 
     def tree_to_block(self):
-        &#34;&#34;&#34; Transfer the block attributes from the tree to the cells&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the block attributes from the tree to the cells&#34;&#34;&#34;
         try:
             self.block_iterations_cell.setText(self.tree.currentItem().text(1))
             self.block_delay_cell.setText(self.tree.currentItem().text(2))
@@ -1382,16 +1606,16 @@ class App(QWidget):
             pass
 
     def block_to_tree(self):
-        &#34;&#34;&#34; Transfer the block attributes from the cells to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the block attributes from the cells to the tree&#34;&#34;&#34;
         self.tree.currentItem().setText(1, self.block_iterations_cell.text())
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
-        self.tree.check_global_validity()
-        self.tree.graph(self.tree.currentItem())
+        self.enable_run(self.tree.check_global_validity())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def tree_to_canal(self):
-        &#34;&#34;&#34; Transfer the canals attributes from the tree to the cells&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the canals attributes from the tree to the cells&#34;&#34;&#34;
         self.canal_running = True
         try:
             self.baseline_checkbox.setChecked(
@@ -1431,12 +1655,11 @@ class App(QWidget):
             else:
                 self.deactivate_buttons(self.canal3buttons)
         except Exception as err:
-            print(err)
             pass
         self.canal_running = False
 
     def canals_to_tree(self):
-        &#34;&#34;&#34; Transfer the canals attributes from the cells to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the canals attributes from the cells to the tree&#34;&#34;&#34;
         self.baseline_checkbox.setEnabled(True)
         if not self.canal_running:
             if self.baseline_checkbox.isChecked():
@@ -1476,21 +1699,24 @@ class App(QWidget):
                 19, str(self.second_canal_check.isChecked())
             )
             self.tree.currentItem().setText(30, str(self.third_canal_check.isChecked()))
-            # self.pulses_cell2.setEnabled(self.second_canal_check.isChecked())
-            self.tree.check_global_validity()
-            self.tree.graph(self.tree.currentItem())
+            self.enable_run(self.tree.check_global_validity())
+            self.tree.graph(self.tree.currentItem(), current=True)
             self.draw()
 
-    def enable_run(self):
-        &#34;&#34;&#34; Enable the run button&#34;&#34;&#34;
-        self.run_button.setDisabled(False)
+    def enable_run(self, boolean):
+        &#34;&#34;&#34;Enable the run button&#34;&#34;&#34;
+        if not self.daq_generated:
+            boolean = False
+        self.save_config_button.setEnabled(boolean)
+        self.run_button.setEnabled(boolean)
 
     def disable_run(self):
-        &#34;&#34;&#34; Disable the run button&#34;&#34;&#34;
+        &#34;&#34;&#34;Disable the run button&#34;&#34;&#34;
+        self.save_config_button.setDisabled(True)
         self.run_button.setDisabled(True)
 
     def count_lights(self):
-        &#34;&#34;&#34; Return the number of lights and a list of their names&#34;&#34;&#34;
+        &#34;&#34;&#34;Return the number of lights and a list of their names&#34;&#34;&#34;
         count = 0
         text = []
         for checkbox in [
@@ -1505,7 +1731,7 @@ class App(QWidget):
         return (count, text)
 
     def actualize_lights(self):
-        &#34;&#34;&#34; Update the lights list in the combo box&#34;&#34;&#34;
+        &#34;&#34;&#34;Update the lights list in the combo box&#34;&#34;&#34;
         self.preview_light_combo.clear()
         if self.count_lights()[0] == 0:
             self.preview_light_combo.setEnabled(False)
@@ -1516,22 +1742,32 @@ class App(QWidget):
                 self.preview_light_combo.addItem(self.count_lights()[1][i])
 
     def boolean(self, string):
-        &#34;&#34;&#34; Return a boolean from a string&#34;&#34;&#34;
+        &#34;&#34;&#34;Return a boolean from a string&#34;&#34;&#34;
         if string == &#34;True&#34;:
             return True
         return False
 
     def draw(self, root=False):
+        &#34;&#34;&#34;Draw the sitmulation channels graph
+        
+        Args:
+            root (bool, optional): If True, the graph includes a progress bar&#34;&#34;&#34;
         try:
             self.plot_window.clear()
             self.plot_window.plot(
                 self.tree.x_values, self.tree.stim1_values, root, index=0
             )
             self.plot_window.plot(
-                self.tree.x_values, self.tree.stim2_values, root, index=1,
+                self.tree.x_values,
+                self.tree.stim2_values,
+                root,
+                index=1,
             )
             self.plot_window.plot(
-                self.tree.x_values, self.tree.stim3_values, root, index=2,
+                self.tree.x_values,
+                self.tree.stim3_values,
+                root,
+                index=2,
             )
             self.tree.x_values = []
             self.tree.stim1_values = []
@@ -1539,18 +1775,17 @@ class App(QWidget):
             self.tree.stim3_values = []
             self.elapsed_time = 0
         except Exception as err:
-            print(err)
             pass
 
     def set_roi(self):
-        &#34;&#34;&#34; Set the ROI&#34;&#34;&#34;
+        &#34;&#34;&#34;Set the ROI&#34;&#34;&#34;
         self.deactivate_buttons(buttons=self.enabled_buttons)
         self.stop_button.setEnabled(False)
         self.save_roi_button.setEnabled(False)
         self.roi_buttons.setCurrentIndex(1)
 
         def onselect_function(eclick, erelease):
-            &#34;&#34;&#34; Save the ROI dimensions as attributes&#34;&#34;&#34;
+            &#34;&#34;&#34;Save the ROI dimensions as attributes&#34;&#34;&#34;
             self.roi_extent = self.rect_selector.extents
             self.save_roi_button.setEnabled(True)
 
@@ -1567,26 +1802,27 @@ class App(QWidget):
         )
 
     def reset_roi(self):
-        &#34;&#34;&#34; Reset the ROI&#34;&#34;&#34;
+        &#34;&#34;&#34;Reset the ROI&#34;&#34;&#34;
         plt.figure(self.image_view.figure.number)
-        plt.xlim(0, 1024)
-        plt.ylim(0, 1024)
+        plt.xlim(0, int(1024 / self.config[&#34;Binning&#34;]))
+        plt.ylim(0, int(1024 / self.config[&#34;Binning&#34;]))
         self.roi_extent = None
         self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):
-        &#34;&#34;&#34; Cancel the ROI selection&#34;&#34;&#34;
+        &#34;&#34;&#34;Cancel the ROI selection&#34;&#34;&#34;
         self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         self.rect_selector.clear()
         self.rect_selector = None
 
     def save_roi(self):
-        &#34;&#34;&#34; Save the ROI&#34;&#34;&#34;
+        &#34;&#34;&#34;Save the ROI&#34;&#34;&#34;
         self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         plt.figure(self.image_view.figure.number)
         plt.ion()
+        print(self.roi_extent)
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
         self.rect_selector.clear()
@@ -1594,7 +1830,7 @@ class App(QWidget):
         self.reset_roi_button.setEnabled(True)
 
     def verify_exposure(self):
-        &#34;&#34;&#34; Verify if the exposure/framerate combination is valid&#34;&#34;&#34;
+        &#34;&#34;&#34;Verify if the exposure/framerate combination is valid&#34;&#34;&#34;
         try:
             boolean_check = (int(self.exposure_cell.text()) / 1000 + 0.0015) * int(
                 self.framerate_cell.text()
@@ -1602,10 +1838,9 @@ class App(QWidget):
         except Exception:
             boolean_check = False
         self.exposure_warning_label.setHidden(boolean_check)
-        self.check_run()
 
     def check_if_thread_is_alive(self):
-        &#34;&#34;&#34; Check what threads are alive&#34;&#34;&#34;
+        &#34;&#34;&#34;Check what threads are alive&#34;&#34;&#34;
         try:
             if self.live_preview_thread.is_alive():
                 print(&#34;Live preview thread is alive&#34;)
@@ -1655,7 +1890,7 @@ class App(QWidget):
             print(err)
 
     def initialize_buttons(self):
-        &#34;&#34;&#34; Define list of buttons to activate/deactivate&#34;&#34;&#34;
+        &#34;&#34;&#34;Define list of buttons to activate/deactivate&#34;&#34;&#34;
         self.canal1buttons = [
             self.stim_type_cell,
             self.pulses_label,
@@ -1714,7 +1949,7 @@ class App(QWidget):
             self.framerate_cell,
             self.exposure_cell,
             self.exposure_label,
-            self.tree.add_brother_branch_button,
+            self.add_brother_branch_button,
             self.add_child_branch_button,
             self.delete_item_button,
             self.red_checkbox,
@@ -1812,44 +2047,112 @@ if __name__ == &#34;__main__&#34;:
 </summary>
 <pre><code class="python">class App(QWidget):
     def __init__(self):
-        &#34;&#34;&#34; Initialize the application &#34;&#34;&#34;
+        &#34;&#34;&#34;Initialize the application&#34;&#34;&#34;
         super().__init__()
+        qInstallMessageHandler(self.handler)
         self.cwd = os.path.dirname(os.path.dirname(__file__))
-        self.ports = get_dictionary(os.path.join(self.cwd, &#34;config.json&#34;))[&#34;Ports&#34;]
-        self.baseline_values = []
+        self.config = get_dictionary(os.path.join(self.cwd, &#34;config.json&#34;))
+        self.ports = self.config[&#34;Ports&#34;]
         self.elapsed_time = 0
         self.files_saved = False
         self.save_files_after_stop = False
         self.roi_extent = None
         self.max_exposure = 4096
+        self.slider_values = {
+            &#34;Infrared&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+            &#34;Red&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+            &#34;Green&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+            &#34;Blue&#34;: {&#34;None&#34;: 4096, &#34;Normal&#34;: 4096, &#34;Logarithmic&#34;: 4096},
+        }
+        self.daq_generated = False
         self.onlyFloat = QDoubleValidator()
         self.onlyFloat.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))
         self.onlyFloat.setNotation(QDoubleValidator.StandardNotation)
         self.onlyFramerate = QIntValidator(1, 57, self)
         self.onlyExposure = QIntValidator(1, 900, self)
+        self.start_container = QWidget()
+        self.start_layout = QVBoxLayout()
+        self.start_container.setLayout(self.start_layout)
+        self.start_title = QLabel(&#34;Welcome to WideBrain!&#34;)
+        self.start_title.setFont(QFont(&#34;IBM Plex Sans&#34;, 20, QFont.Bold))
+        self.start_title.setAlignment(Qt.AlignCenter)
+        self.start_image = QLabel()
+        self.start_image.setPixmap(
+            QPixmap(os.path.join(self.cwd, &#34;assets&#34;, &#34;logo-small.png&#34;))
+        )
+        self.start_image.setAlignment(Qt.AlignCenter)
+        self.start_description = QLabel(&#34;Choose the type of experiment you want to run&#34;)
+        self.start_description.setFont(QFont(&#34;IBM Plex Sans&#34;, 14, QFont.Light))
+        self.start_description.setWordWrap(True)
+        self.start_description.setAlignment(Qt.AlignCenter)
+
+        self.trigger_mode_button = QPushButton(&#34;Start in Trigger Mode&#34;)
+        self.trigger_mode_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;bolt.png&#34;))
+        )
+        self.trigger_mode_button.setFont(QFont(&#34;IBM Plex Sans&#34;, 15, QFont.Light))
+        self.trigger_mode_button.clicked.connect(self.start_in_trigger_mode)
+
+        self.acquisition_mode_button = QPushButton(&#34;Start in Acquisition Mode&#34;)
+        self.acquisition_mode_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;camera.png&#34;))
+        )
+        self.acquisition_mode_button.setFont(QFont(&#34;IBM Plex Sans&#34;, 15, QFont.Light))
+        self.acquisition_mode_button.clicked.connect(self.start_in_acquisition_mode)
+
+        self.start_buttons = QHBoxLayout()
+        self.start_buttons.addWidget(self.trigger_mode_button)
+        self.start_buttons.addWidget(self.acquisition_mode_button)
+
+        self.start_layout.addWidget(self.start_title)
+        self.start_layout.addWidget(self.start_image)
+        self.start_layout.addWidget(self.start_description)
+        self.start_layout.addLayout(self.start_buttons)
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.addWidget(self.start_container, 0, 0)
+
+        self.setLayout(self.grid_layout)
+        self.show()
+
+    def start_in_trigger_mode(self):
+        &#34;&#34;&#34;Initialize the interface in trigger mode&#34;&#34;&#34;
+        self.start_container.setParent(None)
+        self.acquisition_mode = False
+        self.initUI()
+
+    def start_in_acquisition_mode(self):
+        &#34;&#34;&#34;Initialize the interface in acquisition mode&#34;&#34;&#34;
+        self.start_container.setParent(None)
+        self.acquisition_mode = True
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
-        &#34;&#34;&#34; Stop all processes when closing the application &#34;&#34;&#34;
+        &#34;&#34;&#34;Stop all processes when closing the application&#34;&#34;&#34;
         self.video_running = False
         try:
+            self.camera.stop_signal = True
+            self.camera.video_running = False
             self.daq.stop_signal = True
             self.daq.camera.cam.stop_acquisition()
-            print(&#34;Closed&#34;)
+            print(&#34;Program Closed&#34;)
         except Exception as err:
-            print(err)
             pass
         self.check_if_thread_is_alive()
 
+    def handler(*args, **kwargs):
+        &#34;&#34;&#34;Ignore Qt messages&#34;&#34;&#34;
+        pass
+
     def initUI(self):
-        &#34;&#34;&#34; Initialize the user interface &#34;&#34;&#34;
+        &#34;&#34;&#34;Initialize the user interface&#34;&#34;&#34;
         self.title = &#34;Widefield Imaging Aquisition&#34;
         self.dimensions = (10, 10, 640, 480)
         self.setWindowTitle(self.title)
         self.setGeometry(*self.dimensions)
 
-        self.grid_layout = QGridLayout()
-        self.setLayout(self.grid_layout)
+        # self.grid_layout = QGridLayout()
+        # self.setLayout(self.grid_layout)
         self.grid_layout.setAlignment(Qt.AlignTop)
 
         self.experiment_settings_label = QLabel(&#34;Experiment Settings&#34;)
@@ -1871,6 +2174,35 @@ if __name__ == &#34;__main__&#34;:
         self.mouse_id_window.addWidget(self.mouse_id_cell)
         self.experiment_settings_main_window.addLayout(self.mouse_id_window)
 
+        self.framerate_exposure_window = QHBoxLayout()
+        self.exposure_window = QHBoxLayout()
+        self.exposure_label = QLabel(&#34;Exposure (ms)&#34;)
+        self.exposure_window.addWidget(self.exposure_label)
+        self.exposure_cell = QLineEdit(&#34;10&#34;)
+        self.exposure_cell.setValidator(self.onlyExposure)
+        self.exposure_cell.textChanged.connect(self.verify_exposure)
+        self.exposure_window.addWidget(self.exposure_cell)
+        self.framerate_exposure_window.addLayout(self.exposure_window)
+        self.framerate_window = QHBoxLayout()
+        self.framerate_label = QLabel(&#34;Framerate&#34;)
+        self.framerate_window.addWidget(self.framerate_label)
+        self.framerate_cell = QLineEdit(&#34;30&#34;)
+        self.framerate_cell.setValidator(self.onlyFramerate)
+        self.framerate_cell.textChanged.connect(self.verify_exposure)
+        self.framerate_window.addWidget(self.framerate_cell)
+        self.framerate_exposure_window.addLayout(self.framerate_window)
+
+        if self.acquisition_mode:
+            self.experiment_settings_main_window.addLayout(
+                self.framerate_exposure_window
+            )
+
+        self.exposure_warning_label = QLabel(&#34;Invalid Exposure / Frame Rate&#34;)
+        if self.acquisition_mode:
+            self.experiment_settings_main_window.addWidget(self.exposure_warning_label)
+        self.exposure_warning_label.setStyleSheet(&#34;color: red&#34;)
+        self.exposure_warning_label.setHidden(True)
+
         self.directory_window = QHBoxLayout()
         self.directory_save_files_checkbox = QCheckBox()
         self.directory_save_files_checkbox.setText(&#34;Save&#34;)
@@ -1891,42 +2223,31 @@ if __name__ == &#34;__main__&#34;:
         self.trigger_checkbox = QCheckBox(&#34;Wait for Trigger&#34;)
         self.trigger_activated = False
         self.trigger_checkbox.stateChanged.connect(self.set_trigger)
-        self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+        # self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+
+        self.save_config_button = QPushButton(&#34;Save Config&#34;)
+        self.save_config_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;save.png&#34;))
+        )
+        self.save_config_button.clicked.connect(self.save_config)
+        self.save_config_button.setEnabled(False)
+        self.experiment_settings_main_window.addWidget(self.save_config_button)
 
         self.experiment_settings_main_window.addStretch()
 
-        self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+        if self.acquisition_mode:
+            self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+        else:
+            self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0, 1, 2)
 
         self.image_settings_label = QLabel(&#34;Image Settings&#34;)
         self.image_settings_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-        self.grid_layout.addWidget(self.image_settings_label, 0, 1)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.image_settings_label, 0, 1)
 
         self.image_settings_main_window = QVBoxLayout()
         self.image_settings_main_window.setAlignment(Qt.AlignLeft)
         self.image_settings_main_window.setAlignment(Qt.AlignTop)
-
-        self.framerate_window = QHBoxLayout()
-        self.framerate_label = QLabel(&#34;Framerate&#34;)
-        self.framerate_window.addWidget(self.framerate_label)
-        self.framerate_cell = QLineEdit(&#34;30&#34;)
-        self.framerate_cell.setValidator(self.onlyFramerate)
-        self.framerate_cell.textChanged.connect(self.verify_exposure)
-        self.framerate_window.addWidget(self.framerate_cell)
-        self.image_settings_main_window.addLayout(self.framerate_window)
-
-        self.exposure_window = QHBoxLayout()
-        self.exposure_label = QLabel(&#34;Exposure (ms)&#34;)
-        self.exposure_window.addWidget(self.exposure_label)
-        self.exposure_cell = QLineEdit(&#34;10&#34;)
-        self.exposure_cell.setValidator(self.onlyExposure)
-        self.exposure_cell.textChanged.connect(self.verify_exposure)
-        self.exposure_window.addWidget(self.exposure_cell)
-        self.image_settings_main_window.addLayout(self.exposure_window)
-
-        self.exposure_warning_label = QLabel(&#34;Invalid Exposure / Frame Rate&#34;)
-        self.image_settings_main_window.addWidget(self.exposure_warning_label)
-        self.exposure_warning_label.setStyleSheet(&#34;color: red&#34;)
-        self.exposure_warning_label.setHidden(True)
 
         self.image_settings_second_window = QHBoxLayout()
         self.ir_checkbox = QCheckBox(&#34;Infrared&#34;)
@@ -1951,11 +2272,21 @@ if __name__ == &#34;__main__&#34;:
             self.change_preview_light_channel
         )
         self.light_channel_layout.addWidget(self.preview_light_combo)
-        self.activation_map_checkbox = QCheckBox(&#34;Show Activation Map&#34;)
+        # self.activation_map_checkbox = QCheckBox(&#34;Show Activation Map&#34;)
+        self.activation_map_window = QHBoxLayout()
+        self.activation_map_label = QLabel(&#34;Activation Map&#34;)
+        self.activation_map_window.addWidget(self.activation_map_label)
+        self.activation_map_combo = QComboBox()
+        self.activation_map_combo.addItem(&#34;None&#34;)
+        self.activation_map_combo.addItem(&#34;Normal&#34;)
+        self.activation_map_combo.addItem(&#34;Logarithmic&#34;)
+        self.activation_map_combo.currentIndexChanged.connect(self.adjust_slider)
+        self.activation_map_window.addWidget(self.activation_map_combo)
 
         self.image_settings_main_window.addLayout(self.image_settings_second_window)
         self.image_settings_main_window.addLayout(self.light_channel_layout)
-        self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+        # self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+        self.image_settings_main_window.addLayout(self.activation_map_window)
 
         self.roi_buttons = QStackedLayout()
 
@@ -2005,10 +2336,10 @@ if __name__ == &#34;__main__&#34;:
         self.roi_layout2_container = QWidget()
         self.roi_layout2_container.setLayout(self.roi_layout2)
 
-        self.roi_buttons.addWidget(self.roi_layout1_container)
-        self.roi_buttons.addWidget(self.roi_layout2_container)
-
-        self.image_settings_main_window.addLayout(self.roi_buttons)
+        if self.acquisition_mode:
+            self.roi_buttons.addWidget(self.roi_layout1_container)
+            self.roi_buttons.addWidget(self.roi_layout2_container)
+            self.image_settings_main_window.addLayout(self.roi_buttons)
 
         self.exposure_slider = QSlider(Qt.Horizontal, self)
         self.exposure_slider.setRange(0, 4096)
@@ -2033,18 +2364,27 @@ if __name__ == &#34;__main__&#34;:
 
         self.image_settings_main_window.addStretch()
 
-        self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
+        if self.acquisition_mode:
+            self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
         self.live_preview_label = QLabel(&#34;Live Preview&#34;)
         self.live_preview_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-        self.numpy = np.random.rand(1024, 1024)
         self.image_view = PlotWindow()
-        self.plot_image = plt.imshow(self.numpy, cmap=&#34;binary_r&#34;, vmin=0, vmax=4096)
+        self.plot_image = plt.imshow(
+            np.zeros(
+                (int(1024 / self.config[&#34;Binning&#34;]), int(1024 / self.config[&#34;Binning&#34;]))
+            ),
+            cmap=&#34;binary_r&#34;,
+            vmin=0,
+            vmax=4096,
+            origin=&#34;lower&#34;,
+        )
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
-        self.grid_layout.addWidget(self.live_preview_label, 0, 2)
-        self.grid_layout.addWidget(self.image_view, 1, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.live_preview_label, 0, 2)
+            self.grid_layout.addWidget(self.image_view, 1, 2)
 
         self.tree_label = QLabel(&#34;Stimulation Tree&#34;)
         self.tree_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
@@ -2052,7 +2392,6 @@ if __name__ == &#34;__main__&#34;:
 
         self.tree_window = QVBoxLayout()
         self.tree = Tree()
-        self.tree.set_app(self)
         self.tree.setHeaderLabels(
             [
                 &#34;0 Name&#34;,
@@ -2088,13 +2427,14 @@ if __name__ == &#34;__main__&#34;:
                 &#34;30 Canal 3&#34;,
             ]
         )
-        for i in range(1, 20):
-            self.tree.header().hideSection(i)
-        for i in range(21, 31):
-            self.tree.header().hideSection(i)
-        self.tree.setHeaderHidden(True)
-        self.tree.setColumnWidth(0, 330)
-        self.tree.setColumnWidth(20, 20)
+        if not self.config[&#34;Debug&#34;]:
+            for i in range(1, 20):
+                self.tree.header().hideSection(i)
+            for i in range(21, 31):
+                self.tree.header().hideSection(i)
+            self.tree.setHeaderHidden(True)
+            self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.tree.header().setStretchLastSection(False)
         self.tree.currentItemChanged.connect(self.actualize_window)
         self.tree_window.addWidget(self.tree)
 
@@ -2107,12 +2447,12 @@ if __name__ == &#34;__main__&#34;:
         )
         self.delete_item_button.clicked.connect(self.tree.delete_item)
         self.tree_second_window.addWidget(self.delete_item_button)
-        self.tree.add_brother_branch_button = QPushButton(&#34;Add Sibling&#34;)
-        self.tree.add_brother_branch_button.clicked.connect(self.tree.add_brother)
-        self.tree.add_brother_branch_button.setIcon(
+        self.add_brother_branch_button = QPushButton(&#34;Add Sibling&#34;)
+        self.add_brother_branch_button.clicked.connect(self.tree.add_brother)
+        self.add_brother_branch_button.setIcon(
             QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;arrow-bar-down.png&#34;))
         )
-        self.tree_second_window.addWidget(self.tree.add_brother_branch_button)
+        self.tree_second_window.addWidget(self.add_brother_branch_button)
         self.add_child_branch_button = QPushButton(&#34;Add Child&#34;)
         self.add_child_branch_button.clicked.connect(self.tree.add_child)
         self.add_child_branch_button.setIcon(
@@ -2202,7 +2542,7 @@ if __name__ == &#34;__main__&#34;:
         self.stim_type_cell3.currentIndexChanged.connect(self.type_to_tree)
         self.stimulation_type_window3 = QHBoxLayout()
         self.stimulation_type_window3.addWidget(self.third_canal_check)
-        self.stimulation_type_window3.addWidget(self.stim_type_cell3)
+        # self.stimulation_type_window3.addWidget(self.stim_type_cell3)
         self.canal_window.addLayout(self.stimulation_type_window3)
 
         self.different_signals_window3 = QStackedLayout()
@@ -2227,7 +2567,8 @@ if __name__ == &#34;__main__&#34;:
 
         self.baseline_checkbox = QCheckBox(&#34;Baseline&#34;)
         self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
-        self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
+        if self.acquisition_mode:
+            self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
         self.stimulation_edit_layout.addLayout(self.canal_window)
 
         self.first_signal_type_window = QVBoxLayout()
@@ -2446,7 +2787,7 @@ if __name__ == &#34;__main__&#34;:
         self.second_signal_type_window2.addLayout(self.frequency_window2)
         self.second_signal_type_window2.addLayout(self.duty_window2)
 
-        self.second_signal_type_window3.addLayout(self.heigth_window3)
+        # self.second_signal_type_window3.addLayout(self.heigth_window3)
         self.second_signal_type_window3.addLayout(self.frequency_window3)
         self.second_signal_type_window3.addLayout(self.duty_window3)
 
@@ -2539,7 +2880,10 @@ if __name__ == &#34;__main__&#34;:
 
         self.signal_preview_label = QLabel(&#34;Signal Preview&#34;)
         self.signal_preview_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-        self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+        else:
+            self.grid_layout.addWidget(self.signal_preview_label, 0, 2)
 
         self.buttons_main_window = QHBoxLayout()
         self.stop_button = QPushButton(&#34;Stop&#34;)
@@ -2557,30 +2901,42 @@ if __name__ == &#34;__main__&#34;:
         self.run_button.setEnabled(False)
         self.buttons_main_window.addWidget(self.run_button)
         self.plot_window = PlotWindow(subplots=True)
-        self.grid_layout.addWidget(self.plot_window, 3, 2)
+        if self.acquisition_mode:
+            self.grid_layout.addWidget(self.plot_window, 3, 2)
+        else:
+            self.grid_layout.addWidget(self.plot_window, 1, 2, 3, 1)
         self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
         self.open_daq_generation_thread()
         self.initialize_buttons()
         self.show()
 
     def deactivate_channels(self):
-        &#34;&#34;&#34; Deactivate canal checkboxes if the baseline checkbox is checked&#34;&#34;&#34;
+        &#34;&#34;&#34;Deactivate canal checkboxes if the baseline checkbox is checked&#34;&#34;&#34;
         if self.baseline_checkbox.isChecked():
             self.deactivate_buttons(
-                [self.first_canal_check, self.second_canal_check,]
+                [
+                    self.first_canal_check,
+                    self.second_canal_check,
+                ]
             )
         else:
             self.activate_buttons(
-                [self.first_canal_check, self.second_canal_check,]
+                [
+                    self.first_canal_check,
+                    self.second_canal_check,
+                ]
             )
 
     def adjust_exposure(self):
-        &#34;&#34;&#34; Match the exposure of the image preview to the slider value&#34;&#34;&#34;
+        &#34;&#34;&#34;Match the exposure of the image preview to the slider value&#34;&#34;&#34;
         self.max_exposure = self.exposure_slider.value()
+        self.slider_values[self.preview_light_combo.currentText()][
+            self.activation_map_combo.currentText()
+        ] = self.max_exposure
 
     def set_trigger(self):
-        &#34;&#34;&#34; Set the trigger for the DAQ&#34;&#34;&#34;
-        if self.trigger_checkbox.isChecked():
+        &#34;&#34;&#34;Set the trigger for the DAQ&#34;&#34;&#34;
+        if not self.acquisition_mode:
             self.run_button.setText(&#34;Run at Trigger&#34;)
             self.daq.set_trigger(self.ports[&#34;trigger&#34;])
         else:
@@ -2588,22 +2944,38 @@ if __name__ == &#34;__main__&#34;:
             self.daq.remove_trigger()
 
     def import_config(self):
-        &#34;&#34;&#34; Import a configuration file&#34;&#34;&#34;
+        &#34;&#34;&#34;Import a configuration file&#34;&#34;&#34;
         file = QFileDialog.getOpenFileName()[0]
         try:
-            blocks = get_dictionary(file)[&#34;Blocks&#34;]
-            self.tree.create_tree_item(blocks)
-            self.tree.check_global_validity()
+            dictionary = get_dictionary(file)
+            self.framerate_cell.setText(str(dictionary[&#34;Framerate&#34;]))
+            self.exposure_cell.setText(str(dictionary[&#34;Exposition&#34;]))
+            self.set_lights(dictionary[&#34;Lights&#34;])
+            self.tree.create_tree_item(dictionary[&#34;Blocks&#34;])
+            self.enable_run(self.tree.check_global_validity())
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
             print(err)
 
+    def set_lights(self, lights):
+        &#34;&#34;&#34;Set the lights&#34;&#34;&#34;
+        for light in lights:
+            if light == &#34;infrared&#34;:
+                self.ir_checkbox.setChecked(True)
+            elif light == &#34;red&#34;:
+                self.red_checkbox.setChecked(True)
+            elif light == &#34;green&#34;:
+                self.green_checkbox.setChecked(True)
+            elif light == &#34;blue&#34;:
+                self.fluorescence_checkbox.setChecked(True)
+
     def run(self):
-        &#34;&#34;&#34; Run the experiment&#34;&#34;&#34;
+        &#34;&#34;&#34;Run the experiment&#34;&#34;&#34;
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.tree.create_blocks()
+            self.tree.baseline_values = []
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.x_values,
@@ -2614,15 +2986,18 @@ if __name__ == &#34;__main__&#34;:
                 ],
             )
             self.draw(root=True)
-            self.actualize_daq()
-            self.open_live_saving_thread()
-            self.open_live_preview_thread()
-            self.open_baseline_check_thread()
+            if self.acquisition_mode:
+                self.actualize_daq()
+                self.open_live_saving_thread()
+                self.open_live_preview_thread()
+                self.open_baseline_check_thread()
+            else:
+                self.daq.stop_signal = False
             self.open_signal_preview_thread()
             self.open_start_experiment_thread()
 
     def check_override(self):
-        &#34;&#34;&#34; Check if experiment with the same name already exists&#34;&#34;&#34;
+        &#34;&#34;&#34;Check if experiment with the same name already exists&#34;&#34;&#34;
         if os.path.isfile(
             os.path.join(
                 self.directory_cell.text(),
@@ -2643,12 +3018,12 @@ if __name__ == &#34;__main__&#34;:
             return True
 
     def open_baseline_check_thread(self):
-        &#34;&#34;&#34; Open the thread for the baseline check&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the baseline check&#34;&#34;&#34;
         self.baseline_check_thread = Thread(target=self.check_baseline)
         self.baseline_check_thread.start()
 
     def check_baseline(self):
-        &#34;&#34;&#34; Monitor the incoming frames and check if the baseline is reached&#34;&#34;&#34;
+        &#34;&#34;&#34;Monitor the incoming frames and check if the baseline is reached&#34;&#34;&#34;
         if len(self.daq.lights) &gt; 0:
             self.camera.baseline_data = []
             self.camera.adding_frames = False
@@ -2657,9 +3032,8 @@ if __name__ == &#34;__main__&#34;:
                 pass
             frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
             baseline_indices = get_baseline_frame_indices(
-                self.baseline_values, frames_acquired
+                self.tree.baseline_values, frames_acquired
             )
-            print(baseline_indices)
             for baseline_pair in baseline_indices:
                 while not self.daq.stop_signal:
                     try:
@@ -2672,7 +3046,6 @@ if __name__ == &#34;__main__&#34;:
                             self.camera.adding_frames
                             and self.camera.frames_read &gt;= baseline_pair[1]
                         ):
-                            print(&#34;about to average&#34;)
                             self.camera.baseline_read_list = []
                             self.camera.average_baseline = average_baseline(
                                 self.camera.baseline_data,
@@ -2685,17 +3058,35 @@ if __name__ == &#34;__main__&#34;:
                             self.camera.frames_read_list = []
                             break
                     except Exception as err:
-                        print(err)
                         pass
                     time.sleep(0.01)
 
     def open_start_experiment_thread(self):
-        &#34;&#34;&#34; Open the thread for the start of the experiment&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the start of the experiment&#34;&#34;&#34;
         self.start_experiment_thread = Thread(target=self.run_stimulation)
         self.start_experiment_thread.start()
 
+    def save_config(self):
+        &#34;&#34;&#34;Save the current configuration to a JSON file&#34;&#34;&#34;
+        folder = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
+        if folder != &#34;&#34;:
+            self.master_block = self.tree.create_blocks()
+            self.experiment = Experiment(
+                self.master_block,
+                int(self.framerate_cell.text()),
+                int(self.exposure_cell.text()),
+                self.mouse_id_cell.text(),
+                folder,
+                self.daq,
+                name=self.experiment_name_cell.text(),
+                config=self.config,
+            )
+            self.experiment.save_config(
+                [int(1024 / self.config[&#34;Binning&#34;]), int(1024 / self.config[&#34;Binning&#34;])]
+            )
+
     def run_stimulation(self):
-        &#34;&#34;&#34; Run the stimulation in parallel with the lights&#34;&#34;&#34;
+        &#34;&#34;&#34;Run the stimulation in parallel with the lights&#34;&#34;&#34;
         self.experiment = Experiment(
             self.master_block,
             int(self.framerate_cell.text()),
@@ -2704,27 +3095,37 @@ if __name__ == &#34;__main__&#34;:
             self.directory_cell.text(),
             self.daq,
             name=self.experiment_name_cell.text(),
+            config=self.config,
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+        # if (
+        #    not self.daq.stop_signal
+        #    and self.save_files_after_stop
+        #    and self.directory_save_files_checkbox.isChecked()
+        # ):
         if (
-            not self.daq.stop_signal
-            and self.save_files_after_stop
+            self.save_files_after_stop
             and self.directory_save_files_checkbox.isChecked()
         ):
             try:
+                print(&#34;this is the extent&#34;)
+                print(self.roi_extent)
                 self.experiment.save(self.roi_extent)
-            except Exception:
+            except Exception as err:
+                print(&#34;err after saving first&#34;)
+                print(err)
+                print(&#34;err before entering&#34;)
                 self.experiment.save()
         self.stop()
 
     def open_live_saving_thread(self):
-        &#34;&#34;&#34; Open the thread for the live saving&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the live saving&#34;&#34;&#34;
         self.live_save_thread = Thread(target=self.live_save)
         self.live_save_thread.start()
 
     def live_save(self):
-        &#34;&#34;&#34; Save NPY chunked files when the number of frames is over 1200&#34;&#34;&#34;
+        &#34;&#34;&#34;Save NPY chunked files when the number of frames is over 1200&#34;&#34;&#34;
         self.camera.file_index = 0
         self.camera.is_saving = False
         if self.directory_save_files_checkbox.isChecked():
@@ -2742,8 +3143,8 @@ if __name__ == &#34;__main__&#34;:
                     )
                 )
             except Exception as err:
-                print(err)
-            while self.camera.video_running is False:
+                pass
+            while self.camera.video_running is False and not self.camera.stop_signal:
                 time.sleep(0.01)
                 pass
             while self.camera.video_running is True:
@@ -2771,12 +3172,12 @@ if __name__ == &#34;__main__&#34;:
                 time.sleep(0.01)
 
     def open_live_preview_thread(self):
-        &#34;&#34;&#34; Open the thread for the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the live preview&#34;&#34;&#34;
         self.live_preview_thread = Thread(target=self.start_live)
         self.live_preview_thread.start()
 
     def start_live(self):
-        &#34;&#34;&#34; Start the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Start the live preview&#34;&#34;&#34;
         plt.ion()
         self.memory = []
         self.camera.baseline_completed = False
@@ -2789,7 +3190,7 @@ if __name__ == &#34;__main__&#34;:
                     try:
                         if (
                             not self.camera.baseline_completed
-                            or not self.activation_map_checkbox.isChecked()
+                            or self.activation_map_combo.currentIndex() == 0
                         ):
                             self.plot_image.set(
                                 array=self.camera.frames[
@@ -2800,67 +3201,113 @@ if __name__ == &#34;__main__&#34;:
                                 clim=(0, self.max_exposure),
                                 cmap=&#34;binary_r&#34;,
                             )
-                        else:
+                        elif self.activation_map_combo.currentIndex() == 1:
                             start_index = (
                                 self.camera.baseline_read_list[0]
                                 + self.live_preview_light_index
                             ) % len(self.daq.lights)
                             activation_map = (
+                                self.camera.baseline_frames[
+                                    start_index :: len(self.daq.lights)
+                                ][-1]
+                                - self.camera.average_baseline[
+                                    self.live_preview_light_index
+                                ]
+                            ) / self.camera.average_baseline[
+                                self.live_preview_light_index
+                            ]
+                            self.plot_image.set(
+                                array=activation_map,
+                                clim=(
+                                    -self.max_exposure / 200,
+                                    self.max_exposure / 200,
+                                ),
+                                cmap=&#34;seismic&#34;,
+                            )
+                        else:
+                            start_index = (
+                                self.camera.baseline_read_list[0]
+                                + self.live_preview_light_index
+                            ) % len(self.daq.lights)
+                            activation_map = np.log(
                                 (
-                                    self.camera.baseline_frames[
-                                        start_index :: len(self.daq.lights)
-                                    ][-1]
-                                    - self.camera.average_baseline[
+                                    (
+                                        self.camera.baseline_frames[
+                                            start_index :: len(self.daq.lights)
+                                        ][-1]
+                                        - self.camera.average_baseline[
+                                            self.live_preview_light_index
+                                        ]
+                                    )
+                                    / self.camera.average_baseline[
                                         self.live_preview_light_index
                                     ]
                                 )
-                                / self.camera.average_baseline[
-                                    self.live_preview_light_index
-                                ]
                             )
                             self.plot_image.set(
-                                array=activation_map, clim=(-10, 10), cmap=&#34;seismic&#34;
+                                array=activation_map,
+                                clim=(
+                                    -self.max_exposure / 2000,
+                                    self.max_exposure / 2000,
+                                ),
+                                cmap=&#34;seismic&#34;,
                             )
+
                     except Exception as err:
                         print(err)
                         pass
-                    time.sleep(0.01)
+                    time.sleep(0.04)
             except Exception as err:
                 pass
 
     def stop_live(self):
-        &#34;&#34;&#34; Stop the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Stop the live preview&#34;&#34;&#34;
         self.camera.video_running = False
 
     def open_signal_preview_thread(self):
-        &#34;&#34;&#34; Open the thread for the signal preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the signal preview&#34;&#34;&#34;
         self.signal_preview_thread = Thread(target=self.actualize_progression)
         self.signal_preview_thread.start()
 
     def actualize_progression(self):
-        &#34;&#34;&#34; Actualize the position of the progress bar&#34;&#34;&#34;
+        &#34;&#34;&#34;Actualize the position of the progress bar&#34;&#34;&#34;
         plt.ion()
         while self.daq.stop_signal is False:
             try:
-                position = self.camera.frames_read / int(self.framerate_cell.text())
+                if self.acquisition_mode:
+                    position = self.camera.frames_read / int(self.framerate_cell.text())
+                else:
+                    position = time.time() - self.daq.start_time
                 self.plot_window.vertical_lines[0].set_xdata(position)
                 self.plot_window.vertical_lines[1].set_xdata(position)
-                time.sleep(0.2)
-            except Exception:
-                time.sleep(0.2)
+                self.plot_window.vertical_lines[2].set_xdata(position)
+                time.sleep(0.5)
+            except Exception as err:
+                time.sleep(0.5)
                 pass
 
     def change_preview_light_channel(self):
-        &#34;&#34;&#34; Change the light channel for the live preview&#34;&#34;&#34;
+        &#34;&#34;&#34;Change the light channel for the live preview&#34;&#34;&#34;
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        self.adjust_slider()
+
+    def adjust_slider(self):
+        &#34;&#34;&#34;Adjust the saturation slider using corresponding value in dictionary&#34;&#34;&#34;
+        try:
+            value = self.slider_values[self.preview_light_combo.currentText()][
+                self.activation_map_combo.currentText()
+            ]
+            self.exposure_slider.setValue(value)
+        except Exception:
+            pass
 
     def open_daq_generation_thread(self):
-        &#34;&#34;&#34; Open the thread for the DAQ generation&#34;&#34;&#34;
+        &#34;&#34;&#34;Open the thread for the DAQ generation&#34;&#34;&#34;
         self.daq_generation_thread = Thread(target=self.generate_daq)
         self.daq_generation_thread.start()
 
     def generate_daq(self):
-        &#34;&#34;&#34; Generate the DAQ&#34;&#34;&#34;
+        &#34;&#34;&#34;Generate the DAQ&#34;&#34;&#34;
         try:
             self.camera = Camera(self.ports[&#34;camera&#34;], &#34;name&#34;)
         except Exception:
@@ -2870,7 +3317,6 @@ if __name__ == &#34;__main__&#34;:
             Instrument(self.ports[&#34;analog1&#34;], &#34;air-pump2&#34;),
             Instrument(self.ports[&#34;co2&#34;], &#34;air-pump3&#34;),
         ]
-        # TODO verify that said port exists
         self.daq = DAQ(
             &#34;dev1&#34;,
             [],
@@ -2879,9 +3325,12 @@ if __name__ == &#34;__main__&#34;:
             int(self.framerate_cell.text()),
             int(self.exposure_cell.text()) / 1000,
         )
+        self.daq.close_all_lights(self.ports)
+        self.daq_generated = True
+        self.enable_run(self.tree.check_global_validity())
 
     def actualize_daq(self):
-        &#34;&#34;&#34; Actualize the DAQ with the current settings&#34;&#34;&#34;
+        &#34;&#34;&#34;Actualize the DAQ with the current settings&#34;&#34;&#34;
         try:
             self.daq.lights = []
             if self.ir_checkbox.isChecked():
@@ -2900,25 +3349,23 @@ if __name__ == &#34;__main__&#34;:
             pass
 
     def stop(self):
-        &#34;&#34;&#34; Stop the experiment and reactivate the interface&#34;&#34;&#34;
+        &#34;&#34;&#34;Stop the experiment and reactivate the interface&#34;&#34;&#34;
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
-        self.deactivate_buttons(
-            [self.add_child_branch_button, self.tree.add_brother_branch_button]
-        )
+        self.tree.setCurrentItem(self.tree.topLevelItem(0))
         try:
             self.daq.stop_signal = True
         except Exception:
             pass
 
     def stop_while_running(self):
-        &#34;&#34;&#34; Stop the experiment while it is running&#34;&#34;&#34;
+        &#34;&#34;&#34;Stop the experiment while it is running&#34;&#34;&#34;
         if self.directory_save_files_checkbox.isChecked():
             self.stop_stimulation_dialog()
         self.stop()
 
     def stop_stimulation_dialog(self):
-        &#34;&#34;&#34; Ask if user wants to keep the files after experiment is stopped&#34;&#34;&#34;
+        &#34;&#34;&#34;Ask if user wants to keep the files after experiment is stopped&#34;&#34;&#34;
         button = QMessageBox.question(
             self, &#34;Save Files&#34;, &#34;Do you want to save the current files?&#34;
         )
@@ -2928,17 +3375,17 @@ if __name__ == &#34;__main__&#34;:
             self.save_files_after_stop = False
 
     def show_buttons(self, buttons):
-        &#34;&#34;&#34; Show the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Show the buttons in a list&#34;&#34;&#34;
         for button in buttons:
             button.setVisible(True)
 
     def hide_buttons(self, buttons):
-        &#34;&#34;&#34; Hide the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Hide the buttons in a list&#34;&#34;&#34;
         for button in buttons:
             button.setVisible(False)
 
     def activate_buttons(self, buttons):
-        &#34;&#34;&#34; Activate the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Activate the buttons in a list&#34;&#34;&#34;
         for button in buttons:
             button.setEnabled(True)
         if buttons == self.enabled_buttons:
@@ -2951,7 +3398,7 @@ if __name__ == &#34;__main__&#34;:
             self.stop_button.setDisabled(True)
 
     def deactivate_buttons(self, buttons):
-        &#34;&#34;&#34; Deactivate the buttons in a list&#34;&#34;&#34;
+        &#34;&#34;&#34;Deactivate the buttons in a list&#34;&#34;&#34;
         if buttons == self.enabled_buttons:
             self.stop_button.setEnabled(True)
             self.tree.clearSelection()
@@ -2959,20 +3406,20 @@ if __name__ == &#34;__main__&#34;:
             button.setDisabled(True)
 
     def choose_directory(self):
-        &#34;&#34;&#34; Choose the directory where to save the files&#34;&#34;&#34;
+        &#34;&#34;&#34;Choose the directory where to save the files&#34;&#34;&#34;
         folder = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
         self.directory_cell.setText(folder)
 
     def enable_directory(self):
-        &#34;&#34;&#34; Enable the directory cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Enable the directory cell&#34;&#34;&#34;
         self.files_saved = self.directory_save_files_checkbox.isChecked()
         self.directory_choose_button.setEnabled(self.files_saved)
         self.directory_cell.setEnabled(self.files_saved)
 
     def actualize_window(self):
-        &#34;&#34;&#34; Actualize the &#39;Stimulation Edit&#39; and &#39;Signal Preview&#39; windows&#34;&#34;&#34;
+        &#34;&#34;&#34;Actualize the &#39;Stimulation Edit&#39; and &#39;Signal Preview&#39; windows&#34;&#34;&#34;
         self.activate_buttons(
-            [self.add_child_branch_button, self.tree.add_brother_branch_button]
+            [self.add_child_branch_button, self.add_brother_branch_button]
         )
         if self.tree.currentItem():
             self.tree_switch_window.setCurrentIndex(0)
@@ -2990,11 +3437,11 @@ if __name__ == &#34;__main__&#34;:
         self.tree_to_type()
         self.tree_to_signal()
         self.tree_to_canal()
-        self.tree.graph(self.tree.currentItem())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def name_to_tree(self):
-        &#34;&#34;&#34; Transfer the name of the current item from the cell to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the name of the current item from the cell to the tree&#34;&#34;&#34;
         branch = self.tree.currentItem()
         branch.setForeground(0, QBrush(QColor(0, 0, 0)))
         if branch.childCount() &gt; 0:
@@ -3003,7 +3450,7 @@ if __name__ == &#34;__main__&#34;:
             branch.setText(0, self.stimulation_name_cell.text())
 
     def tree_to_name(self):
-        &#34;&#34;&#34; Transfer the name of the current item from the tree to the cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the name of the current item from the tree to the cell&#34;&#34;&#34;
         try:
             if self.tree.currentItem().childCount() &gt; 0:
                 if self.tree.currentItem().text(0) != &#34;No Name&#34;:
@@ -3019,8 +3466,8 @@ if __name__ == &#34;__main__&#34;:
             pass
 
     def type_to_tree(self):
-        &#34;&#34;&#34; Transfer the type of the current item from the cell to the tree&#34;&#34;&#34;
-        self.tree.check_global_validity()
+        &#34;&#34;&#34;Transfer the type of the current item from the cell to the tree&#34;&#34;&#34;
+        self.enable_run(self.tree.check_global_validity())
         self.different_signals_window.setCurrentIndex(
             self.stim_type_cell.currentIndex()
         )
@@ -3043,13 +3490,13 @@ if __name__ == &#34;__main__&#34;:
         except Exception:
             pass
         try:
-            self.tree.graph(self.tree.currentItem())
+            self.tree.graph(self.tree.currentItem(), current=True)
             self.draw()
         except Exception:
             pass
 
     def tree_to_type(self):
-        &#34;&#34;&#34; Transfer the type of the current item from the tree to the cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the type of the current item from the tree to the cell&#34;&#34;&#34;
         dico = {&#34;square&#34;: 0, &#34;random-square&#34;: 1, &#34;Third&#34;: 2}
         try:
             self.stim_type_cell.setCurrentIndex(dico[self.tree.currentItem().text(4)])
@@ -3067,7 +3514,7 @@ if __name__ == &#34;__main__&#34;:
             self.stim_type_cell3.setCurrentIndex(0)
 
     def signal_to_tree(self):
-        &#34;&#34;&#34; Transfer the signal of the current item from the cell to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the signal of the current item from the cell to the tree&#34;&#34;&#34;
         self.tree.currentItem().setText(6, self.duration_cell.text())
         self.tree.currentItem().setText(5, self.pulses_cell.text())
         self.tree.currentItem().setText(7, self.jitter_cell.text())
@@ -3086,13 +3533,12 @@ if __name__ == &#34;__main__&#34;:
         self.tree.currentItem().setText(26, self.width_cell3.text())
         self.tree.currentItem().setText(27, self.frequency_cell3.text())
         self.tree.currentItem().setText(28, self.duty_cell3.text())
-        self.tree.currentItem().setText(29, self.heigth_cell3.text())
-        self.tree.check_global_validity()
-        self.tree.graph(self.tree.currentItem())
+        self.enable_run(self.tree.check_global_validity())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def tree_to_signal(self):
-        &#34;&#34;&#34; Transfer the signal of the current item from the tree to the cell&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the signal of the current item from the tree to the cell&#34;&#34;&#34;
         try:
             self.pulses_cell.setText(self.tree.currentItem().text(5))
             self.duration_cell.setText(self.tree.currentItem().text(6))
@@ -3112,12 +3558,11 @@ if __name__ == &#34;__main__&#34;:
             self.width_cell3.setText(self.tree.currentItem().text(26))
             self.frequency_cell3.setText(self.tree.currentItem().text(27))
             self.duty_cell3.setText(self.tree.currentItem().text(28))
-            self.heigth_cell3.setText(self.tree.currentItem().text(29))
         except Exception as err:
             pass
 
     def tree_to_block(self):
-        &#34;&#34;&#34; Transfer the block attributes from the tree to the cells&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the block attributes from the tree to the cells&#34;&#34;&#34;
         try:
             self.block_iterations_cell.setText(self.tree.currentItem().text(1))
             self.block_delay_cell.setText(self.tree.currentItem().text(2))
@@ -3126,16 +3571,16 @@ if __name__ == &#34;__main__&#34;:
             pass
 
     def block_to_tree(self):
-        &#34;&#34;&#34; Transfer the block attributes from the cells to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the block attributes from the cells to the tree&#34;&#34;&#34;
         self.tree.currentItem().setText(1, self.block_iterations_cell.text())
         self.tree.currentItem().setText(2, self.block_delay_cell.text())
         self.tree.currentItem().setText(3, self.block_jitter_cell.text())
-        self.tree.check_global_validity()
-        self.tree.graph(self.tree.currentItem())
+        self.enable_run(self.tree.check_global_validity())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
 
     def tree_to_canal(self):
-        &#34;&#34;&#34; Transfer the canals attributes from the tree to the cells&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the canals attributes from the tree to the cells&#34;&#34;&#34;
         self.canal_running = True
         try:
             self.baseline_checkbox.setChecked(
@@ -3175,12 +3620,11 @@ if __name__ == &#34;__main__&#34;:
             else:
                 self.deactivate_buttons(self.canal3buttons)
         except Exception as err:
-            print(err)
             pass
         self.canal_running = False
 
     def canals_to_tree(self):
-        &#34;&#34;&#34; Transfer the canals attributes from the cells to the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Transfer the canals attributes from the cells to the tree&#34;&#34;&#34;
         self.baseline_checkbox.setEnabled(True)
         if not self.canal_running:
             if self.baseline_checkbox.isChecked():
@@ -3220,21 +3664,24 @@ if __name__ == &#34;__main__&#34;:
                 19, str(self.second_canal_check.isChecked())
             )
             self.tree.currentItem().setText(30, str(self.third_canal_check.isChecked()))
-            # self.pulses_cell2.setEnabled(self.second_canal_check.isChecked())
-            self.tree.check_global_validity()
-            self.tree.graph(self.tree.currentItem())
+            self.enable_run(self.tree.check_global_validity())
+            self.tree.graph(self.tree.currentItem(), current=True)
             self.draw()
 
-    def enable_run(self):
-        &#34;&#34;&#34; Enable the run button&#34;&#34;&#34;
-        self.run_button.setDisabled(False)
+    def enable_run(self, boolean):
+        &#34;&#34;&#34;Enable the run button&#34;&#34;&#34;
+        if not self.daq_generated:
+            boolean = False
+        self.save_config_button.setEnabled(boolean)
+        self.run_button.setEnabled(boolean)
 
     def disable_run(self):
-        &#34;&#34;&#34; Disable the run button&#34;&#34;&#34;
+        &#34;&#34;&#34;Disable the run button&#34;&#34;&#34;
+        self.save_config_button.setDisabled(True)
         self.run_button.setDisabled(True)
 
     def count_lights(self):
-        &#34;&#34;&#34; Return the number of lights and a list of their names&#34;&#34;&#34;
+        &#34;&#34;&#34;Return the number of lights and a list of their names&#34;&#34;&#34;
         count = 0
         text = []
         for checkbox in [
@@ -3249,7 +3696,7 @@ if __name__ == &#34;__main__&#34;:
         return (count, text)
 
     def actualize_lights(self):
-        &#34;&#34;&#34; Update the lights list in the combo box&#34;&#34;&#34;
+        &#34;&#34;&#34;Update the lights list in the combo box&#34;&#34;&#34;
         self.preview_light_combo.clear()
         if self.count_lights()[0] == 0:
             self.preview_light_combo.setEnabled(False)
@@ -3260,22 +3707,32 @@ if __name__ == &#34;__main__&#34;:
                 self.preview_light_combo.addItem(self.count_lights()[1][i])
 
     def boolean(self, string):
-        &#34;&#34;&#34; Return a boolean from a string&#34;&#34;&#34;
+        &#34;&#34;&#34;Return a boolean from a string&#34;&#34;&#34;
         if string == &#34;True&#34;:
             return True
         return False
 
     def draw(self, root=False):
+        &#34;&#34;&#34;Draw the sitmulation channels graph
+        
+        Args:
+            root (bool, optional): If True, the graph includes a progress bar&#34;&#34;&#34;
         try:
             self.plot_window.clear()
             self.plot_window.plot(
                 self.tree.x_values, self.tree.stim1_values, root, index=0
             )
             self.plot_window.plot(
-                self.tree.x_values, self.tree.stim2_values, root, index=1,
+                self.tree.x_values,
+                self.tree.stim2_values,
+                root,
+                index=1,
             )
             self.plot_window.plot(
-                self.tree.x_values, self.tree.stim3_values, root, index=2,
+                self.tree.x_values,
+                self.tree.stim3_values,
+                root,
+                index=2,
             )
             self.tree.x_values = []
             self.tree.stim1_values = []
@@ -3283,18 +3740,17 @@ if __name__ == &#34;__main__&#34;:
             self.tree.stim3_values = []
             self.elapsed_time = 0
         except Exception as err:
-            print(err)
             pass
 
     def set_roi(self):
-        &#34;&#34;&#34; Set the ROI&#34;&#34;&#34;
+        &#34;&#34;&#34;Set the ROI&#34;&#34;&#34;
         self.deactivate_buttons(buttons=self.enabled_buttons)
         self.stop_button.setEnabled(False)
         self.save_roi_button.setEnabled(False)
         self.roi_buttons.setCurrentIndex(1)
 
         def onselect_function(eclick, erelease):
-            &#34;&#34;&#34; Save the ROI dimensions as attributes&#34;&#34;&#34;
+            &#34;&#34;&#34;Save the ROI dimensions as attributes&#34;&#34;&#34;
             self.roi_extent = self.rect_selector.extents
             self.save_roi_button.setEnabled(True)
 
@@ -3311,26 +3767,27 @@ if __name__ == &#34;__main__&#34;:
         )
 
     def reset_roi(self):
-        &#34;&#34;&#34; Reset the ROI&#34;&#34;&#34;
+        &#34;&#34;&#34;Reset the ROI&#34;&#34;&#34;
         plt.figure(self.image_view.figure.number)
-        plt.xlim(0, 1024)
-        plt.ylim(0, 1024)
+        plt.xlim(0, int(1024 / self.config[&#34;Binning&#34;]))
+        plt.ylim(0, int(1024 / self.config[&#34;Binning&#34;]))
         self.roi_extent = None
         self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):
-        &#34;&#34;&#34; Cancel the ROI selection&#34;&#34;&#34;
+        &#34;&#34;&#34;Cancel the ROI selection&#34;&#34;&#34;
         self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         self.rect_selector.clear()
         self.rect_selector = None
 
     def save_roi(self):
-        &#34;&#34;&#34; Save the ROI&#34;&#34;&#34;
+        &#34;&#34;&#34;Save the ROI&#34;&#34;&#34;
         self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         plt.figure(self.image_view.figure.number)
         plt.ion()
+        print(self.roi_extent)
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
         self.rect_selector.clear()
@@ -3338,7 +3795,7 @@ if __name__ == &#34;__main__&#34;:
         self.reset_roi_button.setEnabled(True)
 
     def verify_exposure(self):
-        &#34;&#34;&#34; Verify if the exposure/framerate combination is valid&#34;&#34;&#34;
+        &#34;&#34;&#34;Verify if the exposure/framerate combination is valid&#34;&#34;&#34;
         try:
             boolean_check = (int(self.exposure_cell.text()) / 1000 + 0.0015) * int(
                 self.framerate_cell.text()
@@ -3346,10 +3803,9 @@ if __name__ == &#34;__main__&#34;:
         except Exception:
             boolean_check = False
         self.exposure_warning_label.setHidden(boolean_check)
-        self.check_run()
 
     def check_if_thread_is_alive(self):
-        &#34;&#34;&#34; Check what threads are alive&#34;&#34;&#34;
+        &#34;&#34;&#34;Check what threads are alive&#34;&#34;&#34;
         try:
             if self.live_preview_thread.is_alive():
                 print(&#34;Live preview thread is alive&#34;)
@@ -3399,7 +3855,7 @@ if __name__ == &#34;__main__&#34;:
             print(err)
 
     def initialize_buttons(self):
-        &#34;&#34;&#34; Define list of buttons to activate/deactivate&#34;&#34;&#34;
+        &#34;&#34;&#34;Define list of buttons to activate/deactivate&#34;&#34;&#34;
         self.canal1buttons = [
             self.stim_type_cell,
             self.pulses_label,
@@ -3458,7 +3914,7 @@ if __name__ == &#34;__main__&#34;:
             self.framerate_cell,
             self.exposure_cell,
             self.exposure_label,
-            self.tree.add_brother_branch_button,
+            self.add_brother_branch_button,
             self.add_child_branch_button,
             self.delete_item_button,
             self.red_checkbox,
@@ -3545,7 +4001,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def activate_buttons(self, buttons):
-    &#34;&#34;&#34; Activate the buttons in a list&#34;&#34;&#34;
+    &#34;&#34;&#34;Activate the buttons in a list&#34;&#34;&#34;
     for button in buttons:
         button.setEnabled(True)
     if buttons == self.enabled_buttons:
@@ -3568,7 +4024,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def actualize_daq(self):
-    &#34;&#34;&#34; Actualize the DAQ with the current settings&#34;&#34;&#34;
+    &#34;&#34;&#34;Actualize the DAQ with the current settings&#34;&#34;&#34;
     try:
         self.daq.lights = []
         if self.ir_checkbox.isChecked():
@@ -3597,7 +4053,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def actualize_lights(self):
-    &#34;&#34;&#34; Update the lights list in the combo box&#34;&#34;&#34;
+    &#34;&#34;&#34;Update the lights list in the combo box&#34;&#34;&#34;
     self.preview_light_combo.clear()
     if self.count_lights()[0] == 0:
         self.preview_light_combo.setEnabled(False)
@@ -3618,16 +4074,20 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def actualize_progression(self):
-    &#34;&#34;&#34; Actualize the position of the progress bar&#34;&#34;&#34;
+    &#34;&#34;&#34;Actualize the position of the progress bar&#34;&#34;&#34;
     plt.ion()
     while self.daq.stop_signal is False:
         try:
-            position = self.camera.frames_read / int(self.framerate_cell.text())
+            if self.acquisition_mode:
+                position = self.camera.frames_read / int(self.framerate_cell.text())
+            else:
+                position = time.time() - self.daq.start_time
             self.plot_window.vertical_lines[0].set_xdata(position)
             self.plot_window.vertical_lines[1].set_xdata(position)
-            time.sleep(0.2)
-        except Exception:
-            time.sleep(0.2)
+            self.plot_window.vertical_lines[2].set_xdata(position)
+            time.sleep(0.5)
+        except Exception as err:
+            time.sleep(0.5)
             pass</code></pre>
 </details>
 </dd>
@@ -3641,9 +4101,9 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def actualize_window(self):
-    &#34;&#34;&#34; Actualize the &#39;Stimulation Edit&#39; and &#39;Signal Preview&#39; windows&#34;&#34;&#34;
+    &#34;&#34;&#34;Actualize the &#39;Stimulation Edit&#39; and &#39;Signal Preview&#39; windows&#34;&#34;&#34;
     self.activate_buttons(
-        [self.add_child_branch_button, self.tree.add_brother_branch_button]
+        [self.add_child_branch_button, self.add_brother_branch_button]
     )
     if self.tree.currentItem():
         self.tree_switch_window.setCurrentIndex(0)
@@ -3661,7 +4121,7 @@ if __name__ == &#34;__main__&#34;:
     self.tree_to_type()
     self.tree_to_signal()
     self.tree_to_canal()
-    self.tree.graph(self.tree.currentItem())
+    self.tree.graph(self.tree.currentItem(), current=True)
     self.draw()</code></pre>
 </details>
 </dd>
@@ -3675,8 +4135,31 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def adjust_exposure(self):
-    &#34;&#34;&#34; Match the exposure of the image preview to the slider value&#34;&#34;&#34;
-    self.max_exposure = self.exposure_slider.value()</code></pre>
+    &#34;&#34;&#34;Match the exposure of the image preview to the slider value&#34;&#34;&#34;
+    self.max_exposure = self.exposure_slider.value()
+    self.slider_values[self.preview_light_combo.currentText()][
+        self.activation_map_combo.currentText()
+    ] = self.max_exposure</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.interface.App.adjust_slider"><code class="name flex">
+<span>def <span class="ident">adjust_slider</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adjust the saturation slider using corresponding value in dictionary</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adjust_slider(self):
+    &#34;&#34;&#34;Adjust the saturation slider using corresponding value in dictionary&#34;&#34;&#34;
+    try:
+        value = self.slider_values[self.preview_light_combo.currentText()][
+            self.activation_map_combo.currentText()
+        ]
+        self.exposure_slider.setValue(value)
+    except Exception:
+        pass</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.block_to_tree"><code class="name flex">
@@ -3689,12 +4172,12 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def block_to_tree(self):
-    &#34;&#34;&#34; Transfer the block attributes from the cells to the tree&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the block attributes from the cells to the tree&#34;&#34;&#34;
     self.tree.currentItem().setText(1, self.block_iterations_cell.text())
     self.tree.currentItem().setText(2, self.block_delay_cell.text())
     self.tree.currentItem().setText(3, self.block_jitter_cell.text())
-    self.tree.check_global_validity()
-    self.tree.graph(self.tree.currentItem())
+    self.enable_run(self.tree.check_global_validity())
+    self.tree.graph(self.tree.currentItem(), current=True)
     self.draw()</code></pre>
 </details>
 </dd>
@@ -3708,7 +4191,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def boolean(self, string):
-    &#34;&#34;&#34; Return a boolean from a string&#34;&#34;&#34;
+    &#34;&#34;&#34;Return a boolean from a string&#34;&#34;&#34;
     if string == &#34;True&#34;:
         return True
     return False</code></pre>
@@ -3724,7 +4207,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def canals_to_tree(self):
-    &#34;&#34;&#34; Transfer the canals attributes from the cells to the tree&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the canals attributes from the cells to the tree&#34;&#34;&#34;
     self.baseline_checkbox.setEnabled(True)
     if not self.canal_running:
         if self.baseline_checkbox.isChecked():
@@ -3764,9 +4247,8 @@ if __name__ == &#34;__main__&#34;:
             19, str(self.second_canal_check.isChecked())
         )
         self.tree.currentItem().setText(30, str(self.third_canal_check.isChecked()))
-        # self.pulses_cell2.setEnabled(self.second_canal_check.isChecked())
-        self.tree.check_global_validity()
-        self.tree.graph(self.tree.currentItem())
+        self.enable_run(self.tree.check_global_validity())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()</code></pre>
 </details>
 </dd>
@@ -3780,7 +4262,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def cancel_roi(self):
-    &#34;&#34;&#34; Cancel the ROI selection&#34;&#34;&#34;
+    &#34;&#34;&#34;Cancel the ROI selection&#34;&#34;&#34;
     self.activate_buttons(buttons=self.enabled_buttons)
     self.roi_buttons.setCurrentIndex(0)
     self.rect_selector.clear()
@@ -3797,8 +4279,9 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def change_preview_light_channel(self):
-    &#34;&#34;&#34; Change the light channel for the live preview&#34;&#34;&#34;
-    self.live_preview_light_index = self.preview_light_combo.currentIndex()</code></pre>
+    &#34;&#34;&#34;Change the light channel for the live preview&#34;&#34;&#34;
+    self.live_preview_light_index = self.preview_light_combo.currentIndex()
+    self.adjust_slider()</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.check_baseline"><code class="name flex">
@@ -3811,7 +4294,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_baseline(self):
-    &#34;&#34;&#34; Monitor the incoming frames and check if the baseline is reached&#34;&#34;&#34;
+    &#34;&#34;&#34;Monitor the incoming frames and check if the baseline is reached&#34;&#34;&#34;
     if len(self.daq.lights) &gt; 0:
         self.camera.baseline_data = []
         self.camera.adding_frames = False
@@ -3820,9 +4303,8 @@ if __name__ == &#34;__main__&#34;:
             pass
         frames_acquired = frames_acquired_from_camera_signal(self.daq.camera_signal)
         baseline_indices = get_baseline_frame_indices(
-            self.baseline_values, frames_acquired
+            self.tree.baseline_values, frames_acquired
         )
-        print(baseline_indices)
         for baseline_pair in baseline_indices:
             while not self.daq.stop_signal:
                 try:
@@ -3835,7 +4317,6 @@ if __name__ == &#34;__main__&#34;:
                         self.camera.adding_frames
                         and self.camera.frames_read &gt;= baseline_pair[1]
                     ):
-                        print(&#34;about to average&#34;)
                         self.camera.baseline_read_list = []
                         self.camera.average_baseline = average_baseline(
                             self.camera.baseline_data,
@@ -3848,7 +4329,6 @@ if __name__ == &#34;__main__&#34;:
                         self.camera.frames_read_list = []
                         break
                 except Exception as err:
-                    print(err)
                     pass
                 time.sleep(0.01)</code></pre>
 </details>
@@ -3863,7 +4343,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_if_thread_is_alive(self):
-    &#34;&#34;&#34; Check what threads are alive&#34;&#34;&#34;
+    &#34;&#34;&#34;Check what threads are alive&#34;&#34;&#34;
     try:
         if self.live_preview_thread.is_alive():
             print(&#34;Live preview thread is alive&#34;)
@@ -3923,7 +4403,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def check_override(self):
-    &#34;&#34;&#34; Check if experiment with the same name already exists&#34;&#34;&#34;
+    &#34;&#34;&#34;Check if experiment with the same name already exists&#34;&#34;&#34;
     if os.path.isfile(
         os.path.join(
             self.directory_cell.text(),
@@ -3954,7 +4434,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def choose_directory(self):
-    &#34;&#34;&#34; Choose the directory where to save the files&#34;&#34;&#34;
+    &#34;&#34;&#34;Choose the directory where to save the files&#34;&#34;&#34;
     folder = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
     self.directory_cell.setText(folder)</code></pre>
 </details>
@@ -3969,14 +4449,15 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def closeEvent(self, *args, **kwargs):
-    &#34;&#34;&#34; Stop all processes when closing the application &#34;&#34;&#34;
+    &#34;&#34;&#34;Stop all processes when closing the application&#34;&#34;&#34;
     self.video_running = False
     try:
+        self.camera.stop_signal = True
+        self.camera.video_running = False
         self.daq.stop_signal = True
         self.daq.camera.cam.stop_acquisition()
-        print(&#34;Closed&#34;)
+        print(&#34;Program Closed&#34;)
     except Exception as err:
-        print(err)
         pass
     self.check_if_thread_is_alive()</code></pre>
 </details>
@@ -3991,7 +4472,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def count_lights(self):
-    &#34;&#34;&#34; Return the number of lights and a list of their names&#34;&#34;&#34;
+    &#34;&#34;&#34;Return the number of lights and a list of their names&#34;&#34;&#34;
     count = 0
     text = []
     for checkbox in [
@@ -4016,7 +4497,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def deactivate_buttons(self, buttons):
-    &#34;&#34;&#34; Deactivate the buttons in a list&#34;&#34;&#34;
+    &#34;&#34;&#34;Deactivate the buttons in a list&#34;&#34;&#34;
     if buttons == self.enabled_buttons:
         self.stop_button.setEnabled(True)
         self.tree.clearSelection()
@@ -4034,14 +4515,20 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def deactivate_channels(self):
-    &#34;&#34;&#34; Deactivate canal checkboxes if the baseline checkbox is checked&#34;&#34;&#34;
+    &#34;&#34;&#34;Deactivate canal checkboxes if the baseline checkbox is checked&#34;&#34;&#34;
     if self.baseline_checkbox.isChecked():
         self.deactivate_buttons(
-            [self.first_canal_check, self.second_canal_check,]
+            [
+                self.first_canal_check,
+                self.second_canal_check,
+            ]
         )
     else:
         self.activate_buttons(
-            [self.first_canal_check, self.second_canal_check,]
+            [
+                self.first_canal_check,
+                self.second_canal_check,
+            ]
         )</code></pre>
 </details>
 </dd>
@@ -4055,7 +4542,8 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def disable_run(self):
-    &#34;&#34;&#34; Disable the run button&#34;&#34;&#34;
+    &#34;&#34;&#34;Disable the run button&#34;&#34;&#34;
+    self.save_config_button.setDisabled(True)
     self.run_button.setDisabled(True)</code></pre>
 </details>
 </dd>
@@ -4063,22 +4551,37 @@ if __name__ == &#34;__main__&#34;:
 <span>def <span class="ident">draw</span></span>(<span>self, root=False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Draw the sitmulation channels graph</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>root</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>If True, the graph includes a progress bar</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def draw(self, root=False):
+    &#34;&#34;&#34;Draw the sitmulation channels graph
+    
+    Args:
+        root (bool, optional): If True, the graph includes a progress bar&#34;&#34;&#34;
     try:
         self.plot_window.clear()
         self.plot_window.plot(
             self.tree.x_values, self.tree.stim1_values, root, index=0
         )
         self.plot_window.plot(
-            self.tree.x_values, self.tree.stim2_values, root, index=1,
+            self.tree.x_values,
+            self.tree.stim2_values,
+            root,
+            index=1,
         )
         self.plot_window.plot(
-            self.tree.x_values, self.tree.stim3_values, root, index=2,
+            self.tree.x_values,
+            self.tree.stim3_values,
+            root,
+            index=2,
         )
         self.tree.x_values = []
         self.tree.stim1_values = []
@@ -4086,7 +4589,6 @@ if __name__ == &#34;__main__&#34;:
         self.tree.stim3_values = []
         self.elapsed_time = 0
     except Exception as err:
-        print(err)
         pass</code></pre>
 </details>
 </dd>
@@ -4100,14 +4602,14 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def enable_directory(self):
-    &#34;&#34;&#34; Enable the directory cell&#34;&#34;&#34;
+    &#34;&#34;&#34;Enable the directory cell&#34;&#34;&#34;
     self.files_saved = self.directory_save_files_checkbox.isChecked()
     self.directory_choose_button.setEnabled(self.files_saved)
     self.directory_cell.setEnabled(self.files_saved)</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.enable_run"><code class="name flex">
-<span>def <span class="ident">enable_run</span></span>(<span>self)</span>
+<span>def <span class="ident">enable_run</span></span>(<span>self, boolean)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Enable the run button</p></div>
@@ -4115,9 +4617,12 @@ if __name__ == &#34;__main__&#34;:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def enable_run(self):
-    &#34;&#34;&#34; Enable the run button&#34;&#34;&#34;
-    self.run_button.setDisabled(False)</code></pre>
+<pre><code class="python">def enable_run(self, boolean):
+    &#34;&#34;&#34;Enable the run button&#34;&#34;&#34;
+    if not self.daq_generated:
+        boolean = False
+    self.save_config_button.setEnabled(boolean)
+    self.run_button.setEnabled(boolean)</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.generate_daq"><code class="name flex">
@@ -4130,7 +4635,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def generate_daq(self):
-    &#34;&#34;&#34; Generate the DAQ&#34;&#34;&#34;
+    &#34;&#34;&#34;Generate the DAQ&#34;&#34;&#34;
     try:
         self.camera = Camera(self.ports[&#34;camera&#34;], &#34;name&#34;)
     except Exception:
@@ -4140,7 +4645,6 @@ if __name__ == &#34;__main__&#34;:
         Instrument(self.ports[&#34;analog1&#34;], &#34;air-pump2&#34;),
         Instrument(self.ports[&#34;co2&#34;], &#34;air-pump3&#34;),
     ]
-    # TODO verify that said port exists
     self.daq = DAQ(
         &#34;dev1&#34;,
         [],
@@ -4148,7 +4652,24 @@ if __name__ == &#34;__main__&#34;:
         self.camera,
         int(self.framerate_cell.text()),
         int(self.exposure_cell.text()) / 1000,
-    )</code></pre>
+    )
+    self.daq.close_all_lights(self.ports)
+    self.daq_generated = True
+    self.enable_run(self.tree.check_global_validity())</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.interface.App.handler"><code class="name flex">
+<span>def <span class="ident">handler</span></span>(<span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Ignore Qt messages</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handler(*args, **kwargs):
+    &#34;&#34;&#34;Ignore Qt messages&#34;&#34;&#34;
+    pass</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.hide_buttons"><code class="name flex">
@@ -4161,7 +4682,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def hide_buttons(self, buttons):
-    &#34;&#34;&#34; Hide the buttons in a list&#34;&#34;&#34;
+    &#34;&#34;&#34;Hide the buttons in a list&#34;&#34;&#34;
     for button in buttons:
         button.setVisible(False)</code></pre>
 </details>
@@ -4176,12 +4697,15 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def import_config(self):
-    &#34;&#34;&#34; Import a configuration file&#34;&#34;&#34;
+    &#34;&#34;&#34;Import a configuration file&#34;&#34;&#34;
     file = QFileDialog.getOpenFileName()[0]
     try:
-        blocks = get_dictionary(file)[&#34;Blocks&#34;]
-        self.tree.create_tree_item(blocks)
-        self.tree.check_global_validity()
+        dictionary = get_dictionary(file)
+        self.framerate_cell.setText(str(dictionary[&#34;Framerate&#34;]))
+        self.exposure_cell.setText(str(dictionary[&#34;Exposition&#34;]))
+        self.set_lights(dictionary[&#34;Lights&#34;])
+        self.tree.create_tree_item(dictionary[&#34;Blocks&#34;])
+        self.enable_run(self.tree.check_global_validity())
         self.tree.graph(self.tree.invisibleRootItem())
         self.draw()
     except Exception as err:
@@ -4198,14 +4722,14 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def initUI(self):
-    &#34;&#34;&#34; Initialize the user interface &#34;&#34;&#34;
+    &#34;&#34;&#34;Initialize the user interface&#34;&#34;&#34;
     self.title = &#34;Widefield Imaging Aquisition&#34;
     self.dimensions = (10, 10, 640, 480)
     self.setWindowTitle(self.title)
     self.setGeometry(*self.dimensions)
 
-    self.grid_layout = QGridLayout()
-    self.setLayout(self.grid_layout)
+    # self.grid_layout = QGridLayout()
+    # self.setLayout(self.grid_layout)
     self.grid_layout.setAlignment(Qt.AlignTop)
 
     self.experiment_settings_label = QLabel(&#34;Experiment Settings&#34;)
@@ -4227,6 +4751,35 @@ if __name__ == &#34;__main__&#34;:
     self.mouse_id_window.addWidget(self.mouse_id_cell)
     self.experiment_settings_main_window.addLayout(self.mouse_id_window)
 
+    self.framerate_exposure_window = QHBoxLayout()
+    self.exposure_window = QHBoxLayout()
+    self.exposure_label = QLabel(&#34;Exposure (ms)&#34;)
+    self.exposure_window.addWidget(self.exposure_label)
+    self.exposure_cell = QLineEdit(&#34;10&#34;)
+    self.exposure_cell.setValidator(self.onlyExposure)
+    self.exposure_cell.textChanged.connect(self.verify_exposure)
+    self.exposure_window.addWidget(self.exposure_cell)
+    self.framerate_exposure_window.addLayout(self.exposure_window)
+    self.framerate_window = QHBoxLayout()
+    self.framerate_label = QLabel(&#34;Framerate&#34;)
+    self.framerate_window.addWidget(self.framerate_label)
+    self.framerate_cell = QLineEdit(&#34;30&#34;)
+    self.framerate_cell.setValidator(self.onlyFramerate)
+    self.framerate_cell.textChanged.connect(self.verify_exposure)
+    self.framerate_window.addWidget(self.framerate_cell)
+    self.framerate_exposure_window.addLayout(self.framerate_window)
+
+    if self.acquisition_mode:
+        self.experiment_settings_main_window.addLayout(
+            self.framerate_exposure_window
+        )
+
+    self.exposure_warning_label = QLabel(&#34;Invalid Exposure / Frame Rate&#34;)
+    if self.acquisition_mode:
+        self.experiment_settings_main_window.addWidget(self.exposure_warning_label)
+    self.exposure_warning_label.setStyleSheet(&#34;color: red&#34;)
+    self.exposure_warning_label.setHidden(True)
+
     self.directory_window = QHBoxLayout()
     self.directory_save_files_checkbox = QCheckBox()
     self.directory_save_files_checkbox.setText(&#34;Save&#34;)
@@ -4247,42 +4800,31 @@ if __name__ == &#34;__main__&#34;:
     self.trigger_checkbox = QCheckBox(&#34;Wait for Trigger&#34;)
     self.trigger_activated = False
     self.trigger_checkbox.stateChanged.connect(self.set_trigger)
-    self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+    # self.experiment_settings_main_window.addWidget(self.trigger_checkbox)
+
+    self.save_config_button = QPushButton(&#34;Save Config&#34;)
+    self.save_config_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;save.png&#34;))
+    )
+    self.save_config_button.clicked.connect(self.save_config)
+    self.save_config_button.setEnabled(False)
+    self.experiment_settings_main_window.addWidget(self.save_config_button)
 
     self.experiment_settings_main_window.addStretch()
 
-    self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+    if self.acquisition_mode:
+        self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0)
+    else:
+        self.grid_layout.addLayout(self.experiment_settings_main_window, 1, 0, 1, 2)
 
     self.image_settings_label = QLabel(&#34;Image Settings&#34;)
     self.image_settings_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-    self.grid_layout.addWidget(self.image_settings_label, 0, 1)
+    if self.acquisition_mode:
+        self.grid_layout.addWidget(self.image_settings_label, 0, 1)
 
     self.image_settings_main_window = QVBoxLayout()
     self.image_settings_main_window.setAlignment(Qt.AlignLeft)
     self.image_settings_main_window.setAlignment(Qt.AlignTop)
-
-    self.framerate_window = QHBoxLayout()
-    self.framerate_label = QLabel(&#34;Framerate&#34;)
-    self.framerate_window.addWidget(self.framerate_label)
-    self.framerate_cell = QLineEdit(&#34;30&#34;)
-    self.framerate_cell.setValidator(self.onlyFramerate)
-    self.framerate_cell.textChanged.connect(self.verify_exposure)
-    self.framerate_window.addWidget(self.framerate_cell)
-    self.image_settings_main_window.addLayout(self.framerate_window)
-
-    self.exposure_window = QHBoxLayout()
-    self.exposure_label = QLabel(&#34;Exposure (ms)&#34;)
-    self.exposure_window.addWidget(self.exposure_label)
-    self.exposure_cell = QLineEdit(&#34;10&#34;)
-    self.exposure_cell.setValidator(self.onlyExposure)
-    self.exposure_cell.textChanged.connect(self.verify_exposure)
-    self.exposure_window.addWidget(self.exposure_cell)
-    self.image_settings_main_window.addLayout(self.exposure_window)
-
-    self.exposure_warning_label = QLabel(&#34;Invalid Exposure / Frame Rate&#34;)
-    self.image_settings_main_window.addWidget(self.exposure_warning_label)
-    self.exposure_warning_label.setStyleSheet(&#34;color: red&#34;)
-    self.exposure_warning_label.setHidden(True)
 
     self.image_settings_second_window = QHBoxLayout()
     self.ir_checkbox = QCheckBox(&#34;Infrared&#34;)
@@ -4307,11 +4849,21 @@ if __name__ == &#34;__main__&#34;:
         self.change_preview_light_channel
     )
     self.light_channel_layout.addWidget(self.preview_light_combo)
-    self.activation_map_checkbox = QCheckBox(&#34;Show Activation Map&#34;)
+    # self.activation_map_checkbox = QCheckBox(&#34;Show Activation Map&#34;)
+    self.activation_map_window = QHBoxLayout()
+    self.activation_map_label = QLabel(&#34;Activation Map&#34;)
+    self.activation_map_window.addWidget(self.activation_map_label)
+    self.activation_map_combo = QComboBox()
+    self.activation_map_combo.addItem(&#34;None&#34;)
+    self.activation_map_combo.addItem(&#34;Normal&#34;)
+    self.activation_map_combo.addItem(&#34;Logarithmic&#34;)
+    self.activation_map_combo.currentIndexChanged.connect(self.adjust_slider)
+    self.activation_map_window.addWidget(self.activation_map_combo)
 
     self.image_settings_main_window.addLayout(self.image_settings_second_window)
     self.image_settings_main_window.addLayout(self.light_channel_layout)
-    self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+    # self.image_settings_main_window.addWidget(self.activation_map_checkbox)
+    self.image_settings_main_window.addLayout(self.activation_map_window)
 
     self.roi_buttons = QStackedLayout()
 
@@ -4361,10 +4913,10 @@ if __name__ == &#34;__main__&#34;:
     self.roi_layout2_container = QWidget()
     self.roi_layout2_container.setLayout(self.roi_layout2)
 
-    self.roi_buttons.addWidget(self.roi_layout1_container)
-    self.roi_buttons.addWidget(self.roi_layout2_container)
-
-    self.image_settings_main_window.addLayout(self.roi_buttons)
+    if self.acquisition_mode:
+        self.roi_buttons.addWidget(self.roi_layout1_container)
+        self.roi_buttons.addWidget(self.roi_layout2_container)
+        self.image_settings_main_window.addLayout(self.roi_buttons)
 
     self.exposure_slider = QSlider(Qt.Horizontal, self)
     self.exposure_slider.setRange(0, 4096)
@@ -4389,18 +4941,27 @@ if __name__ == &#34;__main__&#34;:
 
     self.image_settings_main_window.addStretch()
 
-    self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
+    if self.acquisition_mode:
+        self.grid_layout.addLayout(self.image_settings_main_window, 1, 1)
 
     self.live_preview_label = QLabel(&#34;Live Preview&#34;)
     self.live_preview_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-    self.numpy = np.random.rand(1024, 1024)
     self.image_view = PlotWindow()
-    self.plot_image = plt.imshow(self.numpy, cmap=&#34;binary_r&#34;, vmin=0, vmax=4096)
+    self.plot_image = plt.imshow(
+        np.zeros(
+            (int(1024 / self.config[&#34;Binning&#34;]), int(1024 / self.config[&#34;Binning&#34;]))
+        ),
+        cmap=&#34;binary_r&#34;,
+        vmin=0,
+        vmax=4096,
+        origin=&#34;lower&#34;,
+    )
     self.plot_image.axes.get_xaxis().set_visible(False)
     self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
-    self.grid_layout.addWidget(self.live_preview_label, 0, 2)
-    self.grid_layout.addWidget(self.image_view, 1, 2)
+    if self.acquisition_mode:
+        self.grid_layout.addWidget(self.live_preview_label, 0, 2)
+        self.grid_layout.addWidget(self.image_view, 1, 2)
 
     self.tree_label = QLabel(&#34;Stimulation Tree&#34;)
     self.tree_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
@@ -4408,7 +4969,6 @@ if __name__ == &#34;__main__&#34;:
 
     self.tree_window = QVBoxLayout()
     self.tree = Tree()
-    self.tree.set_app(self)
     self.tree.setHeaderLabels(
         [
             &#34;0 Name&#34;,
@@ -4444,13 +5004,14 @@ if __name__ == &#34;__main__&#34;:
             &#34;30 Canal 3&#34;,
         ]
     )
-    for i in range(1, 20):
-        self.tree.header().hideSection(i)
-    for i in range(21, 31):
-        self.tree.header().hideSection(i)
-    self.tree.setHeaderHidden(True)
-    self.tree.setColumnWidth(0, 330)
-    self.tree.setColumnWidth(20, 20)
+    if not self.config[&#34;Debug&#34;]:
+        for i in range(1, 20):
+            self.tree.header().hideSection(i)
+        for i in range(21, 31):
+            self.tree.header().hideSection(i)
+        self.tree.setHeaderHidden(True)
+        self.tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.tree.header().setStretchLastSection(False)
     self.tree.currentItemChanged.connect(self.actualize_window)
     self.tree_window.addWidget(self.tree)
 
@@ -4463,12 +5024,12 @@ if __name__ == &#34;__main__&#34;:
     )
     self.delete_item_button.clicked.connect(self.tree.delete_item)
     self.tree_second_window.addWidget(self.delete_item_button)
-    self.tree.add_brother_branch_button = QPushButton(&#34;Add Sibling&#34;)
-    self.tree.add_brother_branch_button.clicked.connect(self.tree.add_brother)
-    self.tree.add_brother_branch_button.setIcon(
+    self.add_brother_branch_button = QPushButton(&#34;Add Sibling&#34;)
+    self.add_brother_branch_button.clicked.connect(self.tree.add_brother)
+    self.add_brother_branch_button.setIcon(
         QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;arrow-bar-down.png&#34;))
     )
-    self.tree_second_window.addWidget(self.tree.add_brother_branch_button)
+    self.tree_second_window.addWidget(self.add_brother_branch_button)
     self.add_child_branch_button = QPushButton(&#34;Add Child&#34;)
     self.add_child_branch_button.clicked.connect(self.tree.add_child)
     self.add_child_branch_button.setIcon(
@@ -4558,7 +5119,7 @@ if __name__ == &#34;__main__&#34;:
     self.stim_type_cell3.currentIndexChanged.connect(self.type_to_tree)
     self.stimulation_type_window3 = QHBoxLayout()
     self.stimulation_type_window3.addWidget(self.third_canal_check)
-    self.stimulation_type_window3.addWidget(self.stim_type_cell3)
+    # self.stimulation_type_window3.addWidget(self.stim_type_cell3)
     self.canal_window.addLayout(self.stimulation_type_window3)
 
     self.different_signals_window3 = QStackedLayout()
@@ -4583,7 +5144,8 @@ if __name__ == &#34;__main__&#34;:
 
     self.baseline_checkbox = QCheckBox(&#34;Baseline&#34;)
     self.baseline_checkbox.stateChanged.connect(self.canals_to_tree)
-    self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
+    if self.acquisition_mode:
+        self.stimulation_edit_layout.addWidget(self.baseline_checkbox)
     self.stimulation_edit_layout.addLayout(self.canal_window)
 
     self.first_signal_type_window = QVBoxLayout()
@@ -4802,7 +5364,7 @@ if __name__ == &#34;__main__&#34;:
     self.second_signal_type_window2.addLayout(self.frequency_window2)
     self.second_signal_type_window2.addLayout(self.duty_window2)
 
-    self.second_signal_type_window3.addLayout(self.heigth_window3)
+    # self.second_signal_type_window3.addLayout(self.heigth_window3)
     self.second_signal_type_window3.addLayout(self.frequency_window3)
     self.second_signal_type_window3.addLayout(self.duty_window3)
 
@@ -4895,7 +5457,10 @@ if __name__ == &#34;__main__&#34;:
 
     self.signal_preview_label = QLabel(&#34;Signal Preview&#34;)
     self.signal_preview_label.setFont(QFont(&#34;IBM Plex Sans&#34;, 17))
-    self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+    if self.acquisition_mode:
+        self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
+    else:
+        self.grid_layout.addWidget(self.signal_preview_label, 0, 2)
 
     self.buttons_main_window = QHBoxLayout()
     self.stop_button = QPushButton(&#34;Stop&#34;)
@@ -4913,7 +5478,10 @@ if __name__ == &#34;__main__&#34;:
     self.run_button.setEnabled(False)
     self.buttons_main_window.addWidget(self.run_button)
     self.plot_window = PlotWindow(subplots=True)
-    self.grid_layout.addWidget(self.plot_window, 3, 2)
+    if self.acquisition_mode:
+        self.grid_layout.addWidget(self.plot_window, 3, 2)
+    else:
+        self.grid_layout.addWidget(self.plot_window, 1, 2, 3, 1)
     self.grid_layout.addLayout(self.buttons_main_window, 4, 2)
     self.open_daq_generation_thread()
     self.initialize_buttons()
@@ -4930,7 +5498,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def initialize_buttons(self):
-    &#34;&#34;&#34; Define list of buttons to activate/deactivate&#34;&#34;&#34;
+    &#34;&#34;&#34;Define list of buttons to activate/deactivate&#34;&#34;&#34;
     self.canal1buttons = [
         self.stim_type_cell,
         self.pulses_label,
@@ -4989,7 +5557,7 @@ if __name__ == &#34;__main__&#34;:
         self.framerate_cell,
         self.exposure_cell,
         self.exposure_label,
-        self.tree.add_brother_branch_button,
+        self.add_brother_branch_button,
         self.add_child_branch_button,
         self.delete_item_button,
         self.red_checkbox,
@@ -5067,7 +5635,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def live_save(self):
-    &#34;&#34;&#34; Save NPY chunked files when the number of frames is over 1200&#34;&#34;&#34;
+    &#34;&#34;&#34;Save NPY chunked files when the number of frames is over 1200&#34;&#34;&#34;
     self.camera.file_index = 0
     self.camera.is_saving = False
     if self.directory_save_files_checkbox.isChecked():
@@ -5085,8 +5653,8 @@ if __name__ == &#34;__main__&#34;:
                 )
             )
         except Exception as err:
-            print(err)
-        while self.camera.video_running is False:
+            pass
+        while self.camera.video_running is False and not self.camera.stop_signal:
             time.sleep(0.01)
             pass
         while self.camera.video_running is True:
@@ -5124,7 +5692,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def name_to_tree(self):
-    &#34;&#34;&#34; Transfer the name of the current item from the cell to the tree&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the name of the current item from the cell to the tree&#34;&#34;&#34;
     branch = self.tree.currentItem()
     branch.setForeground(0, QBrush(QColor(0, 0, 0)))
     if branch.childCount() &gt; 0:
@@ -5143,7 +5711,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open_baseline_check_thread(self):
-    &#34;&#34;&#34; Open the thread for the baseline check&#34;&#34;&#34;
+    &#34;&#34;&#34;Open the thread for the baseline check&#34;&#34;&#34;
     self.baseline_check_thread = Thread(target=self.check_baseline)
     self.baseline_check_thread.start()</code></pre>
 </details>
@@ -5158,7 +5726,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open_daq_generation_thread(self):
-    &#34;&#34;&#34; Open the thread for the DAQ generation&#34;&#34;&#34;
+    &#34;&#34;&#34;Open the thread for the DAQ generation&#34;&#34;&#34;
     self.daq_generation_thread = Thread(target=self.generate_daq)
     self.daq_generation_thread.start()</code></pre>
 </details>
@@ -5173,7 +5741,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open_live_preview_thread(self):
-    &#34;&#34;&#34; Open the thread for the live preview&#34;&#34;&#34;
+    &#34;&#34;&#34;Open the thread for the live preview&#34;&#34;&#34;
     self.live_preview_thread = Thread(target=self.start_live)
     self.live_preview_thread.start()</code></pre>
 </details>
@@ -5188,7 +5756,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open_live_saving_thread(self):
-    &#34;&#34;&#34; Open the thread for the live saving&#34;&#34;&#34;
+    &#34;&#34;&#34;Open the thread for the live saving&#34;&#34;&#34;
     self.live_save_thread = Thread(target=self.live_save)
     self.live_save_thread.start()</code></pre>
 </details>
@@ -5203,7 +5771,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open_signal_preview_thread(self):
-    &#34;&#34;&#34; Open the thread for the signal preview&#34;&#34;&#34;
+    &#34;&#34;&#34;Open the thread for the signal preview&#34;&#34;&#34;
     self.signal_preview_thread = Thread(target=self.actualize_progression)
     self.signal_preview_thread.start()</code></pre>
 </details>
@@ -5218,7 +5786,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open_start_experiment_thread(self):
-    &#34;&#34;&#34; Open the thread for the start of the experiment&#34;&#34;&#34;
+    &#34;&#34;&#34;Open the thread for the start of the experiment&#34;&#34;&#34;
     self.start_experiment_thread = Thread(target=self.run_stimulation)
     self.start_experiment_thread.start()</code></pre>
 </details>
@@ -5233,10 +5801,10 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reset_roi(self):
-    &#34;&#34;&#34; Reset the ROI&#34;&#34;&#34;
+    &#34;&#34;&#34;Reset the ROI&#34;&#34;&#34;
     plt.figure(self.image_view.figure.number)
-    plt.xlim(0, 1024)
-    plt.ylim(0, 1024)
+    plt.xlim(0, int(1024 / self.config[&#34;Binning&#34;]))
+    plt.ylim(0, int(1024 / self.config[&#34;Binning&#34;]))
     self.roi_extent = None
     self.reset_roi_button.setEnabled(False)</code></pre>
 </details>
@@ -5251,10 +5819,11 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def run(self):
-    &#34;&#34;&#34; Run the experiment&#34;&#34;&#34;
+    &#34;&#34;&#34;Run the experiment&#34;&#34;&#34;
     if self.check_override():
         self.deactivate_buttons(buttons=self.enabled_buttons)
         self.master_block = self.tree.create_blocks()
+        self.tree.baseline_values = []
         self.tree.graph(item=self.tree.invisibleRootItem())
         self.root_time, self.root_signal = (
             self.tree.x_values,
@@ -5265,10 +5834,13 @@ if __name__ == &#34;__main__&#34;:
             ],
         )
         self.draw(root=True)
-        self.actualize_daq()
-        self.open_live_saving_thread()
-        self.open_live_preview_thread()
-        self.open_baseline_check_thread()
+        if self.acquisition_mode:
+            self.actualize_daq()
+            self.open_live_saving_thread()
+            self.open_live_preview_thread()
+            self.open_baseline_check_thread()
+        else:
+            self.daq.stop_signal = False
         self.open_signal_preview_thread()
         self.open_start_experiment_thread()</code></pre>
 </details>
@@ -5283,7 +5855,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def run_stimulation(self):
-    &#34;&#34;&#34; Run the stimulation in parallel with the lights&#34;&#34;&#34;
+    &#34;&#34;&#34;Run the stimulation in parallel with the lights&#34;&#34;&#34;
     self.experiment = Experiment(
         self.master_block,
         int(self.framerate_cell.text()),
@@ -5292,19 +5864,58 @@ if __name__ == &#34;__main__&#34;:
         self.directory_cell.text(),
         self.daq,
         name=self.experiment_name_cell.text(),
+        config=self.config,
     )
     self.save_files_after_stop = True
     self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+    # if (
+    #    not self.daq.stop_signal
+    #    and self.save_files_after_stop
+    #    and self.directory_save_files_checkbox.isChecked()
+    # ):
     if (
-        not self.daq.stop_signal
-        and self.save_files_after_stop
+        self.save_files_after_stop
         and self.directory_save_files_checkbox.isChecked()
     ):
         try:
+            print(&#34;this is the extent&#34;)
+            print(self.roi_extent)
             self.experiment.save(self.roi_extent)
-        except Exception:
+        except Exception as err:
+            print(&#34;err after saving first&#34;)
+            print(err)
+            print(&#34;err before entering&#34;)
             self.experiment.save()
     self.stop()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.interface.App.save_config"><code class="name flex">
+<span>def <span class="ident">save_config</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save the current configuration to a JSON file</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_config(self):
+    &#34;&#34;&#34;Save the current configuration to a JSON file&#34;&#34;&#34;
+    folder = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
+    if folder != &#34;&#34;:
+        self.master_block = self.tree.create_blocks()
+        self.experiment = Experiment(
+            self.master_block,
+            int(self.framerate_cell.text()),
+            int(self.exposure_cell.text()),
+            self.mouse_id_cell.text(),
+            folder,
+            self.daq,
+            name=self.experiment_name_cell.text(),
+            config=self.config,
+        )
+        self.experiment.save_config(
+            [int(1024 / self.config[&#34;Binning&#34;]), int(1024 / self.config[&#34;Binning&#34;])]
+        )</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.save_roi"><code class="name flex">
@@ -5317,16 +5928,39 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save_roi(self):
-    &#34;&#34;&#34; Save the ROI&#34;&#34;&#34;
+    &#34;&#34;&#34;Save the ROI&#34;&#34;&#34;
     self.activate_buttons(buttons=self.enabled_buttons)
     self.roi_buttons.setCurrentIndex(0)
     plt.figure(self.image_view.figure.number)
     plt.ion()
+    print(self.roi_extent)
     plt.xlim(self.roi_extent[0], self.roi_extent[1])
     plt.ylim(self.roi_extent[2], self.roi_extent[3])
     self.rect_selector.clear()
     self.rect_selector = None
     self.reset_roi_button.setEnabled(True)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.interface.App.set_lights"><code class="name flex">
+<span>def <span class="ident">set_lights</span></span>(<span>self, lights)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the lights</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_lights(self, lights):
+    &#34;&#34;&#34;Set the lights&#34;&#34;&#34;
+    for light in lights:
+        if light == &#34;infrared&#34;:
+            self.ir_checkbox.setChecked(True)
+        elif light == &#34;red&#34;:
+            self.red_checkbox.setChecked(True)
+        elif light == &#34;green&#34;:
+            self.green_checkbox.setChecked(True)
+        elif light == &#34;blue&#34;:
+            self.fluorescence_checkbox.setChecked(True)</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.set_roi"><code class="name flex">
@@ -5339,14 +5973,14 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_roi(self):
-    &#34;&#34;&#34; Set the ROI&#34;&#34;&#34;
+    &#34;&#34;&#34;Set the ROI&#34;&#34;&#34;
     self.deactivate_buttons(buttons=self.enabled_buttons)
     self.stop_button.setEnabled(False)
     self.save_roi_button.setEnabled(False)
     self.roi_buttons.setCurrentIndex(1)
 
     def onselect_function(eclick, erelease):
-        &#34;&#34;&#34; Save the ROI dimensions as attributes&#34;&#34;&#34;
+        &#34;&#34;&#34;Save the ROI dimensions as attributes&#34;&#34;&#34;
         self.roi_extent = self.rect_selector.extents
         self.save_roi_button.setEnabled(True)
 
@@ -5373,8 +6007,8 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_trigger(self):
-    &#34;&#34;&#34; Set the trigger for the DAQ&#34;&#34;&#34;
-    if self.trigger_checkbox.isChecked():
+    &#34;&#34;&#34;Set the trigger for the DAQ&#34;&#34;&#34;
+    if not self.acquisition_mode:
         self.run_button.setText(&#34;Run at Trigger&#34;)
         self.daq.set_trigger(self.ports[&#34;trigger&#34;])
     else:
@@ -5392,7 +6026,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def show_buttons(self, buttons):
-    &#34;&#34;&#34; Show the buttons in a list&#34;&#34;&#34;
+    &#34;&#34;&#34;Show the buttons in a list&#34;&#34;&#34;
     for button in buttons:
         button.setVisible(True)</code></pre>
 </details>
@@ -5407,7 +6041,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def signal_to_tree(self):
-    &#34;&#34;&#34; Transfer the signal of the current item from the cell to the tree&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the signal of the current item from the cell to the tree&#34;&#34;&#34;
     self.tree.currentItem().setText(6, self.duration_cell.text())
     self.tree.currentItem().setText(5, self.pulses_cell.text())
     self.tree.currentItem().setText(7, self.jitter_cell.text())
@@ -5426,10 +6060,41 @@ if __name__ == &#34;__main__&#34;:
     self.tree.currentItem().setText(26, self.width_cell3.text())
     self.tree.currentItem().setText(27, self.frequency_cell3.text())
     self.tree.currentItem().setText(28, self.duty_cell3.text())
-    self.tree.currentItem().setText(29, self.heigth_cell3.text())
-    self.tree.check_global_validity()
-    self.tree.graph(self.tree.currentItem())
+    self.enable_run(self.tree.check_global_validity())
+    self.tree.graph(self.tree.currentItem(), current=True)
     self.draw()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.interface.App.start_in_acquisition_mode"><code class="name flex">
+<span>def <span class="ident">start_in_acquisition_mode</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize the interface in acquisition mode</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_in_acquisition_mode(self):
+    &#34;&#34;&#34;Initialize the interface in acquisition mode&#34;&#34;&#34;
+    self.start_container.setParent(None)
+    self.acquisition_mode = True
+    self.initUI()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.interface.App.start_in_trigger_mode"><code class="name flex">
+<span>def <span class="ident">start_in_trigger_mode</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize the interface in trigger mode</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_in_trigger_mode(self):
+    &#34;&#34;&#34;Initialize the interface in trigger mode&#34;&#34;&#34;
+    self.start_container.setParent(None)
+    self.acquisition_mode = False
+    self.initUI()</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.gui.interface.App.start_live"><code class="name flex">
@@ -5442,7 +6107,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def start_live(self):
-    &#34;&#34;&#34; Start the live preview&#34;&#34;&#34;
+    &#34;&#34;&#34;Start the live preview&#34;&#34;&#34;
     plt.ion()
     self.memory = []
     self.camera.baseline_completed = False
@@ -5455,7 +6120,7 @@ if __name__ == &#34;__main__&#34;:
                 try:
                     if (
                         not self.camera.baseline_completed
-                        or not self.activation_map_checkbox.isChecked()
+                        or self.activation_map_combo.currentIndex() == 0
                     ):
                         self.plot_image.set(
                             array=self.camera.frames[
@@ -5466,31 +6131,62 @@ if __name__ == &#34;__main__&#34;:
                             clim=(0, self.max_exposure),
                             cmap=&#34;binary_r&#34;,
                         )
-                    else:
+                    elif self.activation_map_combo.currentIndex() == 1:
                         start_index = (
                             self.camera.baseline_read_list[0]
                             + self.live_preview_light_index
                         ) % len(self.daq.lights)
                         activation_map = (
+                            self.camera.baseline_frames[
+                                start_index :: len(self.daq.lights)
+                            ][-1]
+                            - self.camera.average_baseline[
+                                self.live_preview_light_index
+                            ]
+                        ) / self.camera.average_baseline[
+                            self.live_preview_light_index
+                        ]
+                        self.plot_image.set(
+                            array=activation_map,
+                            clim=(
+                                -self.max_exposure / 200,
+                                self.max_exposure / 200,
+                            ),
+                            cmap=&#34;seismic&#34;,
+                        )
+                    else:
+                        start_index = (
+                            self.camera.baseline_read_list[0]
+                            + self.live_preview_light_index
+                        ) % len(self.daq.lights)
+                        activation_map = np.log(
                             (
-                                self.camera.baseline_frames[
-                                    start_index :: len(self.daq.lights)
-                                ][-1]
-                                - self.camera.average_baseline[
+                                (
+                                    self.camera.baseline_frames[
+                                        start_index :: len(self.daq.lights)
+                                    ][-1]
+                                    - self.camera.average_baseline[
+                                        self.live_preview_light_index
+                                    ]
+                                )
+                                / self.camera.average_baseline[
                                     self.live_preview_light_index
                                 ]
                             )
-                            / self.camera.average_baseline[
-                                self.live_preview_light_index
-                            ]
                         )
                         self.plot_image.set(
-                            array=activation_map, clim=(-10, 10), cmap=&#34;seismic&#34;
+                            array=activation_map,
+                            clim=(
+                                -self.max_exposure / 2000,
+                                self.max_exposure / 2000,
+                            ),
+                            cmap=&#34;seismic&#34;,
                         )
+
                 except Exception as err:
                     print(err)
                     pass
-                time.sleep(0.01)
+                time.sleep(0.04)
         except Exception as err:
             pass</code></pre>
 </details>
@@ -5505,12 +6201,10 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def stop(self):
-    &#34;&#34;&#34; Stop the experiment and reactivate the interface&#34;&#34;&#34;
+    &#34;&#34;&#34;Stop the experiment and reactivate the interface&#34;&#34;&#34;
     self.stop_live()
     self.activate_buttons(buttons=self.enabled_buttons)
-    self.deactivate_buttons(
-        [self.add_child_branch_button, self.tree.add_brother_branch_button]
-    )
+    self.tree.setCurrentItem(self.tree.topLevelItem(0))
     try:
         self.daq.stop_signal = True
     except Exception:
@@ -5527,7 +6221,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def stop_live(self):
-    &#34;&#34;&#34; Stop the live preview&#34;&#34;&#34;
+    &#34;&#34;&#34;Stop the live preview&#34;&#34;&#34;
     self.camera.video_running = False</code></pre>
 </details>
 </dd>
@@ -5541,7 +6235,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def stop_stimulation_dialog(self):
-    &#34;&#34;&#34; Ask if user wants to keep the files after experiment is stopped&#34;&#34;&#34;
+    &#34;&#34;&#34;Ask if user wants to keep the files after experiment is stopped&#34;&#34;&#34;
     button = QMessageBox.question(
         self, &#34;Save Files&#34;, &#34;Do you want to save the current files?&#34;
     )
@@ -5561,7 +6255,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def stop_while_running(self):
-    &#34;&#34;&#34; Stop the experiment while it is running&#34;&#34;&#34;
+    &#34;&#34;&#34;Stop the experiment while it is running&#34;&#34;&#34;
     if self.directory_save_files_checkbox.isChecked():
         self.stop_stimulation_dialog()
     self.stop()</code></pre>
@@ -5577,7 +6271,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tree_to_block(self):
-    &#34;&#34;&#34; Transfer the block attributes from the tree to the cells&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the block attributes from the tree to the cells&#34;&#34;&#34;
     try:
         self.block_iterations_cell.setText(self.tree.currentItem().text(1))
         self.block_delay_cell.setText(self.tree.currentItem().text(2))
@@ -5596,7 +6290,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tree_to_canal(self):
-    &#34;&#34;&#34; Transfer the canals attributes from the tree to the cells&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the canals attributes from the tree to the cells&#34;&#34;&#34;
     self.canal_running = True
     try:
         self.baseline_checkbox.setChecked(
@@ -5636,7 +6330,6 @@ if __name__ == &#34;__main__&#34;:
         else:
             self.deactivate_buttons(self.canal3buttons)
     except Exception as err:
-        print(err)
         pass
     self.canal_running = False</code></pre>
 </details>
@@ -5651,7 +6344,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tree_to_name(self):
-    &#34;&#34;&#34; Transfer the name of the current item from the tree to the cell&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the name of the current item from the tree to the cell&#34;&#34;&#34;
     try:
         if self.tree.currentItem().childCount() &gt; 0:
             if self.tree.currentItem().text(0) != &#34;No Name&#34;:
@@ -5677,7 +6370,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tree_to_signal(self):
-    &#34;&#34;&#34; Transfer the signal of the current item from the tree to the cell&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the signal of the current item from the tree to the cell&#34;&#34;&#34;
     try:
         self.pulses_cell.setText(self.tree.currentItem().text(5))
         self.duration_cell.setText(self.tree.currentItem().text(6))
@@ -5697,7 +6390,6 @@ if __name__ == &#34;__main__&#34;:
         self.width_cell3.setText(self.tree.currentItem().text(26))
         self.frequency_cell3.setText(self.tree.currentItem().text(27))
         self.duty_cell3.setText(self.tree.currentItem().text(28))
-        self.heigth_cell3.setText(self.tree.currentItem().text(29))
     except Exception as err:
         pass</code></pre>
 </details>
@@ -5712,7 +6404,7 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def tree_to_type(self):
-    &#34;&#34;&#34; Transfer the type of the current item from the tree to the cell&#34;&#34;&#34;
+    &#34;&#34;&#34;Transfer the type of the current item from the tree to the cell&#34;&#34;&#34;
     dico = {&#34;square&#34;: 0, &#34;random-square&#34;: 1, &#34;Third&#34;: 2}
     try:
         self.stim_type_cell.setCurrentIndex(dico[self.tree.currentItem().text(4)])
@@ -5740,8 +6432,8 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def type_to_tree(self):
-    &#34;&#34;&#34; Transfer the type of the current item from the cell to the tree&#34;&#34;&#34;
-    self.tree.check_global_validity()
+    &#34;&#34;&#34;Transfer the type of the current item from the cell to the tree&#34;&#34;&#34;
+    self.enable_run(self.tree.check_global_validity())
     self.different_signals_window.setCurrentIndex(
         self.stim_type_cell.currentIndex()
     )
@@ -5764,7 +6456,7 @@ if __name__ == &#34;__main__&#34;:
     except Exception:
         pass
     try:
-        self.tree.graph(self.tree.currentItem())
+        self.tree.graph(self.tree.currentItem(), current=True)
         self.draw()
     except Exception:
         pass</code></pre>
@@ -5780,15 +6472,14 @@ if __name__ == &#34;__main__&#34;:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def verify_exposure(self):
-    &#34;&#34;&#34; Verify if the exposure/framerate combination is valid&#34;&#34;&#34;
+    &#34;&#34;&#34;Verify if the exposure/framerate combination is valid&#34;&#34;&#34;
     try:
         boolean_check = (int(self.exposure_cell.text()) / 1000 + 0.0015) * int(
             self.framerate_cell.text()
         ) &lt; 1 and int(self.framerate_cell.text()) &lt;= 57
     except Exception:
         boolean_check = False
-    self.exposure_warning_label.setHidden(boolean_check)
-    self.check_run()</code></pre>
+    self.exposure_warning_label.setHidden(boolean_check)</code></pre>
 </details>
 </dd>
 </dl>
@@ -5818,6 +6509,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.actualize_progression" href="#Widefield-Imaging-Acquisition.gui.interface.App.actualize_progression">actualize_progression</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.actualize_window" href="#Widefield-Imaging-Acquisition.gui.interface.App.actualize_window">actualize_window</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.adjust_exposure" href="#Widefield-Imaging-Acquisition.gui.interface.App.adjust_exposure">adjust_exposure</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.adjust_slider" href="#Widefield-Imaging-Acquisition.gui.interface.App.adjust_slider">adjust_slider</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.block_to_tree" href="#Widefield-Imaging-Acquisition.gui.interface.App.block_to_tree">block_to_tree</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.boolean" href="#Widefield-Imaging-Acquisition.gui.interface.App.boolean">boolean</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.canals_to_tree" href="#Widefield-Imaging-Acquisition.gui.interface.App.canals_to_tree">canals_to_tree</a></code></li>
@@ -5836,6 +6528,7 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.enable_directory" href="#Widefield-Imaging-Acquisition.gui.interface.App.enable_directory">enable_directory</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.enable_run" href="#Widefield-Imaging-Acquisition.gui.interface.App.enable_run">enable_run</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.generate_daq" href="#Widefield-Imaging-Acquisition.gui.interface.App.generate_daq">generate_daq</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.handler" href="#Widefield-Imaging-Acquisition.gui.interface.App.handler">handler</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.hide_buttons" href="#Widefield-Imaging-Acquisition.gui.interface.App.hide_buttons">hide_buttons</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.import_config" href="#Widefield-Imaging-Acquisition.gui.interface.App.import_config">import_config</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.initUI" href="#Widefield-Imaging-Acquisition.gui.interface.App.initUI">initUI</a></code></li>
@@ -5851,11 +6544,15 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.reset_roi" href="#Widefield-Imaging-Acquisition.gui.interface.App.reset_roi">reset_roi</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.run" href="#Widefield-Imaging-Acquisition.gui.interface.App.run">run</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.run_stimulation" href="#Widefield-Imaging-Acquisition.gui.interface.App.run_stimulation">run_stimulation</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.save_config" href="#Widefield-Imaging-Acquisition.gui.interface.App.save_config">save_config</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.save_roi" href="#Widefield-Imaging-Acquisition.gui.interface.App.save_roi">save_roi</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.set_lights" href="#Widefield-Imaging-Acquisition.gui.interface.App.set_lights">set_lights</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.set_roi" href="#Widefield-Imaging-Acquisition.gui.interface.App.set_roi">set_roi</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.set_trigger" href="#Widefield-Imaging-Acquisition.gui.interface.App.set_trigger">set_trigger</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.show_buttons" href="#Widefield-Imaging-Acquisition.gui.interface.App.show_buttons">show_buttons</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.signal_to_tree" href="#Widefield-Imaging-Acquisition.gui.interface.App.signal_to_tree">signal_to_tree</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.start_in_acquisition_mode" href="#Widefield-Imaging-Acquisition.gui.interface.App.start_in_acquisition_mode">start_in_acquisition_mode</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.start_in_trigger_mode" href="#Widefield-Imaging-Acquisition.gui.interface.App.start_in_trigger_mode">start_in_trigger_mode</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.start_live" href="#Widefield-Imaging-Acquisition.gui.interface.App.start_live">start_live</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.stop" href="#Widefield-Imaging-Acquisition.gui.interface.App.stop">stop</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.gui.interface.App.stop_live" href="#Widefield-Imaging-Acquisition.gui.interface.App.stop_live">stop_live</a></code></li>

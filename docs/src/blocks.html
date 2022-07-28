@@ -27,23 +27,24 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import json
+import os
 
 
 class Stimulation:
     def __init__(self, dictionary):
-        &#34;&#34;&#34; Initialize the stimulation object with a dictionary
-        
+        &#34;&#34;&#34;Initialize the stimulation object with a dictionary
+
         Args:
             dictionary (dict): dictionary containing the stimulation parameters
         &#34;&#34;&#34;
         self.dico = dictionary
 
     def __str__(self, indent=&#34;&#34;):
-        &#34;&#34;&#34; Return a string representation of the stimulation object 
-        
+        &#34;&#34;&#34;Return a string representation of the stimulation object
+
         Args:
             indent (str): indentation for the current line of the string representation
-            
+
         Returns:
             str: string representation of the stimulation object
         &#34;&#34;&#34;
@@ -91,14 +92,14 @@ class Stimulation:
         return &#34;\n&#34;.join(return_value)
 
     def to_json(self):
-        &#34;&#34;&#34; Return a json representation of the stimulation object &#34;&#34;&#34;
+        &#34;&#34;&#34;Return a json representation of the stimulation object&#34;&#34;&#34;
         return self.dico
 
 
 class Block:
     def __init__(self, name, data, delay=0, iterations=1, jitter=0):
-        &#34;&#34;&#34; Initialize the block object
-        
+        &#34;&#34;&#34;Initialize the block object
+
         Args:
             name (str): Name of the block
             data (list): List of stimulation/block objects
@@ -114,7 +115,7 @@ class Block:
         self.exp = None
 
     def __str__(self, indent=&#34;&#34;):
-        &#34;&#34;&#34; Return a string representation of the block object
+        &#34;&#34;&#34;Return a string representation of the block object
 
         Args:
             indent (str): indentation for the current line of the string representation
@@ -134,7 +135,7 @@ class Block:
         return &#34;\n&#34;.join(stim_list)
 
     def to_json(self):
-        &#34;&#34;&#34; Return a json representation of the block object &#34;&#34;&#34;
+        &#34;&#34;&#34;Return a json representation of the block object&#34;&#34;&#34;
         data_list = []
         for item in self.data:
             data_list.append(item.to_json())
@@ -151,9 +152,17 @@ class Block:
 
 class Experiment:
     def __init__(
-        self, blocks, framerate, exposition, mouse_id, directory, daq, name=&#34;No Name&#34;
+        self,
+        blocks,
+        framerate,
+        exposition,
+        mouse_id,
+        directory,
+        daq,
+        name=&#34;No Name&#34;,
+        config=None,
     ):
-        &#34;&#34;&#34; Initialize the experiment object
+        &#34;&#34;&#34;Initialize the experiment object
 
         Args:
             blocks (list): List of block objects
@@ -164,38 +173,68 @@ class Experiment:
             daq (str): DAQ used for the experiment
             name (str): Name of the experiment
         &#34;&#34;&#34;
-        self.name = name
-        self.blocks = blocks
-        self.framerate = framerate
-        self.exposition = exposition
-        self.mouse_id = mouse_id
-        self.directory = directory + f&#34;/{name}&#34;
-        self.daq = daq
+        try:
+            self.name = name
+            self.blocks = blocks
+            self.framerate = framerate
+            self.exposition = exposition
+            self.mouse_id = mouse_id
+            self.directory = directory + f&#34;/{name}&#34;
+            self.daq = daq
+            self.config = config
+        except Exception as err:
+            print(err)
 
     def save(self, extents=None):
-        &#34;&#34;&#34; Save the experiment object to multiple files
+        &#34;&#34;&#34;Save the experiment object to multiple files
 
         Args:
             extents (list): Positions of the ROI corners used for the experiment
         &#34;&#34;&#34;
+        print(&#34;saving exeperiment&#34;)
         with open(f&#34;{self.directory}/experiment-metadata.txt&#34;, &#34;w&#34;) as file:
             file.write(
                 f&#34;Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}&#34;
             )
+        try:
+            dimensions = [
+                round(extents[1]) - round(extents[0]),
+                round(extents[3]) - round(extents[2]),
+            ]
+        except Exception as err:
+            print(err)
+            print(&#34;*slicing failed&#34;)
+            dimensions = [
+                int(1024 / self.config[&#34;Binning&#34;]),
+                int(1024 / self.config[&#34;Binning&#34;]),
+            ]
+            print(dimensions)
+        self.save_config(dimensions)
+        print(&#34;just saved config&#34;)
+        self.daq.camera.save(self.directory, extents)
+        print(&#34;just saved camera&#34;)
+        self.daq.save(self.directory)
 
+    def save_config(self, dimensions):
+        &#34;&#34;&#34;Save the configuration of the experiment to a file
+        
+        Args:
+            dimensions (list): Dimensions of the experiment
+        &#34;&#34;&#34;
+        try:
+            os.mkdir(self.directory)
+        except Exception:
+            pass
         dictionary = {
             &#34;Blocks&#34;: self.blocks.to_json(),
             &#34;Lights&#34;: self.daq.return_lights(),
             &#34;Framerate&#34;: self.framerate,
             &#34;Exposition&#34;: self.exposition,
             &#34;Mouse ID&#34;: self.mouse_id,
+            &#34;Dimensions&#34;: dimensions,
         }
-
         with open(f&#34;{self.directory}/experiment-metadata.json&#34;, &#34;w&#34;) as file:
-            json.dump(dictionary, file)
-
-        self.daq.camera.save(self.directory, extents)
-        self.daq.save(self.directory)</code></pre>
+            json.dump(dictionary, file)</code></pre>
 </details>
 </section>
 <section>
@@ -232,8 +271,8 @@ class Experiment:
 </summary>
 <pre><code class="python">class Block:
     def __init__(self, name, data, delay=0, iterations=1, jitter=0):
-        &#34;&#34;&#34; Initialize the block object
-        
+        &#34;&#34;&#34;Initialize the block object
+
         Args:
             name (str): Name of the block
             data (list): List of stimulation/block objects
@@ -249,7 +288,7 @@ class Experiment:
         self.exp = None
 
     def __str__(self, indent=&#34;&#34;):
-        &#34;&#34;&#34; Return a string representation of the block object
+        &#34;&#34;&#34;Return a string representation of the block object
 
         Args:
             indent (str): indentation for the current line of the string representation
@@ -269,7 +308,7 @@ class Experiment:
         return &#34;\n&#34;.join(stim_list)
 
     def to_json(self):
-        &#34;&#34;&#34; Return a json representation of the block object &#34;&#34;&#34;
+        &#34;&#34;&#34;Return a json representation of the block object&#34;&#34;&#34;
         data_list = []
         for item in self.data:
             data_list.append(item.to_json())
@@ -295,7 +334,7 @@ class Experiment:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_json(self):
-    &#34;&#34;&#34; Return a json representation of the block object &#34;&#34;&#34;
+    &#34;&#34;&#34;Return a json representation of the block object&#34;&#34;&#34;
     data_list = []
     for item in self.data:
         data_list.append(item.to_json())
@@ -314,7 +353,7 @@ class Experiment:
 </dd>
 <dt id="Widefield-Imaging-Acquisition.src.blocks.Experiment"><code class="flex name class">
 <span>class <span class="ident">Experiment</span></span>
-<span>(</span><span>blocks, framerate, exposition, mouse_id, directory, daq, name='No Name')</span>
+<span>(</span><span>blocks, framerate, exposition, mouse_id, directory, daq, name='No Name', config=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Initialize the experiment object</p>
@@ -341,9 +380,17 @@ class Experiment:
 </summary>
 <pre><code class="python">class Experiment:
     def __init__(
-        self, blocks, framerate, exposition, mouse_id, directory, daq, name=&#34;No Name&#34;
+        self,
+        blocks,
+        framerate,
+        exposition,
+        mouse_id,
+        directory,
+        daq,
+        name=&#34;No Name&#34;,
+        config=None,
     ):
-        &#34;&#34;&#34; Initialize the experiment object
+        &#34;&#34;&#34;Initialize the experiment object
 
         Args:
             blocks (list): List of block objects
@@ -354,38 +401,68 @@ class Experiment:
             daq (str): DAQ used for the experiment
             name (str): Name of the experiment
         &#34;&#34;&#34;
-        self.name = name
-        self.blocks = blocks
-        self.framerate = framerate
-        self.exposition = exposition
-        self.mouse_id = mouse_id
-        self.directory = directory + f&#34;/{name}&#34;
-        self.daq = daq
+        try:
+            self.name = name
+            self.blocks = blocks
+            self.framerate = framerate
+            self.exposition = exposition
+            self.mouse_id = mouse_id
+            self.directory = directory + f&#34;/{name}&#34;
+            self.daq = daq
+            self.config = config
+        except Exception as err:
+            print(err)
 
     def save(self, extents=None):
-        &#34;&#34;&#34; Save the experiment object to multiple files
+        &#34;&#34;&#34;Save the experiment object to multiple files
 
         Args:
             extents (list): Positions of the ROI corners used for the experiment
         &#34;&#34;&#34;
+        print(&#34;saving exeperiment&#34;)
         with open(f&#34;{self.directory}/experiment-metadata.txt&#34;, &#34;w&#34;) as file:
             file.write(
                 f&#34;Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}&#34;
             )
+        try:
+            dimensions = [
+                round(extents[1]) - round(extents[0]),
+                round(extents[3]) - round(extents[2]),
+            ]
+        except Exception as err:
+            print(err)
+            print(&#34;*slicing failed&#34;)
+            dimensions = [
+                int(1024 / self.config[&#34;Binning&#34;]),
+                int(1024 / self.config[&#34;Binning&#34;]),
+            ]
+            print(dimensions)
+        self.save_config(dimensions)
+        print(&#34;just saved config&#34;)
+        self.daq.camera.save(self.directory, extents)
+        print(&#34;just saved camera&#34;)
+        self.daq.save(self.directory)
 
+    def save_config(self, dimensions):
+        &#34;&#34;&#34;Save the configuration of the experiment to a file
+        
+        Args:
+            dimensions (list): Dimensions of the experiment
+        &#34;&#34;&#34;
+        try:
+            os.mkdir(self.directory)
+        except Exception:
+            pass
         dictionary = {
             &#34;Blocks&#34;: self.blocks.to_json(),
             &#34;Lights&#34;: self.daq.return_lights(),
             &#34;Framerate&#34;: self.framerate,
             &#34;Exposition&#34;: self.exposition,
             &#34;Mouse ID&#34;: self.mouse_id,
+            &#34;Dimensions&#34;: dimensions,
         }
-
         with open(f&#34;{self.directory}/experiment-metadata.json&#34;, &#34;w&#34;) as file:
-            json.dump(dictionary, file)
-
-        self.daq.camera.save(self.directory, extents)
-        self.daq.save(self.directory)</code></pre>
+            json.dump(dictionary, file)</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -404,29 +481,70 @@ class Experiment:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save(self, extents=None):
-    &#34;&#34;&#34; Save the experiment object to multiple files
+    &#34;&#34;&#34;Save the experiment object to multiple files
 
     Args:
         extents (list): Positions of the ROI corners used for the experiment
     &#34;&#34;&#34;
+    print(&#34;saving exeperiment&#34;)
     with open(f&#34;{self.directory}/experiment-metadata.txt&#34;, &#34;w&#34;) as file:
         file.write(
             f&#34;Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}&#34;
         )
-
+    try:
+        dimensions = [
+            round(extents[1]) - round(extents[0]),
+            round(extents[3]) - round(extents[2]),
+        ]
+    except Exception as err:
+        print(err)
+        print(&#34;*slicing failed&#34;)
+        dimensions = [
+            int(1024 / self.config[&#34;Binning&#34;]),
+            int(1024 / self.config[&#34;Binning&#34;]),
+        ]
+        print(dimensions)
+    self.save_config(dimensions)
+    print(&#34;just saved config&#34;)
+    self.daq.camera.save(self.directory, extents)
+    print(&#34;just saved camera&#34;)
+    self.daq.save(self.directory)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.blocks.Experiment.save_config"><code class="name flex">
+<span>def <span class="ident">save_config</span></span>(<span>self, dimensions)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save the configuration of the experiment to a file</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dimensions</code></strong> :&ensp;<code>list</code></dt>
+<dd>Dimensions of the experiment</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_config(self, dimensions):
+    &#34;&#34;&#34;Save the configuration of the experiment to a file
+    
+    Args:
+        dimensions (list): Dimensions of the experiment
+    &#34;&#34;&#34;
+    try:
+        os.mkdir(self.directory)
+    except Exception:
+        pass
     dictionary = {
         &#34;Blocks&#34;: self.blocks.to_json(),
         &#34;Lights&#34;: self.daq.return_lights(),
         &#34;Framerate&#34;: self.framerate,
         &#34;Exposition&#34;: self.exposition,
         &#34;Mouse ID&#34;: self.mouse_id,
+        &#34;Dimensions&#34;: dimensions,
     }
-
     with open(f&#34;{self.directory}/experiment-metadata.json&#34;, &#34;w&#34;) as file:
-        json.dump(dictionary, file)
-
-    self.daq.camera.save(self.directory, extents)
-    self.daq.save(self.directory)</code></pre>
+        json.dump(dictionary, file)</code></pre>
 </details>
 </dd>
 </dl>
@@ -448,19 +566,19 @@ class Experiment:
 </summary>
 <pre><code class="python">class Stimulation:
     def __init__(self, dictionary):
-        &#34;&#34;&#34; Initialize the stimulation object with a dictionary
-        
+        &#34;&#34;&#34;Initialize the stimulation object with a dictionary
+
         Args:
             dictionary (dict): dictionary containing the stimulation parameters
         &#34;&#34;&#34;
         self.dico = dictionary
 
     def __str__(self, indent=&#34;&#34;):
-        &#34;&#34;&#34; Return a string representation of the stimulation object 
-        
+        &#34;&#34;&#34;Return a string representation of the stimulation object
+
         Args:
             indent (str): indentation for the current line of the string representation
-            
+
         Returns:
             str: string representation of the stimulation object
         &#34;&#34;&#34;
@@ -508,7 +626,7 @@ class Experiment:
         return &#34;\n&#34;.join(return_value)
 
     def to_json(self):
-        &#34;&#34;&#34; Return a json representation of the stimulation object &#34;&#34;&#34;
+        &#34;&#34;&#34;Return a json representation of the stimulation object&#34;&#34;&#34;
         return self.dico</code></pre>
 </details>
 <h3>Methods</h3>
@@ -523,7 +641,7 @@ class Experiment:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def to_json(self):
-    &#34;&#34;&#34; Return a json representation of the stimulation object &#34;&#34;&#34;
+    &#34;&#34;&#34;Return a json representation of the stimulation object&#34;&#34;&#34;
     return self.dico</code></pre>
 </details>
 </dd>
@@ -555,6 +673,7 @@ class Experiment:
 <h4><code><a title="Widefield-Imaging-Acquisition.src.blocks.Experiment" href="#Widefield-Imaging-Acquisition.src.blocks.Experiment">Experiment</a></code></h4>
 <ul class="">
 <li><code><a title="Widefield-Imaging-Acquisition.src.blocks.Experiment.save" href="#Widefield-Imaging-Acquisition.src.blocks.Experiment.save">save</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.blocks.Experiment.save_config" href="#Widefield-Imaging-Acquisition.src.blocks.Experiment.save_config">save_config</a></code></li>
 </ul>
 </li>
 <li>

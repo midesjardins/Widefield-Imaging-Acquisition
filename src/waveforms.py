@@ -65,7 +65,7 @@ def random_square(time, pulses, width, jitter):
 
 
 def make_signal(time, pulse_type, width, pulses, jitter, frequency, duty, heigth):
-    """" Generate a signal based on the given pulse type
+    """ " Generate a signal based on the given pulse type
 
     Args:
         time (array of float): The array of time values

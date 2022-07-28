@@ -1,6 +1,7 @@
 import time
 import sys
 import os
+
 try:
     import nidaqmx
     from nidaqmx.constants import AcquisitionType
@@ -13,22 +14,22 @@ from src.calculations import (
     shrink_array,
     find_rising_indices,
     reduce_stack,
-    get_dictionary
+    get_dictionary,
 )
 from src.waveforms import digital_square
 import warnings
 import logging
 
-logging.basicConfig(filename='app.log', filemode='a',
-                    format='%(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    filename="app.log", filemode="a", format="%(name)s - %(levelname)s - %(message)s"
+)
 
 
 warnings.filterwarnings("ignore")
 
-WIDEFIELD_COMPUTER = True
-
-config = get_dictionary(os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "config.json"))
+config = get_dictionary(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "config.json")
+)
 
 
 class Instrument:
@@ -86,24 +87,35 @@ class Camera(Instrument):
             binning (int): The binning factor
         """
         lines = []
-        with open("C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd", "r") as read_file:
+        with open(
+            "C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd",
+            "r",
+        ) as read_file:
             for i, line in enumerate(read_file):
                 if i == 17:
                     lines.append(
-                        f"      MaxImageSize ({str(int(1024/binning))}, {str(int(1024/binning))})")
+                        f"      MaxImageSize ({str(int(1024/binning))}, {str(int(1024/binning))})"
+                    )
                 elif i == 2041:
                     lines.append(
-                        f"                           Current ({binning}x{binning})")
+                        f"                           Current ({binning}x{binning})"
+                    )
                 else:
                     lines.append(line.strip("\n"))
-            with open("C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd", "w") as write_file:
+            with open(
+                "C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd",
+                "w",
+            ) as write_file:
                 write_file.write("\n".join(lines))
 
     def set_window(self, binning):
+        """Set the window of the camera to the correct size for the binning factor"""
         self.cam.set_grabber_attribute_value(
-            "IMG_ATTR_ACQWINDOW_HEIGHT", int(1024 / binning), kind="auto")
+            "IMG_ATTR_ACQWINDOW_HEIGHT", int(1024 / binning), kind="auto"
+        )
         self.cam.set_grabber_attribute_value(
-            "IMG_ATTR_ACQWINDOW_WIDTH", int(1024 / binning), kind="auto")
+            "IMG_ATTR_ACQWINDOW_WIDTH", int(1024 / binning), kind="auto"
+        )
 
     def delete_frames(self):
         """Read all frames in the buffer"""
@@ -152,8 +164,9 @@ class Camera(Instrument):
                     print("is saving")
                     pass
             print(len(self.frames))
-            np.save(os.path.join(directory, "data",
-                                f"{self.file_index}.npy"), self.frames)
+            np.save(
+                os.path.join(directory, "data", f"{self.file_index}.npy"), self.frames
+            )
         except Exception as err:
             print("cam save err")
             print(err)
@@ -190,10 +203,10 @@ class DAQ:
             Instrument(ports["infrared"], "ir"),
             Instrument(ports["red"], "red"),
             Instrument(ports["green"], "green"),
-            Instrument(ports["blue"], "blue")
+            Instrument(ports["blue"], "blue"),
         ]
 
-        if WIDEFIELD_COMPUTER:
+        if config["Widefield Computer"]:
             with nidaqmx.Task(new_task_name="lights") as l_task:
                 with nidaqmx.Task(new_task_name="a_stimuli") as s_task:
                     for light in self.lights:
@@ -210,7 +223,16 @@ class DAQ:
                             )
                     self.sample([s_task, l_task], [False, False])
                     s_task.write([[0, 0], [0, 0]])
-                    l_task.write([[False, False], [False, False], [False, False], [False, False], [False, False], [False, False]])
+                    l_task.write(
+                        [
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                        ]
+                    )
                     self.start([s_task, l_task])
 
         else:
@@ -241,7 +263,7 @@ class DAQ:
         self.write_waveforms()
 
     def set_trigger(self, port):
-        """ Set the trigger port and activate it"""
+        """Set the trigger port and activate it"""
         self.trigger_activated = True
         self.trigger_port = port
 
@@ -278,13 +300,13 @@ class DAQ:
     def generate_camera_wave(self):
         """Generate camera signal using the light signals and add it to the list of all signals"""
         try:
-            self.camera_signal = np.max(
-                np.vstack((self.stacked_lights)), axis=0)
+            self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
         except ValueError:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
         self.allz_signals = np.stack(
-            self.light_signals + [self.camera_signal] + [self.d_stim_signal])
+            self.light_signals + [self.camera_signal] + [self.d_stim_signal]
+        )
 
     def extend_light_wave(self):
         """Extend the light signal to be wider than the camera signal"""
@@ -295,19 +317,19 @@ class DAQ:
     def write_waveforms(self):
         """Write lights, stimuli and camera signal to the DAQ"""
 
-        if WIDEFIELD_COMPUTER:
+        if config["Widefield Computer"]:
             with nidaqmx.Task(new_task_name="lights") as l_task:
                 self.control_task = l_task
                 with nidaqmx.Task(new_task_name="a_stimuli") as s_task:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
                     for light in self.lights:
-                        l_task.do_channels.add_do_chan(
-                            f"{self.name}/{light.port}")
+                        l_task.do_channels.add_do_chan(f"{self.name}/{light.port}")
                         null_lights.append([False, False])
                     if len(self.lights) > 0:
                         l_task.do_channels.add_do_chan(
-                            f"{self.name}/{self.camera.port}")
+                            f"{self.name}/{self.camera.port}"
+                        )
                     for stimulus in self.stimuli:
                         if "ao0" in stimulus.port or "ao1" in stimulus.port:
                             s_task.ao_channels.add_ao_voltage_chan(
@@ -342,8 +364,9 @@ class DAQ:
                         l_task.write(null_lights)
                         self.start([s_task, l_task])
                     else:
-                        self.write([s_task, l_task], [
-                                   self.stim_signal, self.d_stim_signal])
+                        self.write(
+                            [s_task, l_task], [self.stim_signal, self.d_stim_signal]
+                        )
                         self.camera.delete_frames()
                         if self.trigger_activated:
                             with nidaqmx.Task(new_task_name="trigger") as t_task:
@@ -373,6 +396,10 @@ class DAQ:
             pass
 
     def return_lights(self):
+        """Return the lights used in the experiment
+        
+        Returns:
+            list: List of lights used in the experiment"""
         lights = []
         for light in self.lights:
             lights.append(light.name)
@@ -387,16 +414,13 @@ class DAQ:
         try:
             indices = find_rising_indices(self.all_signals[-1])
             reduced_stack = reduce_stack(self.all_signals, indices)
-            np.save(
-                f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
+            np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
         except Exception as err:
             print(err)
-        np.save(f"{directory}/{self.experiment_name}-stim_signal",
-                self.stim_signal)
+        np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
 
     def reset_daq(self):
-        """Reset the DAQ parameters
-        """
+        """Reset the DAQ parameters"""
         self.light_signals, self.stim_signal, self.camera_signal, self.time_values = (
             [],
             [],

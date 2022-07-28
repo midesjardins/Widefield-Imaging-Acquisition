@@ -4,19 +4,19 @@ import os
 
 class Stimulation:
     def __init__(self, dictionary):
-        """ Initialize the stimulation object with a dictionary
-        
+        """Initialize the stimulation object with a dictionary
+
         Args:
             dictionary (dict): dictionary containing the stimulation parameters
         """
         self.dico = dictionary
 
     def __str__(self, indent=""):
-        """ Return a string representation of the stimulation object 
-        
+        """Return a string representation of the stimulation object
+
         Args:
             indent (str): indentation for the current line of the string representation
-            
+
         Returns:
             str: string representation of the stimulation object
         """
@@ -64,14 +64,14 @@ class Stimulation:
         return "\n".join(return_value)
 
     def to_json(self):
-        """ Return a json representation of the stimulation object """
+        """Return a json representation of the stimulation object"""
         return self.dico
 
 
 class Block:
     def __init__(self, name, data, delay=0, iterations=1, jitter=0):
-        """ Initialize the block object
-        
+        """Initialize the block object
+
         Args:
             name (str): Name of the block
             data (list): List of stimulation/block objects
@@ -87,7 +87,7 @@ class Block:
         self.exp = None
 
     def __str__(self, indent=""):
-        """ Return a string representation of the block object
+        """Return a string representation of the block object
 
         Args:
             indent (str): indentation for the current line of the string representation
@@ -107,7 +107,7 @@ class Block:
         return "\n".join(stim_list)
 
     def to_json(self):
-        """ Return a json representation of the block object """
+        """Return a json representation of the block object"""
         data_list = []
         for item in self.data:
             data_list.append(item.to_json())
@@ -124,9 +124,17 @@ class Block:
 
 class Experiment:
     def __init__(
-        self, blocks, framerate, exposition, mouse_id, directory, daq, name="No Name", config=None
+        self,
+        blocks,
+        framerate,
+        exposition,
+        mouse_id,
+        directory,
+        daq,
+        name="No Name",
+        config=None,
     ):
-        """ Initialize the experiment object
+        """Initialize the experiment object
 
         Args:
             blocks (list): List of block objects
@@ -150,7 +158,7 @@ class Experiment:
             print(err)
 
     def save(self, extents=None):
-        """ Save the experiment object to multiple files
+        """Save the experiment object to multiple files
 
         Args:
             extents (list): Positions of the ROI corners used for the experiment
@@ -159,13 +167,19 @@ class Experiment:
         with open(f"{self.directory}/experiment-metadata.txt", "w") as file:
             file.write(
                 f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}"
-            ) 
+            )
         try:
-            dimensions = [round(extents[1])-round(extents[0]), round(extents[3])-round(extents[2])]
+            dimensions = [
+                round(extents[1]) - round(extents[0]),
+                round(extents[3]) - round(extents[2]),
+            ]
         except Exception as err:
             print(err)
             print("*slicing failed")
-            dimensions = [int(1024/self.config["Binning"]), int(1024/self.config["Binning"])]
+            dimensions = [
+                int(1024 / self.config["Binning"]),
+                int(1024 / self.config["Binning"]),
+            ]
             print(dimensions)
         self.save_config(dimensions)
         print("just saved config")
@@ -174,17 +188,22 @@ class Experiment:
         self.daq.save(self.directory)
 
     def save_config(self, dimensions):
+        """Save the configuration of the experiment to a file
+        
+        Args:
+            dimensions (list): Dimensions of the experiment
+        """
         try:
             os.mkdir(self.directory)
         except Exception:
             pass
         dictionary = {
-        "Blocks": self.blocks.to_json(),
-        "Lights": self.daq.return_lights(),
-        "Framerate": self.framerate,
-        "Exposition": self.exposition,
-        "Mouse ID": self.mouse_id,
-        "Dimensions": dimensions
+            "Blocks": self.blocks.to_json(),
+            "Lights": self.daq.return_lights(),
+            "Framerate": self.framerate,
+            "Exposition": self.exposition,
+            "Mouse ID": self.mouse_id,
+            "Dimensions": dimensions,
         }
         with open(f"{self.directory}/experiment-metadata.json", "w") as file:
             json.dump(dictionary, file)

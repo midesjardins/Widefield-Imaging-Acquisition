@@ -26,25 +26,38 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import nidaqmx
-import time
+<pre><code class="python">import time
 import sys
 import os
-from nidaqmx.constants import AcquisitionType
+
+try:
+    import nidaqmx
+    from nidaqmx.constants import AcquisitionType
+    from pylablib.devices import IMAQ
+except ModuleNotFoundError:
+    pass
 import numpy as np
 from src.calculations import (
     extend_light_signal,
     shrink_array,
     find_rising_indices,
     reduce_stack,
+    get_dictionary,
 )
 from src.waveforms import digital_square
-from pylablib.devices import IMAQ
 import warnings
+import logging
+
+logging.basicConfig(
+    filename=&#34;app.log&#34;, filemode=&#34;a&#34;, format=&#34;%(name)s - %(levelname)s - %(message)s&#34;
+)
+
 
 warnings.filterwarnings(&#34;ignore&#34;)
 
-WIDEFIELD_COMPUTER = True
+config = get_dictionary(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), &#34;config.json&#34;)
+)
 
 
 class Instrument:
@@ -70,14 +83,16 @@ class Camera(Instrument):
         super().__init__(port, name)
         self.frames = []
         self.baseline_frames = []
+        self.stop_signal = False
         self.frames_read = 0
         self.video_running = False
         try:
+            self.set_binning(config[&#34;Binning&#34;])
             self.cam = IMAQ.IMAQCamera(&#34;img0&#34;)
-            self.cam.setup_acquisition(nframes=100)
+            self.set_window(config[&#34;Binning&#34;])
+            self.cam.setup_acquisition()
             self.cam.start_acquisition()
         except Exception as err:
-            # print(err)
             pass
 
     def initialize(self, daq):
@@ -92,6 +107,43 @@ class Camera(Instrument):
         self.frames_read_list = []
         self.baseline_read_list = []
         self.frames_read = 0
+
+    def set_binning(self, binning):
+        &#34;&#34;&#34;Set the binning of the camera
+
+        Args:
+            binning (int): The binning factor
+        &#34;&#34;&#34;
+        lines = []
+        with open(
+            &#34;C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd&#34;,
+            &#34;r&#34;,
+        ) as read_file:
+            for i, line in enumerate(read_file):
+                if i == 17:
+                    lines.append(
+                        f&#34;      MaxImageSize ({str(int(1024/binning))}, {str(int(1024/binning))})&#34;
+                    )
+                elif i == 2041:
+                    lines.append(
+                        f&#34;                           Current ({binning}x{binning})&#34;
+                    )
+                else:
+                    lines.append(line.strip(&#34;\n&#34;))
+            with open(
+                &#34;C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd&#34;,
+                &#34;w&#34;,
+            ) as write_file:
+                write_file.write(&#34;\n&#34;.join(lines))
+
+    def set_window(self, binning):
+        &#34;&#34;&#34;Set the window of the camera to the correct size for the binning factor&#34;&#34;&#34;
+        self.cam.set_grabber_attribute_value(
+            &#34;IMG_ATTR_ACQWINDOW_HEIGHT&#34;, int(1024 / binning), kind=&#34;auto&#34;
+        )
+        self.cam.set_grabber_attribute_value(
+            &#34;IMG_ATTR_ACQWINDOW_WIDTH&#34;, int(1024 / binning), kind=&#34;auto&#34;
+        )
 
     def delete_frames(self):
         &#34;&#34;&#34;Read all frames in the buffer&#34;&#34;&#34;
@@ -129,15 +181,24 @@ class Camera(Instrument):
 
         Args:
             directory (str): The location in which to save the NPY file
-            extents (tuple): The positions of the corners used to resize the frames 
+            extents (tuple): The positions of the corners used to resize the frames
                              Equal to None if original size is kept
         &#34;&#34;&#34;
-        if extents:
-            self.frames = shrink_array(self.frames, extents)
-        if self.is_saving:
-            while self.is_saving:
-                pass
-        np.save(os.path.join(directory, &#34;data&#34;, f&#34;{self.file_index}.npy&#34;), self.frames)
+        try:
+            if extents:
+                self.frames = shrink_array(self.frames, extents)
+            if self.is_saving:
+                while self.is_saving:
+                    print(&#34;is saving&#34;)
+                    pass
+            print(len(self.frames))
+            np.save(
+                os.path.join(directory, &#34;data&#34;, f&#34;{self.file_index}.npy&#34;), self.frames
+            )
+        except Exception as err:
+            print(&#34;cam save err&#34;)
+            print(err)
+            pass
 
 
 class DAQ:
@@ -165,6 +226,50 @@ class DAQ:
             None,
         )
 
+    def close_all_lights(self, ports):
+        self.lights = [
+            Instrument(ports[&#34;infrared&#34;], &#34;ir&#34;),
+            Instrument(ports[&#34;red&#34;], &#34;red&#34;),
+            Instrument(ports[&#34;green&#34;], &#34;green&#34;),
+            Instrument(ports[&#34;blue&#34;], &#34;blue&#34;),
+        ]
+
+        if config[&#34;Widefield Computer&#34;]:
+            with nidaqmx.Task(new_task_name=&#34;lights&#34;) as l_task:
+                with nidaqmx.Task(new_task_name=&#34;a_stimuli&#34;) as s_task:
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
+                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{self.camera.port}&#34;)
+                    for stimulus in self.stimuli:
+                        if &#34;ao0&#34; in stimulus.port or &#34;ao1&#34; in stimulus.port:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
+                        else:
+                            l_task.do_channels.add_do_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
+                    self.sample([s_task, l_task], [False, False])
+                    s_task.write([[0, 0], [0, 0]])
+                    l_task.write(
+                        [
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                        ]
+                    )
+                    self.start([s_task, l_task])
+
+        else:
+            time.sleep(2)
+            self.stop_signal = True
+            pass
+
+        self.lights = []
+
     def launch(self, name, time_values, stim_values):
         &#34;&#34;&#34;Generate stimulation, light and camera signal and write them to the DAQ
 
@@ -181,11 +286,12 @@ class DAQ:
         if len(self.lights) &gt; 0:
             self.generate_light_wave()
             self.generate_camera_wave()
-            self.extend_light_wave()
+            if config[&#34;Extend Signal&#34;]:
+                self.extend_light_wave()
         self.write_waveforms()
 
     def set_trigger(self, port):
-        &#34;&#34;&#34; Set the trigger port and activate it&#34;&#34;&#34;
+        &#34;&#34;&#34;Set the trigger port and activate it&#34;&#34;&#34;
         self.trigger_activated = True
         self.trigger_port = port
 
@@ -195,10 +301,11 @@ class DAQ:
 
     def generate_stim_wave(self):
         &#34;&#34;&#34;Create a stack of the stimulation signals and set the last values to zero&#34;&#34;&#34;
-        self.stim_signal = np.stack((self.stim_values))
+        self.stim_signal = np.stack((self.stim_values[:-1]))
+        self.d_stim_signal = self.stim_values[-1]
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
-        self.stim_signal[2][-1] = 0
+        self.d_stim_signal[-1] = False
 
     def generate_light_wave(self):
         &#34;&#34;&#34;Generate a light signal for each light used and set the last value to zero&#34;&#34;&#34;
@@ -225,6 +332,9 @@ class DAQ:
         except ValueError:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+        self.allz_signals = np.stack(
+            self.light_signals + [self.camera_signal] + [self.d_stim_signal]
+        )
 
     def extend_light_wave(self):
         &#34;&#34;&#34;Extend the light signal to be wider than the camera signal&#34;&#34;&#34;
@@ -234,30 +344,35 @@ class DAQ:
 
     def write_waveforms(self):
         &#34;&#34;&#34;Write lights, stimuli and camera signal to the DAQ&#34;&#34;&#34;
-        if WIDEFIELD_COMPUTER:
+
+        if config[&#34;Widefield Computer&#34;]:
             with nidaqmx.Task(new_task_name=&#34;lights&#34;) as l_task:
                 self.control_task = l_task
-                with nidaqmx.Task(new_task_name=&#34;stimuli&#34;) as s_task:
+                with nidaqmx.Task(new_task_name=&#34;a_stimuli&#34;) as s_task:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
+                        null_lights.append([False, False])
+                    if len(self.lights) &gt; 0:
+                        l_task.do_channels.add_do_chan(
+                            f&#34;{self.name}/{self.camera.port}&#34;
+                        )
                     for stimulus in self.stimuli:
-                        if &#34;a0&#34; in stimulus.name or &#34;a1&#34; in stimulus.name:
+                        if &#34;ao0&#34; in stimulus.port or &#34;ao1&#34; in stimulus.port:
                             s_task.ao_channels.add_ao_voltage_chan(
                                 f&#34;{self.name}/{stimulus.port}&#34;
                             )
                         else:
-                            s_task.do_channels.add_do_chan(
+                            l_task.do_channels.add_do_chan(
                                 f&#34;{self.name}/{stimulus.port}&#34;
                             )
-                    for light in self.lights:
-                        l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
-                        null_lights.append([False, False])
-                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{self.camera.port}&#34;)
+                            null_lights.append([False, False])
                     self.camera.initialize(self)
-                    self.sample([s_task, l_task])
+                    self.sample([s_task, l_task], self.stim_signal[0])
                     if len(self.lights) &gt; 0:
                         self.write(
-                            [s_task, l_task], [self.stim_signal, self.all_signals]
+                            [s_task, l_task], [self.stim_signal, self.allz_signals]
                         )
                         self.camera.delete_frames()
                         if self.trigger_activated:
@@ -269,6 +384,7 @@ class DAQ:
                                     time.sleep(0.001)
                                     if t_task.read():
                                         break
+                        self.start_time = time.time()
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
@@ -276,7 +392,9 @@ class DAQ:
                         l_task.write(null_lights)
                         self.start([s_task, l_task])
                     else:
-                        self.write([s_task], [self.stim_signal])
+                        self.write(
+                            [s_task, l_task], [self.stim_signal, self.d_stim_signal]
+                        )
                         self.camera.delete_frames()
                         if self.trigger_activated:
                             with nidaqmx.Task(new_task_name=&#34;trigger&#34;) as t_task:
@@ -287,20 +405,33 @@ class DAQ:
                                     time.sleep(0.001)
                                     if t_task.read():
                                         break
-                        self.start([s_task])
+                        self.start_time = time.time()
+                        self.start([s_task, l_task])
                         while (
                             s_task.is_task_done() is False and self.stop_signal is False
                         ):
                             time.sleep(0.01)
                             pass
-                        self.stop([s_task])
+                        self.stop([s_task, l_task])
                         s_task.write([[0, 0], [0, 0]])
-                        self.start([s_task])
+                        l_task.write([False, False])
+                        self.start([s_task, l_task])
 
         else:
-            time.sleep(2)
+            self.start_time = time.time()
+            time.sleep(len(self.stim_signal[0]) / 3000)
             self.stop_signal = True
             pass
+
+    def return_lights(self):
+        &#34;&#34;&#34;Return the lights used in the experiment
+        
+        Returns:
+            list: List of lights used in the experiment&#34;&#34;&#34;
+        lights = []
+        for light in self.lights:
+            lights.append(light.name)
+        return lights
 
     def save(self, directory):
         &#34;&#34;&#34;Save the light and stimulation data for each frame as a NPY file
@@ -317,8 +448,7 @@ class DAQ:
         np.save(f&#34;{directory}/{self.experiment_name}-stim_signal&#34;, self.stim_signal)
 
     def reset_daq(self):
-        &#34;&#34;&#34;Reset the DAQ parameters
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Reset the DAQ parameters&#34;&#34;&#34;
         self.light_signals, self.stim_signal, self.camera_signal, self.time_values = (
             [],
             [],
@@ -344,7 +474,7 @@ class DAQ:
         for task in tasks:
             task.wait_until_done(timeout=1.5 * len(self.time_values) / 3000)
 
-    def sample(self, tasks):
+    def sample(self, tasks, signal):
         &#34;&#34;&#34;Set the sampling rate for a list of nidaqmx tasks
 
         Args:
@@ -354,7 +484,7 @@ class DAQ:
             task.timing.cfg_samp_clk_timing(
                 3000,
                 sample_mode=AcquisitionType.FINITE,
-                samps_per_chan=len(self.stim_signal[0]),
+                samps_per_chan=len(signal),
             )
 
     def write(self, tasks, content):
@@ -414,14 +544,16 @@ class DAQ:
         super().__init__(port, name)
         self.frames = []
         self.baseline_frames = []
+        self.stop_signal = False
         self.frames_read = 0
         self.video_running = False
         try:
+            self.set_binning(config[&#34;Binning&#34;])
             self.cam = IMAQ.IMAQCamera(&#34;img0&#34;)
-            self.cam.setup_acquisition(nframes=100)
+            self.set_window(config[&#34;Binning&#34;])
+            self.cam.setup_acquisition()
             self.cam.start_acquisition()
         except Exception as err:
-            # print(err)
             pass
 
     def initialize(self, daq):
@@ -436,6 +568,43 @@ class DAQ:
         self.frames_read_list = []
         self.baseline_read_list = []
         self.frames_read = 0
+
+    def set_binning(self, binning):
+        &#34;&#34;&#34;Set the binning of the camera
+
+        Args:
+            binning (int): The binning factor
+        &#34;&#34;&#34;
+        lines = []
+        with open(
+            &#34;C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd&#34;,
+            &#34;r&#34;,
+        ) as read_file:
+            for i, line in enumerate(read_file):
+                if i == 17:
+                    lines.append(
+                        f&#34;      MaxImageSize ({str(int(1024/binning))}, {str(int(1024/binning))})&#34;
+                    )
+                elif i == 2041:
+                    lines.append(
+                        f&#34;                           Current ({binning}x{binning})&#34;
+                    )
+                else:
+                    lines.append(line.strip(&#34;\n&#34;))
+            with open(
+                &#34;C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd&#34;,
+                &#34;w&#34;,
+            ) as write_file:
+                write_file.write(&#34;\n&#34;.join(lines))
+
+    def set_window(self, binning):
+        &#34;&#34;&#34;Set the window of the camera to the correct size for the binning factor&#34;&#34;&#34;
+        self.cam.set_grabber_attribute_value(
+            &#34;IMG_ATTR_ACQWINDOW_HEIGHT&#34;, int(1024 / binning), kind=&#34;auto&#34;
+        )
+        self.cam.set_grabber_attribute_value(
+            &#34;IMG_ATTR_ACQWINDOW_WIDTH&#34;, int(1024 / binning), kind=&#34;auto&#34;
+        )
 
     def delete_frames(self):
         &#34;&#34;&#34;Read all frames in the buffer&#34;&#34;&#34;
@@ -473,15 +642,24 @@ class DAQ:
 
         Args:
             directory (str): The location in which to save the NPY file
-            extents (tuple): The positions of the corners used to resize the frames 
+            extents (tuple): The positions of the corners used to resize the frames
                              Equal to None if original size is kept
         &#34;&#34;&#34;
-        if extents:
-            self.frames = shrink_array(self.frames, extents)
-        if self.is_saving:
-            while self.is_saving:
-                pass
-        np.save(os.path.join(directory, &#34;data&#34;, f&#34;{self.file_index}.npy&#34;), self.frames)</code></pre>
+        try:
+            if extents:
+                self.frames = shrink_array(self.frames, extents)
+            if self.is_saving:
+                while self.is_saving:
+                    print(&#34;is saving&#34;)
+                    pass
+            print(len(self.frames))
+            np.save(
+                os.path.join(directory, &#34;data&#34;, f&#34;{self.file_index}.npy&#34;), self.frames
+            )
+        except Exception as err:
+            print(&#34;cam save err&#34;)
+            print(err)
+            pass</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -595,15 +773,86 @@ Equal to None if original size is kept</dd>
 
     Args:
         directory (str): The location in which to save the NPY file
-        extents (tuple): The positions of the corners used to resize the frames 
+        extents (tuple): The positions of the corners used to resize the frames
                          Equal to None if original size is kept
     &#34;&#34;&#34;
-    if extents:
-        self.frames = shrink_array(self.frames, extents)
-    if self.is_saving:
-        while self.is_saving:
-            pass
-    np.save(os.path.join(directory, &#34;data&#34;, f&#34;{self.file_index}.npy&#34;), self.frames)</code></pre>
+    try:
+        if extents:
+            self.frames = shrink_array(self.frames, extents)
+        if self.is_saving:
+            while self.is_saving:
+                print(&#34;is saving&#34;)
+                pass
+        print(len(self.frames))
+        np.save(
+            os.path.join(directory, &#34;data&#34;, f&#34;{self.file_index}.npy&#34;), self.frames
+        )
+    except Exception as err:
+        print(&#34;cam save err&#34;)
+        print(err)
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.controls.Camera.set_binning"><code class="name flex">
+<span>def <span class="ident">set_binning</span></span>(<span>self, binning)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the binning of the camera</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>binning</code></strong> :&ensp;<code>int</code></dt>
+<dd>The binning factor</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_binning(self, binning):
+    &#34;&#34;&#34;Set the binning of the camera
+
+    Args:
+        binning (int): The binning factor
+    &#34;&#34;&#34;
+    lines = []
+    with open(
+        &#34;C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd&#34;,
+        &#34;r&#34;,
+    ) as read_file:
+        for i, line in enumerate(read_file):
+            if i == 17:
+                lines.append(
+                    f&#34;      MaxImageSize ({str(int(1024/binning))}, {str(int(1024/binning))})&#34;
+                )
+            elif i == 2041:
+                lines.append(
+                    f&#34;                           Current ({binning}x{binning})&#34;
+                )
+            else:
+                lines.append(line.strip(&#34;\n&#34;))
+        with open(
+            &#34;C:\\Users\\Public\\Documents\\National Instruments\\NI-IMAQ\\Data\\Dalsa 1M60.icd&#34;,
+            &#34;w&#34;,
+        ) as write_file:
+            write_file.write(&#34;\n&#34;.join(lines))</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.controls.Camera.set_window"><code class="name flex">
+<span>def <span class="ident">set_window</span></span>(<span>self, binning)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the window of the camera to the correct size for the binning factor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_window(self, binning):
+    &#34;&#34;&#34;Set the window of the camera to the correct size for the binning factor&#34;&#34;&#34;
+    self.cam.set_grabber_attribute_value(
+        &#34;IMG_ATTR_ACQWINDOW_HEIGHT&#34;, int(1024 / binning), kind=&#34;auto&#34;
+    )
+    self.cam.set_grabber_attribute_value(
+        &#34;IMG_ATTR_ACQWINDOW_WIDTH&#34;, int(1024 / binning), kind=&#34;auto&#34;
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -658,6 +907,50 @@ Equal to None if original size is kept</dd>
             None,
         )
 
+    def close_all_lights(self, ports):
+        self.lights = [
+            Instrument(ports[&#34;infrared&#34;], &#34;ir&#34;),
+            Instrument(ports[&#34;red&#34;], &#34;red&#34;),
+            Instrument(ports[&#34;green&#34;], &#34;green&#34;),
+            Instrument(ports[&#34;blue&#34;], &#34;blue&#34;),
+        ]
+
+        if config[&#34;Widefield Computer&#34;]:
+            with nidaqmx.Task(new_task_name=&#34;lights&#34;) as l_task:
+                with nidaqmx.Task(new_task_name=&#34;a_stimuli&#34;) as s_task:
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
+                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{self.camera.port}&#34;)
+                    for stimulus in self.stimuli:
+                        if &#34;ao0&#34; in stimulus.port or &#34;ao1&#34; in stimulus.port:
+                            s_task.ao_channels.add_ao_voltage_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
+                        else:
+                            l_task.do_channels.add_do_chan(
+                                f&#34;{self.name}/{stimulus.port}&#34;
+                            )
+                    self.sample([s_task, l_task], [False, False])
+                    s_task.write([[0, 0], [0, 0]])
+                    l_task.write(
+                        [
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                            [False, False],
+                        ]
+                    )
+                    self.start([s_task, l_task])
+
+        else:
+            time.sleep(2)
+            self.stop_signal = True
+            pass
+
+        self.lights = []
+
     def launch(self, name, time_values, stim_values):
         &#34;&#34;&#34;Generate stimulation, light and camera signal and write them to the DAQ
 
@@ -674,11 +967,12 @@ Equal to None if original size is kept</dd>
         if len(self.lights) &gt; 0:
             self.generate_light_wave()
             self.generate_camera_wave()
-            self.extend_light_wave()
+            if config[&#34;Extend Signal&#34;]:
+                self.extend_light_wave()
         self.write_waveforms()
 
     def set_trigger(self, port):
-        &#34;&#34;&#34; Set the trigger port and activate it&#34;&#34;&#34;
+        &#34;&#34;&#34;Set the trigger port and activate it&#34;&#34;&#34;
         self.trigger_activated = True
         self.trigger_port = port
 
@@ -688,10 +982,11 @@ Equal to None if original size is kept</dd>
 
     def generate_stim_wave(self):
         &#34;&#34;&#34;Create a stack of the stimulation signals and set the last values to zero&#34;&#34;&#34;
-        self.stim_signal = np.stack((self.stim_values))
+        self.stim_signal = np.stack((self.stim_values[:-1]))
+        self.d_stim_signal = self.stim_values[-1]
         self.stim_signal[0][-1] = 0
         self.stim_signal[1][-1] = 0
-        self.stim_signal[2][-1] = 0
+        self.d_stim_signal[-1] = False
 
     def generate_light_wave(self):
         &#34;&#34;&#34;Generate a light signal for each light used and set the last value to zero&#34;&#34;&#34;
@@ -718,6 +1013,9 @@ Equal to None if original size is kept</dd>
         except ValueError:
             self.camera_signal = np.zeros(len(self.stim_signal[0]))
         self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+        self.allz_signals = np.stack(
+            self.light_signals + [self.camera_signal] + [self.d_stim_signal]
+        )
 
     def extend_light_wave(self):
         &#34;&#34;&#34;Extend the light signal to be wider than the camera signal&#34;&#34;&#34;
@@ -727,30 +1025,35 @@ Equal to None if original size is kept</dd>
 
     def write_waveforms(self):
         &#34;&#34;&#34;Write lights, stimuli and camera signal to the DAQ&#34;&#34;&#34;
-        if WIDEFIELD_COMPUTER:
+
+        if config[&#34;Widefield Computer&#34;]:
             with nidaqmx.Task(new_task_name=&#34;lights&#34;) as l_task:
                 self.control_task = l_task
-                with nidaqmx.Task(new_task_name=&#34;stimuli&#34;) as s_task:
+                with nidaqmx.Task(new_task_name=&#34;a_stimuli&#34;) as s_task:
                     null_lights = [[False, False]]
                     self.tasks = [l_task, s_task]
+                    for light in self.lights:
+                        l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
+                        null_lights.append([False, False])
+                    if len(self.lights) &gt; 0:
+                        l_task.do_channels.add_do_chan(
+                            f&#34;{self.name}/{self.camera.port}&#34;
+                        )
                     for stimulus in self.stimuli:
-                        if &#34;a0&#34; in stimulus.name or &#34;a1&#34; in stimulus.name:
+                        if &#34;ao0&#34; in stimulus.port or &#34;ao1&#34; in stimulus.port:
                             s_task.ao_channels.add_ao_voltage_chan(
                                 f&#34;{self.name}/{stimulus.port}&#34;
                             )
                         else:
-                            s_task.do_channels.add_do_chan(
+                            l_task.do_channels.add_do_chan(
                                 f&#34;{self.name}/{stimulus.port}&#34;
                             )
-                    for light in self.lights:
-                        l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
-                        null_lights.append([False, False])
-                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{self.camera.port}&#34;)
+                            null_lights.append([False, False])
                     self.camera.initialize(self)
-                    self.sample([s_task, l_task])
+                    self.sample([s_task, l_task], self.stim_signal[0])
                     if len(self.lights) &gt; 0:
                         self.write(
-                            [s_task, l_task], [self.stim_signal, self.all_signals]
+                            [s_task, l_task], [self.stim_signal, self.allz_signals]
                         )
                         self.camera.delete_frames()
                         if self.trigger_activated:
@@ -762,6 +1065,7 @@ Equal to None if original size is kept</dd>
                                     time.sleep(0.001)
                                     if t_task.read():
                                         break
+                        self.start_time = time.time()
                         self.start([s_task, l_task])
                         self.camera.loop(l_task)
                         self.stop([s_task, l_task])
@@ -769,7 +1073,9 @@ Equal to None if original size is kept</dd>
                         l_task.write(null_lights)
                         self.start([s_task, l_task])
                     else:
-                        self.write([s_task], [self.stim_signal])
+                        self.write(
+                            [s_task, l_task], [self.stim_signal, self.d_stim_signal]
+                        )
                         self.camera.delete_frames()
                         if self.trigger_activated:
                             with nidaqmx.Task(new_task_name=&#34;trigger&#34;) as t_task:
@@ -780,20 +1086,33 @@ Equal to None if original size is kept</dd>
                                     time.sleep(0.001)
                                     if t_task.read():
                                         break
-                        self.start([s_task])
+                        self.start_time = time.time()
+                        self.start([s_task, l_task])
                         while (
                             s_task.is_task_done() is False and self.stop_signal is False
                         ):
                             time.sleep(0.01)
                             pass
-                        self.stop([s_task])
+                        self.stop([s_task, l_task])
                         s_task.write([[0, 0], [0, 0]])
-                        self.start([s_task])
+                        l_task.write([False, False])
+                        self.start([s_task, l_task])
 
         else:
-            time.sleep(2)
+            self.start_time = time.time()
+            time.sleep(len(self.stim_signal[0]) / 3000)
             self.stop_signal = True
             pass
+
+    def return_lights(self):
+        &#34;&#34;&#34;Return the lights used in the experiment
+        
+        Returns:
+            list: List of lights used in the experiment&#34;&#34;&#34;
+        lights = []
+        for light in self.lights:
+            lights.append(light.name)
+        return lights
 
     def save(self, directory):
         &#34;&#34;&#34;Save the light and stimulation data for each frame as a NPY file
@@ -810,8 +1129,7 @@ Equal to None if original size is kept</dd>
         np.save(f&#34;{directory}/{self.experiment_name}-stim_signal&#34;, self.stim_signal)
 
     def reset_daq(self):
-        &#34;&#34;&#34;Reset the DAQ parameters
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Reset the DAQ parameters&#34;&#34;&#34;
         self.light_signals, self.stim_signal, self.camera_signal, self.time_values = (
             [],
             [],
@@ -837,7 +1155,7 @@ Equal to None if original size is kept</dd>
         for task in tasks:
             task.wait_until_done(timeout=1.5 * len(self.time_values) / 3000)
 
-    def sample(self, tasks):
+    def sample(self, tasks, signal):
         &#34;&#34;&#34;Set the sampling rate for a list of nidaqmx tasks
 
         Args:
@@ -847,7 +1165,7 @@ Equal to None if original size is kept</dd>
             task.timing.cfg_samp_clk_timing(
                 3000,
                 sample_mode=AcquisitionType.FINITE,
-                samps_per_chan=len(self.stim_signal[0]),
+                samps_per_chan=len(signal),
             )
 
     def write(self, tasks, content):
@@ -871,6 +1189,60 @@ Equal to None if original size is kept</dd>
 </details>
 <h3>Methods</h3>
 <dl>
+<dt id="Widefield-Imaging-Acquisition.src.controls.DAQ.close_all_lights"><code class="name flex">
+<span>def <span class="ident">close_all_lights</span></span>(<span>self, ports)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_all_lights(self, ports):
+    self.lights = [
+        Instrument(ports[&#34;infrared&#34;], &#34;ir&#34;),
+        Instrument(ports[&#34;red&#34;], &#34;red&#34;),
+        Instrument(ports[&#34;green&#34;], &#34;green&#34;),
+        Instrument(ports[&#34;blue&#34;], &#34;blue&#34;),
+    ]
+
+    if config[&#34;Widefield Computer&#34;]:
+        with nidaqmx.Task(new_task_name=&#34;lights&#34;) as l_task:
+            with nidaqmx.Task(new_task_name=&#34;a_stimuli&#34;) as s_task:
+                for light in self.lights:
+                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
+                l_task.do_channels.add_do_chan(f&#34;{self.name}/{self.camera.port}&#34;)
+                for stimulus in self.stimuli:
+                    if &#34;ao0&#34; in stimulus.port or &#34;ao1&#34; in stimulus.port:
+                        s_task.ao_channels.add_ao_voltage_chan(
+                            f&#34;{self.name}/{stimulus.port}&#34;
+                        )
+                    else:
+                        l_task.do_channels.add_do_chan(
+                            f&#34;{self.name}/{stimulus.port}&#34;
+                        )
+                self.sample([s_task, l_task], [False, False])
+                s_task.write([[0, 0], [0, 0]])
+                l_task.write(
+                    [
+                        [False, False],
+                        [False, False],
+                        [False, False],
+                        [False, False],
+                        [False, False],
+                        [False, False],
+                    ]
+                )
+                self.start([s_task, l_task])
+
+    else:
+        time.sleep(2)
+        self.stop_signal = True
+        pass
+
+    self.lights = []</code></pre>
+</details>
+</dd>
 <dt id="Widefield-Imaging-Acquisition.src.controls.DAQ.extend_light_wave"><code class="name flex">
 <span>def <span class="ident">extend_light_wave</span></span>(<span>self)</span>
 </code></dt>
@@ -902,7 +1274,10 @@ Equal to None if original size is kept</dd>
         self.camera_signal = np.max(np.vstack((self.stacked_lights)), axis=0)
     except ValueError:
         self.camera_signal = np.zeros(len(self.stim_signal[0]))
-    self.all_signals = np.stack(self.light_signals + [self.camera_signal])</code></pre>
+    self.all_signals = np.stack(self.light_signals + [self.camera_signal])
+    self.allz_signals = np.stack(
+        self.light_signals + [self.camera_signal] + [self.d_stim_signal]
+    )</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.src.controls.DAQ.generate_light_wave"><code class="name flex">
@@ -944,10 +1319,11 @@ Equal to None if original size is kept</dd>
 </summary>
 <pre><code class="python">def generate_stim_wave(self):
     &#34;&#34;&#34;Create a stack of the stimulation signals and set the last values to zero&#34;&#34;&#34;
-    self.stim_signal = np.stack((self.stim_values))
+    self.stim_signal = np.stack((self.stim_values[:-1]))
+    self.d_stim_signal = self.stim_values[-1]
     self.stim_signal[0][-1] = 0
     self.stim_signal[1][-1] = 0
-    self.stim_signal[2][-1] = 0</code></pre>
+    self.d_stim_signal[-1] = False</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.src.controls.DAQ.launch"><code class="name flex">
@@ -984,7 +1360,8 @@ Equal to None if original size is kept</dd>
     if len(self.lights) &gt; 0:
         self.generate_light_wave()
         self.generate_camera_wave()
-        self.extend_light_wave()
+        if config[&#34;Extend Signal&#34;]:
+            self.extend_light_wave()
     self.write_waveforms()</code></pre>
 </details>
 </dd>
@@ -1012,8 +1389,7 @@ Equal to None if original size is kept</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reset_daq(self):
-    &#34;&#34;&#34;Reset the DAQ parameters
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Reset the DAQ parameters&#34;&#34;&#34;
     self.light_signals, self.stim_signal, self.camera_signal, self.time_values = (
         [],
         [],
@@ -1022,8 +1398,33 @@ Equal to None if original size is kept</dd>
     )</code></pre>
 </details>
 </dd>
+<dt id="Widefield-Imaging-Acquisition.src.controls.DAQ.return_lights"><code class="name flex">
+<span>def <span class="ident">return_lights</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the lights used in the experiment</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>list</code></dt>
+<dd>List of lights used in the experiment</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def return_lights(self):
+    &#34;&#34;&#34;Return the lights used in the experiment
+    
+    Returns:
+        list: List of lights used in the experiment&#34;&#34;&#34;
+    lights = []
+    for light in self.lights:
+        lights.append(light.name)
+    return lights</code></pre>
+</details>
+</dd>
 <dt id="Widefield-Imaging-Acquisition.src.controls.DAQ.sample"><code class="name flex">
-<span>def <span class="ident">sample</span></span>(<span>self, tasks)</span>
+<span>def <span class="ident">sample</span></span>(<span>self, tasks, signal)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Set the sampling rate for a list of nidaqmx tasks</p>
@@ -1036,7 +1437,7 @@ Equal to None if original size is kept</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def sample(self, tasks):
+<pre><code class="python">def sample(self, tasks, signal):
     &#34;&#34;&#34;Set the sampling rate for a list of nidaqmx tasks
 
     Args:
@@ -1046,7 +1447,7 @@ Equal to None if original size is kept</dd>
         task.timing.cfg_samp_clk_timing(
             3000,
             sample_mode=AcquisitionType.FINITE,
-            samps_per_chan=len(self.stim_signal[0]),
+            samps_per_chan=len(signal),
         )</code></pre>
 </details>
 </dd>
@@ -1089,7 +1490,7 @@ Equal to None if original size is kept</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_trigger(self, port):
-    &#34;&#34;&#34; Set the trigger port and activate it&#34;&#34;&#34;
+    &#34;&#34;&#34;Set the trigger port and activate it&#34;&#34;&#34;
     self.trigger_activated = True
     self.trigger_port = port</code></pre>
 </details>
@@ -1204,30 +1605,35 @@ Equal to None if original size is kept</dd>
 </summary>
 <pre><code class="python">def write_waveforms(self):
     &#34;&#34;&#34;Write lights, stimuli and camera signal to the DAQ&#34;&#34;&#34;
-    if WIDEFIELD_COMPUTER:
+
+    if config[&#34;Widefield Computer&#34;]:
         with nidaqmx.Task(new_task_name=&#34;lights&#34;) as l_task:
             self.control_task = l_task
-            with nidaqmx.Task(new_task_name=&#34;stimuli&#34;) as s_task:
+            with nidaqmx.Task(new_task_name=&#34;a_stimuli&#34;) as s_task:
                 null_lights = [[False, False]]
                 self.tasks = [l_task, s_task]
+                for light in self.lights:
+                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
+                    null_lights.append([False, False])
+                if len(self.lights) &gt; 0:
+                    l_task.do_channels.add_do_chan(
+                        f&#34;{self.name}/{self.camera.port}&#34;
+                    )
                 for stimulus in self.stimuli:
-                    if &#34;a0&#34; in stimulus.name or &#34;a1&#34; in stimulus.name:
+                    if &#34;ao0&#34; in stimulus.port or &#34;ao1&#34; in stimulus.port:
                         s_task.ao_channels.add_ao_voltage_chan(
                             f&#34;{self.name}/{stimulus.port}&#34;
                         )
                     else:
-                        s_task.do_channels.add_do_chan(
+                        l_task.do_channels.add_do_chan(
                             f&#34;{self.name}/{stimulus.port}&#34;
                         )
-                for light in self.lights:
-                    l_task.do_channels.add_do_chan(f&#34;{self.name}/{light.port}&#34;)
-                    null_lights.append([False, False])
-                l_task.do_channels.add_do_chan(f&#34;{self.name}/{self.camera.port}&#34;)
+                        null_lights.append([False, False])
                 self.camera.initialize(self)
-                self.sample([s_task, l_task])
+                self.sample([s_task, l_task], self.stim_signal[0])
                 if len(self.lights) &gt; 0:
                     self.write(
-                        [s_task, l_task], [self.stim_signal, self.all_signals]
+                        [s_task, l_task], [self.stim_signal, self.allz_signals]
                     )
                     self.camera.delete_frames()
                     if self.trigger_activated:
@@ -1239,6 +1645,7 @@ Equal to None if original size is kept</dd>
                                 time.sleep(0.001)
                                 if t_task.read():
                                     break
+                    self.start_time = time.time()
                     self.start([s_task, l_task])
                     self.camera.loop(l_task)
                     self.stop([s_task, l_task])
@@ -1246,7 +1653,9 @@ Equal to None if original size is kept</dd>
                     l_task.write(null_lights)
                     self.start([s_task, l_task])
                 else:
-                    self.write([s_task], [self.stim_signal])
+                    self.write(
+                        [s_task, l_task], [self.stim_signal, self.d_stim_signal]
+                    )
                     self.camera.delete_frames()
                     if self.trigger_activated:
                         with nidaqmx.Task(new_task_name=&#34;trigger&#34;) as t_task:
@@ -1257,18 +1666,21 @@ Equal to None if original size is kept</dd>
                                 time.sleep(0.001)
                                 if t_task.read():
                                     break
-                    self.start([s_task])
+                    self.start_time = time.time()
+                    self.start([s_task, l_task])
                     while (
                         s_task.is_task_done() is False and self.stop_signal is False
                     ):
                         time.sleep(0.01)
                         pass
-                    self.stop([s_task])
+                    self.stop([s_task, l_task])
                     s_task.write([[0, 0], [0, 0]])
-                    self.start([s_task])
+                    l_task.write([False, False])
+                    self.start([s_task, l_task])
 
     else:
-        time.sleep(2)
+        self.start_time = time.time()
+        time.sleep(len(self.stim_signal[0]) / 3000)
         self.stop_signal = True
         pass</code></pre>
 </details>
@@ -1326,16 +1738,19 @@ Equal to None if original size is kept</dd>
 <ul>
 <li>
 <h4><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera" href="#Widefield-Imaging-Acquisition.src.controls.Camera">Camera</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera.delete_frames" href="#Widefield-Imaging-Acquisition.src.controls.Camera.delete_frames">delete_frames</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera.initialize" href="#Widefield-Imaging-Acquisition.src.controls.Camera.initialize">initialize</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera.loop" href="#Widefield-Imaging-Acquisition.src.controls.Camera.loop">loop</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera.save" href="#Widefield-Imaging-Acquisition.src.controls.Camera.save">save</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera.set_binning" href="#Widefield-Imaging-Acquisition.src.controls.Camera.set_binning">set_binning</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.controls.Camera.set_window" href="#Widefield-Imaging-Acquisition.src.controls.Camera.set_window">set_window</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ" href="#Widefield-Imaging-Acquisition.src.controls.DAQ">DAQ</a></code></h4>
 <ul class="">
+<li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.close_all_lights" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.close_all_lights">close_all_lights</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.extend_light_wave" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.extend_light_wave">extend_light_wave</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.generate_camera_wave" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.generate_camera_wave">generate_camera_wave</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.generate_light_wave" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.generate_light_wave">generate_light_wave</a></code></li>
@@ -1343,6 +1758,7 @@ Equal to None if original size is kept</dd>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.launch" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.launch">launch</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.remove_trigger" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.remove_trigger">remove_trigger</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.reset_daq" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.reset_daq">reset_daq</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.return_lights" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.return_lights">return_lights</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.sample" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.sample">sample</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.save" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.save">save</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.controls.DAQ.set_trigger" href="#Widefield-Imaging-Acquisition.src.controls.DAQ.set_trigger">set_trigger</a></code></li>

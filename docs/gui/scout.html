@@ -1,0 +1,1539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>Widefield-Imaging-Acquisition.gui.scout API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>Widefield-Imaging-Acquisition.gui.scout</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import sys
+import time
+import os
+import matplotlib.pyplot as plt
+from PyQt5.QtCore import Qt, QLocale
+import numpy as np
+from PyQt5.QtWidgets import (
+    QVBoxLayout,
+    QWidget,
+    QGridLayout,
+    QLabel,
+    QHBoxLayout,
+    QLineEdit,
+    QCheckBox,
+    QPushButton,
+    QStackedLayout,
+    QComboBox,
+    QMessageBox,
+    QFileDialog,
+    QApplication,
+    QSlider,
+)
+from PyQt5.QtGui import QIntValidator, QDoubleValidator, QFont, QIcon, QBrush, QColor
+from matplotlib.widgets import RectangleSelector
+from threading import Thread
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from src.controls import DAQ, Instrument, Camera
+from src.blocks import Experiment
+from src.tree import Tree
+from src.plot import PlotWindow
+from src.calculations import (
+    get_dictionary,
+    shrink_array,
+    frames_acquired_from_camera_signal,
+    get_baseline_frame_indices,
+    average_baseline,
+    get_timecourse,
+    separate_images,
+)
+
+
+class App(QWidget):
+    def __init__(self):
+        &#34;&#34;&#34;Initialize the application&#34;&#34;&#34;
+        super().__init__()
+        self.cwd = os.path.dirname(os.path.dirname(__file__))
+        self.roi_extent = None
+        self.image_index = 0
+        self.previous_index = 0
+        self.files_to_read = True
+        self.live_preview_light_index = 0
+
+        self.initUI()
+
+    def closeEvent(self, *args, **kwargs):
+        &#34;&#34;&#34;Stop all processes when closing the application&#34;&#34;&#34;
+        self.files_to_read = False
+
+    def initUI(self):
+        &#34;&#34;&#34;Initialize the user interface&#34;&#34;&#34;
+        self.setWindowTitle(&#34;Brain Scout&#34;)
+        self.setGeometry(10, 10, 640, 480)
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setAlignment(Qt.AlignLeft)
+        self.grid_layout.setAlignment(Qt.AlignTop)
+        # self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.grid_layout)
+
+        self.settings_window = QVBoxLayout()
+        self.settings_window.setAlignment(Qt.AlignLeft)
+        self.settings_window.setAlignment(Qt.AlignTop)
+        self.grid_layout.addLayout(self.settings_window, 0, 0)
+
+        self.settings_window2 = QVBoxLayout()
+        self.settings_window2.setAlignment(Qt.AlignLeft)
+        self.settings_window2.setAlignment(Qt.AlignTop)
+        self.grid_layout.addLayout(self.settings_window2, 0, 1)
+
+        # ----
+        self.directory_window = QHBoxLayout()
+        self.directory_window.setAlignment(Qt.AlignLeft)
+        self.directory_window.setAlignment(Qt.AlignTop)
+        self.choose_directory_button = QPushButton(&#34;Select Directory&#34;)
+        self.choose_directory_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;folder-plus.png&#34;))
+        )
+        self.choose_directory_button.clicked.connect(self.choose_directory)
+        self.directory_window.addWidget(self.choose_directory_button)
+        self.directory_cell = QLineEdit(&#34;&#34;)
+        self.directory_cell.setReadOnly(True)
+        self.directory_window.addWidget(self.directory_cell)
+
+        self.settings_window.addLayout(self.directory_window)
+
+        # ----
+        self.light_channel_layout = QHBoxLayout()
+        self.preview_light_label = QLabel(&#34;Light Channel Preview&#34;)
+        self.light_channel_layout.addWidget(self.preview_light_label)
+        self.preview_light_combo = QComboBox()
+        self.preview_light_combo.setEnabled(False)
+        self.preview_light_combo.currentIndexChanged.connect(
+            self.change_preview_light_channel
+        )
+        self.light_channel_layout.addWidget(self.preview_light_combo)
+        self.settings_window.addLayout(self.light_channel_layout)
+
+        # self.import_window = QHBoxLayout()
+        # self.import_progress = QLabel(&#34;0% Imported&#34;)
+        # self.import_window.addWidget(self.import_progress)
+        # self.settings_window.addLayout(self.import_window)
+
+        # --
+
+        # -------------
+
+        self.index_window = QVBoxLayout()
+        self.current_index_window = QHBoxLayout()
+        self.current_index_label = QLabel(&#34;Current Index:&#34;)
+        self.current_index_window.addWidget(self.current_index_label)
+        self.current_index = QLineEdit(&#34;0&#34;)
+        self.current_index.textChanged.connect(self.adjust_index)
+        self.current_index_window.addWidget(self.current_index)
+        self.index_window.addLayout(self.current_index_window)
+        self.start_index_window = QHBoxLayout()
+        self.start_index_label = QLabel(&#34;Start Index:&#34;)
+        self.start_index_window.addWidget(self.start_index_label)
+        self.start_index = QLineEdit(&#34;0&#34;)
+        self.start_index_window.addWidget(self.start_index)
+        self.index_window.addLayout(self.start_index_window)
+        self.end_index_window = QHBoxLayout()
+        self.end_index_label = QLabel(&#34;End Index:&#34;)
+        self.end_index_window.addWidget(self.end_index_label)
+        self.end_index = QLineEdit(&#34;0&#34;)
+        self.end_index_window.addWidget(self.end_index)
+        self.index_window.addLayout(self.end_index_window)
+        self.settings_window2.addLayout(self.index_window)
+        # self.settings_window.addStretch()
+
+        self.make_time_course_button = QPushButton(&#34;Generate Time Course&#34;)
+        self.make_time_course_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;chart-line.png&#34;))
+        )
+        self.make_time_course_button.clicked.connect(self.make_time_course)
+        self.make_time_course_layout = QHBoxLayout()
+        self.make_time_course_layout.setAlignment(Qt.AlignLeft)
+        self.make_time_course_layout.setAlignment(Qt.AlignTop)
+        self.make_time_course_layout.addWidget(self.make_time_course_button)
+        self.make_time_course_container = QWidget()
+        self.make_time_course_container.setLayout(self.make_time_course_layout)
+        self.grid_layout.addWidget(self.make_time_course_container, 2, 1)
+
+        # -------
+        self.slider_layout = QHBoxLayout()
+        self.slider_layout.setAlignment(Qt.AlignLeft)
+        self.slider_layout.setAlignment(Qt.AlignTop)
+        # self.slider_layout.setContentsMargins(0, 0, 0, 0)
+        self.slider_layout.addWidget(QLabel(&#34;Start&#34;))
+
+        self.time_slider = QSlider(Qt.Horizontal, self)
+        self.time_slider.setRange(0, 0)
+        self.time_slider.setValue(0)
+        self.time_slider.valueChanged.connect(self.adjust_time)
+        self.slider_layout.addWidget(self.time_slider)
+        self.slider_layout.addWidget(QLabel(&#34;End&#34;))
+
+        self.settings_window.addLayout(self.slider_layout)
+
+        # -------------
+        # self.graphics_layout =QHBoxLayout()
+
+        # self.graphics_layout.addWidget(self.image_view)
+
+        self.time_course = PlotWindow(subplots=False)
+        self.time_course.plot([1, 2, 3], [1, 2, 3], root=False)
+        self.grid_layout.addWidget(self.time_course, 1, 1)
+        # self.grid_layout.addLayout(self.graphics_layout, 1, 0)
+
+        # -------------
+        self.show()
+
+    def initialize_roi(self):
+        self.roi_buttons = QStackedLayout()
+        self.roi_buttons.setAlignment(Qt.AlignLeft)
+        self.roi_buttons.setAlignment(Qt.AlignTop)
+        # self.roi_buttons.setContentsMargins(0, 0, 0, 0)
+        self.roi_layout1 = QHBoxLayout()
+        self.roi_layout1.setAlignment(Qt.AlignLeft)
+        self.roi_layout1.setAlignment(Qt.AlignTop)
+        # self.roi_layout1.setContentsMargins(0, 0, 0, 0)
+        self.reset_roi_button = QPushButton(&#34;Reset ROI&#34;)
+        self.reset_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-out-area.png&#34;))
+        )
+        self.reset_roi_button.setEnabled(False)
+        self.reset_roi_button.clicked.connect(self.reset_roi)
+        self.roi_layout1.addWidget(self.reset_roi_button)
+
+        self.set_roi_button = QPushButton(&#34;Set ROI&#34;)
+        self.set_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-in-area.png&#34;))
+        )
+        self.set_roi_button.clicked.connect(self.set_roi)
+        self.roi_layout1.addWidget(self.set_roi_button)
+
+        self.roi_layout1_container = QWidget()
+        self.roi_layout1_container.setLayout(self.roi_layout1)
+
+        self.roi_layout2 = QHBoxLayout()
+        self.roi_layout2.setAlignment(Qt.AlignLeft)
+        self.roi_layout2.setAlignment(Qt.AlignTop)
+        # self.roi_layout2.setContentsMargins(0, 0, 0, 0)
+        self.cancel_roi_button = QPushButton(&#34;Cancel&#34;)
+        self.cancel_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-cancel.png&#34;))
+        )
+        self.cancel_roi_button.clicked.connect(self.cancel_roi)
+        self.roi_layout2.addWidget(self.cancel_roi_button)
+
+        self.save_roi_button = QPushButton(&#34;Save ROI&#34;)
+        self.save_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-check.png&#34;))
+        )
+        self.save_roi_button.clicked.connect(self.save_roi)
+        self.roi_layout2.addWidget(self.save_roi_button)
+        self.roi_layout2_container = QWidget()
+        self.roi_layout2_container.setLayout(self.roi_layout2)
+
+        self.roi_buttons.addWidget(self.roi_layout1_container)
+        self.roi_buttons.addWidget(self.roi_layout2_container)
+
+        self.grid_layout.addLayout(self.roi_buttons, 2, 0)
+
+    def change_preview_light_channel(self):
+        &#34;&#34;&#34;Change the light channel for the live preview&#34;&#34;&#34;
+        self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        self.adjust_time()
+
+    def actualize_lights(self):
+        &#34;&#34;&#34;Update the lights list in the combo box&#34;&#34;&#34;
+        self.preview_light_combo.clear()
+        if len(self.dictionary[&#34;Lights&#34;]) == 0:
+            self.preview_light_combo.setEnabled(False)
+        else:
+            self.preview_light_combo.setEnabled(True)
+        for light in self.dictionary[&#34;Lights&#34;]:
+            self.preview_light_combo.addItem(light)
+        self.preview_light_combo.setCurrentIndex(0)
+
+    def choose_directory(self):
+        &#34;&#34;&#34;Choose the directory where to save the files&#34;&#34;&#34;
+        self.directory = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
+        self.directory_cell.setText(self.directory)
+        self.frames = []
+        potential_dic = os.listdir(self.directory)
+        for file in potential_dic:
+            if &#34;.json&#34; in file:
+                self.dictionary = get_dictionary(os.path.join(self.directory, file))
+        self.dimensions = self.dictionary[&#34;Dimensions&#34;]
+        self.initialize_plot()
+        self.initialize_roi()
+        self.open_import_thread()
+
+    def initialize_plot(self):
+        try:
+            self.image_view
+        except Exception:
+            self.image_view = PlotWindow()
+            self.grid_layout.addWidget(self.image_view, 1, 0)
+        self.plot_image = plt.imshow(
+            np.zeros((self.dimensions[1], self.dimensions[0])),
+            cmap=&#34;binary_r&#34;,
+            vmin=0,
+            vmax=4096,
+            origin=&#34;lower&#34;,
+        )
+        self.plot_image.axes.get_xaxis().set_visible(False)
+        self.plot_image.axes.axes.get_yaxis().set_visible(False)
+
+    def open_import_thread(self):
+        &#34;&#34;&#34;Open the thread that will import the frames&#34;&#34;&#34;
+        self.import_thread = Thread(target=self.import_frames)
+        self.import_thread.start()
+
+    def import_frames(self):
+        try:
+            self.frames = []
+            self.time_slider.setEnabled(False)
+            potential_data = os.listdir(os.path.join(self.directory, &#34;data&#34;))
+            for file in potential_data:
+                if &#34;.npy&#34; in file:
+                    self.concatenate_frames(file)
+            self.frame_number = self.frames.shape[0]
+            self.split_frames = separate_images(self.dictionary[&#34;Lights&#34;], self.frames)
+            self.end_index.setText(f&#34;{self.frame_number-1}&#34;)
+            self.time_slider.setRange(0, self.frame_number - 1)
+            self.time_slider.setEnabled(True)
+            self.actualize_lights()
+        except Exception as err:
+            print(err)
+            pass
+
+    def concatenate_frames(self, file):
+        &#34;&#34;&#34;Concatenate the frames in the directory&#34;&#34;&#34;
+        if len(self.frames) == 0:
+            self.frames = np.load(os.path.join(self.directory, &#34;data&#34;, file))
+        else:
+            self.frames = np.concatenate(
+                (self.frames, np.load(os.path.join(self.directory, &#34;data&#34;, file)))
+            )
+
+    def set_roi(self):
+        &#34;&#34;&#34;Set the ROI&#34;&#34;&#34;
+        self.roi_buttons.setCurrentIndex(1)
+        self.cancel_roi_button.setEnabled(True)
+        self.save_roi_button.setEnabled(False)
+
+        def onselect_function(eclick, erelease):
+            &#34;&#34;&#34;Save the ROI dimensions as attributes&#34;&#34;&#34;
+            self.roi_extent = self.rect_selector.extents
+            self.save_roi_button.setEnabled(True)
+
+        self.rect_selector = RectangleSelector(
+            self.plot_image.axes,
+            onselect_function,
+            drawtype=&#34;box&#34;,
+            useblit=True,
+            button=[1, 3],
+            minspanx=5,
+            minspany=5,
+            spancoords=&#34;pixels&#34;,
+            interactive=True,
+        )
+
+    def reset_roi(self):
+        &#34;&#34;&#34;Reset the ROI&#34;&#34;&#34;
+        plt.figure(self.image_view.figure.number)
+        plt.ion()
+        plt.xlim(0, self.dimensions[0])
+        plt.ylim(0, self.dimensions[1])
+        self.roi_extent = None
+        self.reset_roi_button.setEnabled(False)
+        self.set_roi_button.setEnabled(True)
+        self.reset_roi_button.setEnabled(False)
+
+    def cancel_roi(self):
+        &#34;&#34;&#34;Cancel the ROI selection&#34;&#34;&#34;
+        # self.activate_buttons(buttons=self.enabled_buttons)
+        self.roi_buttons.setCurrentIndex(0)
+        self.rect_selector.clear()
+        self.rect_selector = None
+
+    def save_roi(self):
+        &#34;&#34;&#34;Save the ROI&#34;&#34;&#34;
+        # self.activate_buttons(buttons=self.enabled_buttons)
+        self.roi_buttons.setCurrentIndex(0)
+        plt.figure(self.image_view.figure.number)
+        plt.ion()
+        plt.xlim(self.roi_extent[0], self.roi_extent[1])
+        plt.ylim(self.roi_extent[2], self.roi_extent[3])
+        self.rect_selector.clear()
+        self.rect_selector = None
+        self.reset_roi_button.setEnabled(True)
+        self.set_roi_button.setEnabled(True)
+
+    def adjust_index(self):
+        &#34;&#34;&#34;Adjust the index&#34;&#34;&#34;
+        try:
+            self.time_slider.setValue(int(self.current_index.text()))
+        except Exception:
+            pass
+
+    def adjust_time(self):
+        plt.ion()
+        try:
+            self.image_index = self.time_slider.value()
+            self.current_index.setText(str(self.image_index))
+            self.open_live_preview_thread()
+        except Exception as err:
+            print(err)
+            pass
+
+    def open_live_preview_thread(self):
+        &#34;&#34;&#34;Open the thread that will show the live preview&#34;&#34;&#34;
+        self.live_preview_thread = Thread(target=self.live_preview)
+        self.live_preview_thread.start()
+
+    def live_preview(self):
+        self.plot_image.set(
+            array=self.split_frames[self.live_preview_light_index][
+                self.image_index // len(self.dictionary[&#34;Lights&#34;])
+            ]
+        )
+
+    def make_time_course(self):
+        try:
+            if self.roi_extent:
+                print(
+                    shrink_array(
+                        self.split_frames[self.live_preview_light_index],
+                        self.roi_extent,
+                    )
+                )
+                y_values = get_timecourse(
+                    shrink_array(
+                        self.split_frames[self.live_preview_light_index],
+                        self.roi_extent,
+                    ),
+                    int(self.start_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                    int(self.end_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                )
+            else:
+                y_values = get_timecourse(
+                    self.split_frames[self.live_preview_light_index],
+                    int(self.start_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                    int(self.end_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                )
+            plt.figure(self.time_course.figure.number)
+            plt.ion()
+            plt.clf()
+            plt.plot(y_values)
+        except Exception as err:
+            print(err)
+            pass
+
+    def activate_buttons(self, buttons):
+        &#34;&#34;&#34;Activate the buttons in a list&#34;&#34;&#34;
+        for button in buttons:
+            button.setEnabled(True)
+
+    def deactivate_buttons(self, buttons):
+        &#34;&#34;&#34;Deactivate the buttons in a list&#34;&#34;&#34;
+        for button in buttons:
+            button.setDisabled(True)
+
+
+if __name__ == &#34;__main__&#34;:
+    app = QApplication(sys.argv)
+    font = QFont()
+    font.setFamily(&#34;IBM Plex Sans&#34;)
+    app.setFont(font)
+    ex = App()
+    sys.exit(app.exec_())</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App"><code class="flex name class">
+<span>class <span class="ident">App</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>QWidget(parent: QWidget = None, flags: Union[Qt.WindowFlags, Qt.WindowType] = Qt.WindowFlags())</p>
+<p>Initialize the application</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class App(QWidget):
+    def __init__(self):
+        &#34;&#34;&#34;Initialize the application&#34;&#34;&#34;
+        super().__init__()
+        self.cwd = os.path.dirname(os.path.dirname(__file__))
+        self.roi_extent = None
+        self.image_index = 0
+        self.previous_index = 0
+        self.files_to_read = True
+        self.live_preview_light_index = 0
+
+        self.initUI()
+
+    def closeEvent(self, *args, **kwargs):
+        &#34;&#34;&#34;Stop all processes when closing the application&#34;&#34;&#34;
+        self.files_to_read = False
+
+    def initUI(self):
+        &#34;&#34;&#34;Initialize the user interface&#34;&#34;&#34;
+        self.setWindowTitle(&#34;Brain Scout&#34;)
+        self.setGeometry(10, 10, 640, 480)
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setAlignment(Qt.AlignLeft)
+        self.grid_layout.setAlignment(Qt.AlignTop)
+        # self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.grid_layout)
+
+        self.settings_window = QVBoxLayout()
+        self.settings_window.setAlignment(Qt.AlignLeft)
+        self.settings_window.setAlignment(Qt.AlignTop)
+        self.grid_layout.addLayout(self.settings_window, 0, 0)
+
+        self.settings_window2 = QVBoxLayout()
+        self.settings_window2.setAlignment(Qt.AlignLeft)
+        self.settings_window2.setAlignment(Qt.AlignTop)
+        self.grid_layout.addLayout(self.settings_window2, 0, 1)
+
+        # ----
+        self.directory_window = QHBoxLayout()
+        self.directory_window.setAlignment(Qt.AlignLeft)
+        self.directory_window.setAlignment(Qt.AlignTop)
+        self.choose_directory_button = QPushButton(&#34;Select Directory&#34;)
+        self.choose_directory_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;folder-plus.png&#34;))
+        )
+        self.choose_directory_button.clicked.connect(self.choose_directory)
+        self.directory_window.addWidget(self.choose_directory_button)
+        self.directory_cell = QLineEdit(&#34;&#34;)
+        self.directory_cell.setReadOnly(True)
+        self.directory_window.addWidget(self.directory_cell)
+
+        self.settings_window.addLayout(self.directory_window)
+
+        # ----
+        self.light_channel_layout = QHBoxLayout()
+        self.preview_light_label = QLabel(&#34;Light Channel Preview&#34;)
+        self.light_channel_layout.addWidget(self.preview_light_label)
+        self.preview_light_combo = QComboBox()
+        self.preview_light_combo.setEnabled(False)
+        self.preview_light_combo.currentIndexChanged.connect(
+            self.change_preview_light_channel
+        )
+        self.light_channel_layout.addWidget(self.preview_light_combo)
+        self.settings_window.addLayout(self.light_channel_layout)
+
+        # self.import_window = QHBoxLayout()
+        # self.import_progress = QLabel(&#34;0% Imported&#34;)
+        # self.import_window.addWidget(self.import_progress)
+        # self.settings_window.addLayout(self.import_window)
+
+        # --
+
+        # -------------
+
+        self.index_window = QVBoxLayout()
+        self.current_index_window = QHBoxLayout()
+        self.current_index_label = QLabel(&#34;Current Index:&#34;)
+        self.current_index_window.addWidget(self.current_index_label)
+        self.current_index = QLineEdit(&#34;0&#34;)
+        self.current_index.textChanged.connect(self.adjust_index)
+        self.current_index_window.addWidget(self.current_index)
+        self.index_window.addLayout(self.current_index_window)
+        self.start_index_window = QHBoxLayout()
+        self.start_index_label = QLabel(&#34;Start Index:&#34;)
+        self.start_index_window.addWidget(self.start_index_label)
+        self.start_index = QLineEdit(&#34;0&#34;)
+        self.start_index_window.addWidget(self.start_index)
+        self.index_window.addLayout(self.start_index_window)
+        self.end_index_window = QHBoxLayout()
+        self.end_index_label = QLabel(&#34;End Index:&#34;)
+        self.end_index_window.addWidget(self.end_index_label)
+        self.end_index = QLineEdit(&#34;0&#34;)
+        self.end_index_window.addWidget(self.end_index)
+        self.index_window.addLayout(self.end_index_window)
+        self.settings_window2.addLayout(self.index_window)
+        # self.settings_window.addStretch()
+
+        self.make_time_course_button = QPushButton(&#34;Generate Time Course&#34;)
+        self.make_time_course_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;chart-line.png&#34;))
+        )
+        self.make_time_course_button.clicked.connect(self.make_time_course)
+        self.make_time_course_layout = QHBoxLayout()
+        self.make_time_course_layout.setAlignment(Qt.AlignLeft)
+        self.make_time_course_layout.setAlignment(Qt.AlignTop)
+        self.make_time_course_layout.addWidget(self.make_time_course_button)
+        self.make_time_course_container = QWidget()
+        self.make_time_course_container.setLayout(self.make_time_course_layout)
+        self.grid_layout.addWidget(self.make_time_course_container, 2, 1)
+
+        # -------
+        self.slider_layout = QHBoxLayout()
+        self.slider_layout.setAlignment(Qt.AlignLeft)
+        self.slider_layout.setAlignment(Qt.AlignTop)
+        # self.slider_layout.setContentsMargins(0, 0, 0, 0)
+        self.slider_layout.addWidget(QLabel(&#34;Start&#34;))
+
+        self.time_slider = QSlider(Qt.Horizontal, self)
+        self.time_slider.setRange(0, 0)
+        self.time_slider.setValue(0)
+        self.time_slider.valueChanged.connect(self.adjust_time)
+        self.slider_layout.addWidget(self.time_slider)
+        self.slider_layout.addWidget(QLabel(&#34;End&#34;))
+
+        self.settings_window.addLayout(self.slider_layout)
+
+        # -------------
+        # self.graphics_layout =QHBoxLayout()
+
+        # self.graphics_layout.addWidget(self.image_view)
+
+        self.time_course = PlotWindow(subplots=False)
+        self.time_course.plot([1, 2, 3], [1, 2, 3], root=False)
+        self.grid_layout.addWidget(self.time_course, 1, 1)
+        # self.grid_layout.addLayout(self.graphics_layout, 1, 0)
+
+        # -------------
+        self.show()
+
+    def initialize_roi(self):
+        self.roi_buttons = QStackedLayout()
+        self.roi_buttons.setAlignment(Qt.AlignLeft)
+        self.roi_buttons.setAlignment(Qt.AlignTop)
+        # self.roi_buttons.setContentsMargins(0, 0, 0, 0)
+        self.roi_layout1 = QHBoxLayout()
+        self.roi_layout1.setAlignment(Qt.AlignLeft)
+        self.roi_layout1.setAlignment(Qt.AlignTop)
+        # self.roi_layout1.setContentsMargins(0, 0, 0, 0)
+        self.reset_roi_button = QPushButton(&#34;Reset ROI&#34;)
+        self.reset_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-out-area.png&#34;))
+        )
+        self.reset_roi_button.setEnabled(False)
+        self.reset_roi_button.clicked.connect(self.reset_roi)
+        self.roi_layout1.addWidget(self.reset_roi_button)
+
+        self.set_roi_button = QPushButton(&#34;Set ROI&#34;)
+        self.set_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-in-area.png&#34;))
+        )
+        self.set_roi_button.clicked.connect(self.set_roi)
+        self.roi_layout1.addWidget(self.set_roi_button)
+
+        self.roi_layout1_container = QWidget()
+        self.roi_layout1_container.setLayout(self.roi_layout1)
+
+        self.roi_layout2 = QHBoxLayout()
+        self.roi_layout2.setAlignment(Qt.AlignLeft)
+        self.roi_layout2.setAlignment(Qt.AlignTop)
+        # self.roi_layout2.setContentsMargins(0, 0, 0, 0)
+        self.cancel_roi_button = QPushButton(&#34;Cancel&#34;)
+        self.cancel_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-cancel.png&#34;))
+        )
+        self.cancel_roi_button.clicked.connect(self.cancel_roi)
+        self.roi_layout2.addWidget(self.cancel_roi_button)
+
+        self.save_roi_button = QPushButton(&#34;Save ROI&#34;)
+        self.save_roi_button.setIcon(
+            QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-check.png&#34;))
+        )
+        self.save_roi_button.clicked.connect(self.save_roi)
+        self.roi_layout2.addWidget(self.save_roi_button)
+        self.roi_layout2_container = QWidget()
+        self.roi_layout2_container.setLayout(self.roi_layout2)
+
+        self.roi_buttons.addWidget(self.roi_layout1_container)
+        self.roi_buttons.addWidget(self.roi_layout2_container)
+
+        self.grid_layout.addLayout(self.roi_buttons, 2, 0)
+
+    def change_preview_light_channel(self):
+        &#34;&#34;&#34;Change the light channel for the live preview&#34;&#34;&#34;
+        self.live_preview_light_index = self.preview_light_combo.currentIndex()
+        self.adjust_time()
+
+    def actualize_lights(self):
+        &#34;&#34;&#34;Update the lights list in the combo box&#34;&#34;&#34;
+        self.preview_light_combo.clear()
+        if len(self.dictionary[&#34;Lights&#34;]) == 0:
+            self.preview_light_combo.setEnabled(False)
+        else:
+            self.preview_light_combo.setEnabled(True)
+        for light in self.dictionary[&#34;Lights&#34;]:
+            self.preview_light_combo.addItem(light)
+        self.preview_light_combo.setCurrentIndex(0)
+
+    def choose_directory(self):
+        &#34;&#34;&#34;Choose the directory where to save the files&#34;&#34;&#34;
+        self.directory = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
+        self.directory_cell.setText(self.directory)
+        self.frames = []
+        potential_dic = os.listdir(self.directory)
+        for file in potential_dic:
+            if &#34;.json&#34; in file:
+                self.dictionary = get_dictionary(os.path.join(self.directory, file))
+        self.dimensions = self.dictionary[&#34;Dimensions&#34;]
+        self.initialize_plot()
+        self.initialize_roi()
+        self.open_import_thread()
+
+    def initialize_plot(self):
+        try:
+            self.image_view
+        except Exception:
+            self.image_view = PlotWindow()
+            self.grid_layout.addWidget(self.image_view, 1, 0)
+        self.plot_image = plt.imshow(
+            np.zeros((self.dimensions[1], self.dimensions[0])),
+            cmap=&#34;binary_r&#34;,
+            vmin=0,
+            vmax=4096,
+            origin=&#34;lower&#34;,
+        )
+        self.plot_image.axes.get_xaxis().set_visible(False)
+        self.plot_image.axes.axes.get_yaxis().set_visible(False)
+
+    def open_import_thread(self):
+        &#34;&#34;&#34;Open the thread that will import the frames&#34;&#34;&#34;
+        self.import_thread = Thread(target=self.import_frames)
+        self.import_thread.start()
+
+    def import_frames(self):
+        try:
+            self.frames = []
+            self.time_slider.setEnabled(False)
+            potential_data = os.listdir(os.path.join(self.directory, &#34;data&#34;))
+            for file in potential_data:
+                if &#34;.npy&#34; in file:
+                    self.concatenate_frames(file)
+            self.frame_number = self.frames.shape[0]
+            self.split_frames = separate_images(self.dictionary[&#34;Lights&#34;], self.frames)
+            self.end_index.setText(f&#34;{self.frame_number-1}&#34;)
+            self.time_slider.setRange(0, self.frame_number - 1)
+            self.time_slider.setEnabled(True)
+            self.actualize_lights()
+        except Exception as err:
+            print(err)
+            pass
+
+    def concatenate_frames(self, file):
+        &#34;&#34;&#34;Concatenate the frames in the directory&#34;&#34;&#34;
+        if len(self.frames) == 0:
+            self.frames = np.load(os.path.join(self.directory, &#34;data&#34;, file))
+        else:
+            self.frames = np.concatenate(
+                (self.frames, np.load(os.path.join(self.directory, &#34;data&#34;, file)))
+            )
+
+    def set_roi(self):
+        &#34;&#34;&#34;Set the ROI&#34;&#34;&#34;
+        self.roi_buttons.setCurrentIndex(1)
+        self.cancel_roi_button.setEnabled(True)
+        self.save_roi_button.setEnabled(False)
+
+        def onselect_function(eclick, erelease):
+            &#34;&#34;&#34;Save the ROI dimensions as attributes&#34;&#34;&#34;
+            self.roi_extent = self.rect_selector.extents
+            self.save_roi_button.setEnabled(True)
+
+        self.rect_selector = RectangleSelector(
+            self.plot_image.axes,
+            onselect_function,
+            drawtype=&#34;box&#34;,
+            useblit=True,
+            button=[1, 3],
+            minspanx=5,
+            minspany=5,
+            spancoords=&#34;pixels&#34;,
+            interactive=True,
+        )
+
+    def reset_roi(self):
+        &#34;&#34;&#34;Reset the ROI&#34;&#34;&#34;
+        plt.figure(self.image_view.figure.number)
+        plt.ion()
+        plt.xlim(0, self.dimensions[0])
+        plt.ylim(0, self.dimensions[1])
+        self.roi_extent = None
+        self.reset_roi_button.setEnabled(False)
+        self.set_roi_button.setEnabled(True)
+        self.reset_roi_button.setEnabled(False)
+
+    def cancel_roi(self):
+        &#34;&#34;&#34;Cancel the ROI selection&#34;&#34;&#34;
+        # self.activate_buttons(buttons=self.enabled_buttons)
+        self.roi_buttons.setCurrentIndex(0)
+        self.rect_selector.clear()
+        self.rect_selector = None
+
+    def save_roi(self):
+        &#34;&#34;&#34;Save the ROI&#34;&#34;&#34;
+        # self.activate_buttons(buttons=self.enabled_buttons)
+        self.roi_buttons.setCurrentIndex(0)
+        plt.figure(self.image_view.figure.number)
+        plt.ion()
+        plt.xlim(self.roi_extent[0], self.roi_extent[1])
+        plt.ylim(self.roi_extent[2], self.roi_extent[3])
+        self.rect_selector.clear()
+        self.rect_selector = None
+        self.reset_roi_button.setEnabled(True)
+        self.set_roi_button.setEnabled(True)
+
+    def adjust_index(self):
+        &#34;&#34;&#34;Adjust the index&#34;&#34;&#34;
+        try:
+            self.time_slider.setValue(int(self.current_index.text()))
+        except Exception:
+            pass
+
+    def adjust_time(self):
+        plt.ion()
+        try:
+            self.image_index = self.time_slider.value()
+            self.current_index.setText(str(self.image_index))
+            self.open_live_preview_thread()
+        except Exception as err:
+            print(err)
+            pass
+
+    def open_live_preview_thread(self):
+        &#34;&#34;&#34;Open the thread that will show the live preview&#34;&#34;&#34;
+        self.live_preview_thread = Thread(target=self.live_preview)
+        self.live_preview_thread.start()
+
+    def live_preview(self):
+        self.plot_image.set(
+            array=self.split_frames[self.live_preview_light_index][
+                self.image_index // len(self.dictionary[&#34;Lights&#34;])
+            ]
+        )
+
+    def make_time_course(self):
+        try:
+            if self.roi_extent:
+                print(
+                    shrink_array(
+                        self.split_frames[self.live_preview_light_index],
+                        self.roi_extent,
+                    )
+                )
+                y_values = get_timecourse(
+                    shrink_array(
+                        self.split_frames[self.live_preview_light_index],
+                        self.roi_extent,
+                    ),
+                    int(self.start_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                    int(self.end_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                )
+            else:
+                y_values = get_timecourse(
+                    self.split_frames[self.live_preview_light_index],
+                    int(self.start_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                    int(self.end_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                )
+            plt.figure(self.time_course.figure.number)
+            plt.ion()
+            plt.clf()
+            plt.plot(y_values)
+        except Exception as err:
+            print(err)
+            pass
+
+    def activate_buttons(self, buttons):
+        &#34;&#34;&#34;Activate the buttons in a list&#34;&#34;&#34;
+        for button in buttons:
+            button.setEnabled(True)
+
+    def deactivate_buttons(self, buttons):
+        &#34;&#34;&#34;Deactivate the buttons in a list&#34;&#34;&#34;
+        for button in buttons:
+            button.setDisabled(True)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>PyQt5.QtWidgets.QWidget</li>
+<li>PyQt5.QtCore.QObject</li>
+<li>sip.wrapper</li>
+<li>PyQt5.QtGui.QPaintDevice</li>
+<li>sip.simplewrapper</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.activate_buttons"><code class="name flex">
+<span>def <span class="ident">activate_buttons</span></span>(<span>self, buttons)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Activate the buttons in a list</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def activate_buttons(self, buttons):
+    &#34;&#34;&#34;Activate the buttons in a list&#34;&#34;&#34;
+    for button in buttons:
+        button.setEnabled(True)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.actualize_lights"><code class="name flex">
+<span>def <span class="ident">actualize_lights</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Update the lights list in the combo box</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def actualize_lights(self):
+    &#34;&#34;&#34;Update the lights list in the combo box&#34;&#34;&#34;
+    self.preview_light_combo.clear()
+    if len(self.dictionary[&#34;Lights&#34;]) == 0:
+        self.preview_light_combo.setEnabled(False)
+    else:
+        self.preview_light_combo.setEnabled(True)
+    for light in self.dictionary[&#34;Lights&#34;]:
+        self.preview_light_combo.addItem(light)
+    self.preview_light_combo.setCurrentIndex(0)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.adjust_index"><code class="name flex">
+<span>def <span class="ident">adjust_index</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adjust the index</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adjust_index(self):
+    &#34;&#34;&#34;Adjust the index&#34;&#34;&#34;
+    try:
+        self.time_slider.setValue(int(self.current_index.text()))
+    except Exception:
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.adjust_time"><code class="name flex">
+<span>def <span class="ident">adjust_time</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def adjust_time(self):
+    plt.ion()
+    try:
+        self.image_index = self.time_slider.value()
+        self.current_index.setText(str(self.image_index))
+        self.open_live_preview_thread()
+    except Exception as err:
+        print(err)
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.cancel_roi"><code class="name flex">
+<span>def <span class="ident">cancel_roi</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Cancel the ROI selection</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cancel_roi(self):
+    &#34;&#34;&#34;Cancel the ROI selection&#34;&#34;&#34;
+    # self.activate_buttons(buttons=self.enabled_buttons)
+    self.roi_buttons.setCurrentIndex(0)
+    self.rect_selector.clear()
+    self.rect_selector = None</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.change_preview_light_channel"><code class="name flex">
+<span>def <span class="ident">change_preview_light_channel</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Change the light channel for the live preview</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def change_preview_light_channel(self):
+    &#34;&#34;&#34;Change the light channel for the live preview&#34;&#34;&#34;
+    self.live_preview_light_index = self.preview_light_combo.currentIndex()
+    self.adjust_time()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.choose_directory"><code class="name flex">
+<span>def <span class="ident">choose_directory</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Choose the directory where to save the files</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def choose_directory(self):
+    &#34;&#34;&#34;Choose the directory where to save the files&#34;&#34;&#34;
+    self.directory = str(QFileDialog.getExistingDirectory(self, &#34;Select Directory&#34;))
+    self.directory_cell.setText(self.directory)
+    self.frames = []
+    potential_dic = os.listdir(self.directory)
+    for file in potential_dic:
+        if &#34;.json&#34; in file:
+            self.dictionary = get_dictionary(os.path.join(self.directory, file))
+    self.dimensions = self.dictionary[&#34;Dimensions&#34;]
+    self.initialize_plot()
+    self.initialize_roi()
+    self.open_import_thread()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.closeEvent"><code class="name flex">
+<span>def <span class="ident">closeEvent</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Stop all processes when closing the application</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def closeEvent(self, *args, **kwargs):
+    &#34;&#34;&#34;Stop all processes when closing the application&#34;&#34;&#34;
+    self.files_to_read = False</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.concatenate_frames"><code class="name flex">
+<span>def <span class="ident">concatenate_frames</span></span>(<span>self, file)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Concatenate the frames in the directory</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def concatenate_frames(self, file):
+    &#34;&#34;&#34;Concatenate the frames in the directory&#34;&#34;&#34;
+    if len(self.frames) == 0:
+        self.frames = np.load(os.path.join(self.directory, &#34;data&#34;, file))
+    else:
+        self.frames = np.concatenate(
+            (self.frames, np.load(os.path.join(self.directory, &#34;data&#34;, file)))
+        )</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.deactivate_buttons"><code class="name flex">
+<span>def <span class="ident">deactivate_buttons</span></span>(<span>self, buttons)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Deactivate the buttons in a list</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def deactivate_buttons(self, buttons):
+    &#34;&#34;&#34;Deactivate the buttons in a list&#34;&#34;&#34;
+    for button in buttons:
+        button.setDisabled(True)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.import_frames"><code class="name flex">
+<span>def <span class="ident">import_frames</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def import_frames(self):
+    try:
+        self.frames = []
+        self.time_slider.setEnabled(False)
+        potential_data = os.listdir(os.path.join(self.directory, &#34;data&#34;))
+        for file in potential_data:
+            if &#34;.npy&#34; in file:
+                self.concatenate_frames(file)
+        self.frame_number = self.frames.shape[0]
+        self.split_frames = separate_images(self.dictionary[&#34;Lights&#34;], self.frames)
+        self.end_index.setText(f&#34;{self.frame_number-1}&#34;)
+        self.time_slider.setRange(0, self.frame_number - 1)
+        self.time_slider.setEnabled(True)
+        self.actualize_lights()
+    except Exception as err:
+        print(err)
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.initUI"><code class="name flex">
+<span>def <span class="ident">initUI</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initialize the user interface</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def initUI(self):
+    &#34;&#34;&#34;Initialize the user interface&#34;&#34;&#34;
+    self.setWindowTitle(&#34;Brain Scout&#34;)
+    self.setGeometry(10, 10, 640, 480)
+    self.grid_layout = QGridLayout()
+    self.grid_layout.setAlignment(Qt.AlignLeft)
+    self.grid_layout.setAlignment(Qt.AlignTop)
+    # self.grid_layout.setContentsMargins(0, 0, 0, 0)
+    self.setLayout(self.grid_layout)
+
+    self.settings_window = QVBoxLayout()
+    self.settings_window.setAlignment(Qt.AlignLeft)
+    self.settings_window.setAlignment(Qt.AlignTop)
+    self.grid_layout.addLayout(self.settings_window, 0, 0)
+
+    self.settings_window2 = QVBoxLayout()
+    self.settings_window2.setAlignment(Qt.AlignLeft)
+    self.settings_window2.setAlignment(Qt.AlignTop)
+    self.grid_layout.addLayout(self.settings_window2, 0, 1)
+
+    # ----
+    self.directory_window = QHBoxLayout()
+    self.directory_window.setAlignment(Qt.AlignLeft)
+    self.directory_window.setAlignment(Qt.AlignTop)
+    self.choose_directory_button = QPushButton(&#34;Select Directory&#34;)
+    self.choose_directory_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;folder-plus.png&#34;))
+    )
+    self.choose_directory_button.clicked.connect(self.choose_directory)
+    self.directory_window.addWidget(self.choose_directory_button)
+    self.directory_cell = QLineEdit(&#34;&#34;)
+    self.directory_cell.setReadOnly(True)
+    self.directory_window.addWidget(self.directory_cell)
+
+    self.settings_window.addLayout(self.directory_window)
+
+    # ----
+    self.light_channel_layout = QHBoxLayout()
+    self.preview_light_label = QLabel(&#34;Light Channel Preview&#34;)
+    self.light_channel_layout.addWidget(self.preview_light_label)
+    self.preview_light_combo = QComboBox()
+    self.preview_light_combo.setEnabled(False)
+    self.preview_light_combo.currentIndexChanged.connect(
+        self.change_preview_light_channel
+    )
+    self.light_channel_layout.addWidget(self.preview_light_combo)
+    self.settings_window.addLayout(self.light_channel_layout)
+
+    # self.import_window = QHBoxLayout()
+    # self.import_progress = QLabel(&#34;0% Imported&#34;)
+    # self.import_window.addWidget(self.import_progress)
+    # self.settings_window.addLayout(self.import_window)
+
+    # --
+
+    # -------------
+
+    self.index_window = QVBoxLayout()
+    self.current_index_window = QHBoxLayout()
+    self.current_index_label = QLabel(&#34;Current Index:&#34;)
+    self.current_index_window.addWidget(self.current_index_label)
+    self.current_index = QLineEdit(&#34;0&#34;)
+    self.current_index.textChanged.connect(self.adjust_index)
+    self.current_index_window.addWidget(self.current_index)
+    self.index_window.addLayout(self.current_index_window)
+    self.start_index_window = QHBoxLayout()
+    self.start_index_label = QLabel(&#34;Start Index:&#34;)
+    self.start_index_window.addWidget(self.start_index_label)
+    self.start_index = QLineEdit(&#34;0&#34;)
+    self.start_index_window.addWidget(self.start_index)
+    self.index_window.addLayout(self.start_index_window)
+    self.end_index_window = QHBoxLayout()
+    self.end_index_label = QLabel(&#34;End Index:&#34;)
+    self.end_index_window.addWidget(self.end_index_label)
+    self.end_index = QLineEdit(&#34;0&#34;)
+    self.end_index_window.addWidget(self.end_index)
+    self.index_window.addLayout(self.end_index_window)
+    self.settings_window2.addLayout(self.index_window)
+    # self.settings_window.addStretch()
+
+    self.make_time_course_button = QPushButton(&#34;Generate Time Course&#34;)
+    self.make_time_course_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;chart-line.png&#34;))
+    )
+    self.make_time_course_button.clicked.connect(self.make_time_course)
+    self.make_time_course_layout = QHBoxLayout()
+    self.make_time_course_layout.setAlignment(Qt.AlignLeft)
+    self.make_time_course_layout.setAlignment(Qt.AlignTop)
+    self.make_time_course_layout.addWidget(self.make_time_course_button)
+    self.make_time_course_container = QWidget()
+    self.make_time_course_container.setLayout(self.make_time_course_layout)
+    self.grid_layout.addWidget(self.make_time_course_container, 2, 1)
+
+    # -------
+    self.slider_layout = QHBoxLayout()
+    self.slider_layout.setAlignment(Qt.AlignLeft)
+    self.slider_layout.setAlignment(Qt.AlignTop)
+    # self.slider_layout.setContentsMargins(0, 0, 0, 0)
+    self.slider_layout.addWidget(QLabel(&#34;Start&#34;))
+
+    self.time_slider = QSlider(Qt.Horizontal, self)
+    self.time_slider.setRange(0, 0)
+    self.time_slider.setValue(0)
+    self.time_slider.valueChanged.connect(self.adjust_time)
+    self.slider_layout.addWidget(self.time_slider)
+    self.slider_layout.addWidget(QLabel(&#34;End&#34;))
+
+    self.settings_window.addLayout(self.slider_layout)
+
+    # -------------
+    # self.graphics_layout =QHBoxLayout()
+
+    # self.graphics_layout.addWidget(self.image_view)
+
+    self.time_course = PlotWindow(subplots=False)
+    self.time_course.plot([1, 2, 3], [1, 2, 3], root=False)
+    self.grid_layout.addWidget(self.time_course, 1, 1)
+    # self.grid_layout.addLayout(self.graphics_layout, 1, 0)
+
+    # -------------
+    self.show()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.initialize_plot"><code class="name flex">
+<span>def <span class="ident">initialize_plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def initialize_plot(self):
+    try:
+        self.image_view
+    except Exception:
+        self.image_view = PlotWindow()
+        self.grid_layout.addWidget(self.image_view, 1, 0)
+    self.plot_image = plt.imshow(
+        np.zeros((self.dimensions[1], self.dimensions[0])),
+        cmap=&#34;binary_r&#34;,
+        vmin=0,
+        vmax=4096,
+        origin=&#34;lower&#34;,
+    )
+    self.plot_image.axes.get_xaxis().set_visible(False)
+    self.plot_image.axes.axes.get_yaxis().set_visible(False)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.initialize_roi"><code class="name flex">
+<span>def <span class="ident">initialize_roi</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def initialize_roi(self):
+    self.roi_buttons = QStackedLayout()
+    self.roi_buttons.setAlignment(Qt.AlignLeft)
+    self.roi_buttons.setAlignment(Qt.AlignTop)
+    # self.roi_buttons.setContentsMargins(0, 0, 0, 0)
+    self.roi_layout1 = QHBoxLayout()
+    self.roi_layout1.setAlignment(Qt.AlignLeft)
+    self.roi_layout1.setAlignment(Qt.AlignTop)
+    # self.roi_layout1.setContentsMargins(0, 0, 0, 0)
+    self.reset_roi_button = QPushButton(&#34;Reset ROI&#34;)
+    self.reset_roi_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-out-area.png&#34;))
+    )
+    self.reset_roi_button.setEnabled(False)
+    self.reset_roi_button.clicked.connect(self.reset_roi)
+    self.roi_layout1.addWidget(self.reset_roi_button)
+
+    self.set_roi_button = QPushButton(&#34;Set ROI&#34;)
+    self.set_roi_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-in-area.png&#34;))
+    )
+    self.set_roi_button.clicked.connect(self.set_roi)
+    self.roi_layout1.addWidget(self.set_roi_button)
+
+    self.roi_layout1_container = QWidget()
+    self.roi_layout1_container.setLayout(self.roi_layout1)
+
+    self.roi_layout2 = QHBoxLayout()
+    self.roi_layout2.setAlignment(Qt.AlignLeft)
+    self.roi_layout2.setAlignment(Qt.AlignTop)
+    # self.roi_layout2.setContentsMargins(0, 0, 0, 0)
+    self.cancel_roi_button = QPushButton(&#34;Cancel&#34;)
+    self.cancel_roi_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-cancel.png&#34;))
+    )
+    self.cancel_roi_button.clicked.connect(self.cancel_roi)
+    self.roi_layout2.addWidget(self.cancel_roi_button)
+
+    self.save_roi_button = QPushButton(&#34;Save ROI&#34;)
+    self.save_roi_button.setIcon(
+        QIcon(os.path.join(self.cwd, &#34;gui&#34;, &#34;icons&#34;, &#34;zoom-check.png&#34;))
+    )
+    self.save_roi_button.clicked.connect(self.save_roi)
+    self.roi_layout2.addWidget(self.save_roi_button)
+    self.roi_layout2_container = QWidget()
+    self.roi_layout2_container.setLayout(self.roi_layout2)
+
+    self.roi_buttons.addWidget(self.roi_layout1_container)
+    self.roi_buttons.addWidget(self.roi_layout2_container)
+
+    self.grid_layout.addLayout(self.roi_buttons, 2, 0)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.live_preview"><code class="name flex">
+<span>def <span class="ident">live_preview</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def live_preview(self):
+    self.plot_image.set(
+        array=self.split_frames[self.live_preview_light_index][
+            self.image_index // len(self.dictionary[&#34;Lights&#34;])
+        ]
+    )</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.make_time_course"><code class="name flex">
+<span>def <span class="ident">make_time_course</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def make_time_course(self):
+    try:
+        if self.roi_extent:
+            print(
+                shrink_array(
+                    self.split_frames[self.live_preview_light_index],
+                    self.roi_extent,
+                )
+            )
+            y_values = get_timecourse(
+                shrink_array(
+                    self.split_frames[self.live_preview_light_index],
+                    self.roi_extent,
+                ),
+                int(self.start_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                int(self.end_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+            )
+        else:
+            y_values = get_timecourse(
+                self.split_frames[self.live_preview_light_index],
+                int(self.start_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+                int(self.end_index.text()) // len(self.dictionary[&#34;Lights&#34;]),
+            )
+        plt.figure(self.time_course.figure.number)
+        plt.ion()
+        plt.clf()
+        plt.plot(y_values)
+    except Exception as err:
+        print(err)
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.open_import_thread"><code class="name flex">
+<span>def <span class="ident">open_import_thread</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open the thread that will import the frames</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open_import_thread(self):
+    &#34;&#34;&#34;Open the thread that will import the frames&#34;&#34;&#34;
+    self.import_thread = Thread(target=self.import_frames)
+    self.import_thread.start()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.open_live_preview_thread"><code class="name flex">
+<span>def <span class="ident">open_live_preview_thread</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Open the thread that will show the live preview</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def open_live_preview_thread(self):
+    &#34;&#34;&#34;Open the thread that will show the live preview&#34;&#34;&#34;
+    self.live_preview_thread = Thread(target=self.live_preview)
+    self.live_preview_thread.start()</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.reset_roi"><code class="name flex">
+<span>def <span class="ident">reset_roi</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reset the ROI</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset_roi(self):
+    &#34;&#34;&#34;Reset the ROI&#34;&#34;&#34;
+    plt.figure(self.image_view.figure.number)
+    plt.ion()
+    plt.xlim(0, self.dimensions[0])
+    plt.ylim(0, self.dimensions[1])
+    self.roi_extent = None
+    self.reset_roi_button.setEnabled(False)
+    self.set_roi_button.setEnabled(True)
+    self.reset_roi_button.setEnabled(False)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.save_roi"><code class="name flex">
+<span>def <span class="ident">save_roi</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Save the ROI</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_roi(self):
+    &#34;&#34;&#34;Save the ROI&#34;&#34;&#34;
+    # self.activate_buttons(buttons=self.enabled_buttons)
+    self.roi_buttons.setCurrentIndex(0)
+    plt.figure(self.image_view.figure.number)
+    plt.ion()
+    plt.xlim(self.roi_extent[0], self.roi_extent[1])
+    plt.ylim(self.roi_extent[2], self.roi_extent[3])
+    self.rect_selector.clear()
+    self.rect_selector = None
+    self.reset_roi_button.setEnabled(True)
+    self.set_roi_button.setEnabled(True)</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.gui.scout.App.set_roi"><code class="name flex">
+<span>def <span class="ident">set_roi</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the ROI</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_roi(self):
+    &#34;&#34;&#34;Set the ROI&#34;&#34;&#34;
+    self.roi_buttons.setCurrentIndex(1)
+    self.cancel_roi_button.setEnabled(True)
+    self.save_roi_button.setEnabled(False)
+
+    def onselect_function(eclick, erelease):
+        &#34;&#34;&#34;Save the ROI dimensions as attributes&#34;&#34;&#34;
+        self.roi_extent = self.rect_selector.extents
+        self.save_roi_button.setEnabled(True)
+
+    self.rect_selector = RectangleSelector(
+        self.plot_image.axes,
+        onselect_function,
+        drawtype=&#34;box&#34;,
+        useblit=True,
+        button=[1, 3],
+        minspanx=5,
+        minspany=5,
+        spancoords=&#34;pixels&#34;,
+        interactive=True,
+    )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="Widefield-Imaging-Acquisition.gui" href="index.html">Widefield-Imaging-Acquisition.gui</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="Widefield-Imaging-Acquisition.gui.scout.App" href="#Widefield-Imaging-Acquisition.gui.scout.App">App</a></code></h4>
+<ul class="">
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.activate_buttons" href="#Widefield-Imaging-Acquisition.gui.scout.App.activate_buttons">activate_buttons</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.actualize_lights" href="#Widefield-Imaging-Acquisition.gui.scout.App.actualize_lights">actualize_lights</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.adjust_index" href="#Widefield-Imaging-Acquisition.gui.scout.App.adjust_index">adjust_index</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.adjust_time" href="#Widefield-Imaging-Acquisition.gui.scout.App.adjust_time">adjust_time</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.cancel_roi" href="#Widefield-Imaging-Acquisition.gui.scout.App.cancel_roi">cancel_roi</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.change_preview_light_channel" href="#Widefield-Imaging-Acquisition.gui.scout.App.change_preview_light_channel">change_preview_light_channel</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.choose_directory" href="#Widefield-Imaging-Acquisition.gui.scout.App.choose_directory">choose_directory</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.closeEvent" href="#Widefield-Imaging-Acquisition.gui.scout.App.closeEvent">closeEvent</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.concatenate_frames" href="#Widefield-Imaging-Acquisition.gui.scout.App.concatenate_frames">concatenate_frames</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.deactivate_buttons" href="#Widefield-Imaging-Acquisition.gui.scout.App.deactivate_buttons">deactivate_buttons</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.import_frames" href="#Widefield-Imaging-Acquisition.gui.scout.App.import_frames">import_frames</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.initUI" href="#Widefield-Imaging-Acquisition.gui.scout.App.initUI">initUI</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.initialize_plot" href="#Widefield-Imaging-Acquisition.gui.scout.App.initialize_plot">initialize_plot</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.initialize_roi" href="#Widefield-Imaging-Acquisition.gui.scout.App.initialize_roi">initialize_roi</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.live_preview" href="#Widefield-Imaging-Acquisition.gui.scout.App.live_preview">live_preview</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.make_time_course" href="#Widefield-Imaging-Acquisition.gui.scout.App.make_time_course">make_time_course</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.open_import_thread" href="#Widefield-Imaging-Acquisition.gui.scout.App.open_import_thread">open_import_thread</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.open_live_preview_thread" href="#Widefield-Imaging-Acquisition.gui.scout.App.open_live_preview_thread">open_live_preview_thread</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.reset_roi" href="#Widefield-Imaging-Acquisition.gui.scout.App.reset_roi">reset_roi</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.save_roi" href="#Widefield-Imaging-Acquisition.gui.scout.App.save_roi">save_roi</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.gui.scout.App.set_roi" href="#Widefield-Imaging-Acquisition.gui.scout.App.set_roi">set_roi</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

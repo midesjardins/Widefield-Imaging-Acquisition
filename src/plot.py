@@ -9,8 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 class PlotWindow(QDialog):
     def __init__(self, subplots=False, parent=None):
-        """ Initialize the plot window 
-        
+        """Initialize the plot window
+
         Args:
             subplots (bool): Whether to use subplots or not
             parent (QWidget): The parent widget
@@ -29,7 +29,7 @@ class PlotWindow(QDialog):
         self.vertical_lines = []
 
     def clear(self):
-        """ Clear each axis of the plot """
+        """Clear each axis of the plot"""
         plt.figure(self.figure.number)
         plt.ion()
         try:
@@ -40,14 +40,14 @@ class PlotWindow(QDialog):
         self.vertical_lines = []
 
     def plot(self, x, y, root, index=0):
-        """ Plot the given data on the plot window 
-        
+        """Plot the given data on the plot window
+
         Args:
             x (array): The x-values of the data
             y (array): The y-values of the data
             root (bool): If the plotted block is the root block
             index (int): The index of the axis to plot on
-            """
+        """
         plt.figure(self.figure.number)
         try:
             self.axis[index].plot(x, y)
