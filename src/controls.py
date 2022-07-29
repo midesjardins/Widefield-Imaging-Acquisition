@@ -248,7 +248,6 @@ class DAQ:
             time_values (array): A array containing the time values
             stim_values (array): A array containing the stimulation values
         """
-        print("daq launched")
         self.reset_daq()
         self.experiment_name = name
         self.time_values = time_values
