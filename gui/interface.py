@@ -936,10 +936,13 @@ class App(QWidget):
 
     def adjust_exposure(self):
         """Match the exposure of the image preview to the slider value"""
-        self.max_exposure = self.exposure_slider.value()
-        self.slider_values[self.preview_light_combo.currentText()][
+        try:
+            self.max_exposure = self.exposure_slider.value()
+            self.slider_values[self.preview_light_combo.currentText()][
             self.activation_map_combo.currentText()
-        ] = self.max_exposure
+            ] = self.max_exposure
+        except Exception:
+            pass
 
     def set_trigger(self):
         """Set the trigger for the DAQ"""
@@ -1273,18 +1276,17 @@ class App(QWidget):
     def actualize_progression(self):
         """Actualize the position of the progress bar"""
         plt.ion()
+        start = time.time()
+        if not self.config["Widefield Computer"]:
+            self.daq.start_time = time.time()
         while self.daq.stop_signal is False:
             try:
-                if self.acquisition_mode:
-                    position = self.camera.frames_read / int(self.framerate_cell.text())
-                else:
-                    position = time.time() - self.daq.start_time
-                self.plot_window.vertical_lines[0].set_xdata(position)
-                self.plot_window.vertical_lines[1].set_xdata(position)
-                self.plot_window.vertical_lines[2].set_xdata(position)
-                time.sleep(0.5)
+                position = time.time() - self.daq.start_time
+                self.plot_window.actualize(position)
+                time.sleep(1)
             except Exception as err:
-                time.sleep(0.5)
+                print(err)
+                time.sleep(1)
                 pass
 
     def change_preview_light_channel(self):
@@ -1351,6 +1353,8 @@ class App(QWidget):
 
     def stop(self):
         """Stop the experiment and reactivate the interface"""
+
+        print("Things have stopped")
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
         self.tree.setCurrentItem(self.tree.topLevelItem(0))
@@ -1725,14 +1729,12 @@ class App(QWidget):
             )
             self.plot_window.plot(
                 self.tree.x_values,
-                self.tree.stim2_values,
-                root,
+                self.tree.stim2_values, root,
                 index=1,
             )
             self.plot_window.plot(
                 self.tree.x_values,
-                self.tree.stim3_values,
-                root,
+                self.tree.stim3_values, root,
                 index=2,
             )
             self.tree.x_values = []
