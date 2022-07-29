@@ -1277,17 +1277,15 @@ class App(QWidget):
         """Actualize the position of the progress bar"""
         plt.ion()
         start = time.time()
+        if not self.config["Widefield Computer"]:
+            self.daq.start_time = time.time()
         while self.daq.stop_signal is False:
             try:
-                if self.acquisition_mode and self.config["Widefield Computer"]:
-                    position = self.camera.frames_read / int(self.framerate_cell.text())
-                elif self.acquisition_mode:
-                    position = time.time() - start
-                else:
-                    position = time.time() - self.daq.start_time
+                position = time.time() - self.daq.start_time
                 self.plot_window.actualize(position)
                 time.sleep(0.1)
             except Exception as err:
+                print(err)
                 time.sleep(0.1)
                 pass
 
