@@ -1353,6 +1353,8 @@ class App(QWidget):
 
     def stop(self):
         """Stop the experiment and reactivate the interface"""
+
+        print("Things have stopped")
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
         self.tree.setCurrentItem(self.tree.topLevelItem(0))

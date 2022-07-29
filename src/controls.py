@@ -248,6 +248,7 @@ class DAQ:
             time_values (array): A array containing the time values
             stim_values (array): A array containing the stimulation values
         """
+        print("daq launched")
         self.reset_daq()
         self.experiment_name = name
         self.time_values = time_values
@@ -389,9 +390,9 @@ class DAQ:
 
         else:
             self.start_time = time.time()
-            time.sleep(len(self.stim_signal[0]) / 3000)
-            self.stop_signal = True
-            pass
+            while time.time() - self.start_time < len(self.stim_signal[0]) / 3000 and not self.stop_signal:
+                time.sleep(0.01)
+                pass
 
     def return_lights(self):
         """Return the lights used in the experiment

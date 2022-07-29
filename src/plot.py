@@ -58,5 +58,10 @@ class PlotWindow(QDialog):
             self.vertical_lines.append(self.axis[index].axvline(x=0, color="red"))
 
     def actualize(self, position):
-        for i, line in enumerate(self.vertical_lines):
+        """Actualize the vertical lines on the plot
+
+        Args:
+            position (int): The position of the vertical line
+        """
+        for line in self.vertical_lines:
             line.set_xdata(position)
