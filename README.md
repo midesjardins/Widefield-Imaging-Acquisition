@@ -209,7 +209,7 @@ Project Page: [https://github.com/midesjardins/Widefield-Imaging-Acquisition](ht
 This project was made possible with the help of these open-source ressources:
 
 * [Tabler Icons](https://tabler-icons.io/)
-* [Pylablib](hhttps://github.com/AlexShkarin)
+* [Pylablib](https://pylablib.readthedocs.io/en/latest/)
 * [Best-README-Template](https://github.com/othneildrew)
 
 
