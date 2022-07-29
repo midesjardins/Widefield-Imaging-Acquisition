@@ -936,10 +936,13 @@ class App(QWidget):
 
     def adjust_exposure(self):
         """Match the exposure of the image preview to the slider value"""
-        self.max_exposure = self.exposure_slider.value()
-        self.slider_values[self.preview_light_combo.currentText()][
+        try:
+            self.max_exposure = self.exposure_slider.value()
+            self.slider_values[self.preview_light_combo.currentText()][
             self.activation_map_combo.currentText()
-        ] = self.max_exposure
+            ] = self.max_exposure
+        except Exception:
+            pass
 
     def set_trigger(self):
         """Set the trigger for the DAQ"""
@@ -1273,10 +1276,13 @@ class App(QWidget):
     def actualize_progression(self):
         """Actualize the position of the progress bar"""
         plt.ion()
+        start = time.time()
         while self.daq.stop_signal is False:
             try:
-                if self.acquisition_mode:
+                if self.acquisition_mode and self.config["Widefield Computer"]:
                     position = self.camera.frames_read / int(self.framerate_cell.text())
+                elif self.acquisition_mode:
+                    position = time.time() - start
                 else:
                     position = time.time() - self.daq.start_time
                 self.plot_window.vertical_lines[0].set_xdata(position)
