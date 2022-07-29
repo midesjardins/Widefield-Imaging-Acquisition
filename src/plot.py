@@ -2,6 +2,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import sys
 import os
+import time
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget, QCheckBox, QTabWidget
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -55,3 +56,7 @@ class PlotWindow(QDialog):
             plt.plot(x, y)
         if root:
             self.vertical_lines.append(self.axis[index].axvline(x=0, color="red"))
+
+    def actualize(self, position):
+        for i, line in enumerate(self.vertical_lines):
+            line.set_xdata(position)

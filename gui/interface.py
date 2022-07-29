@@ -1285,12 +1285,10 @@ class App(QWidget):
                     position = time.time() - start
                 else:
                     position = time.time() - self.daq.start_time
-                self.plot_window.vertical_lines[0].set_xdata(position)
-                self.plot_window.vertical_lines[1].set_xdata(position)
-                self.plot_window.vertical_lines[2].set_xdata(position)
-                time.sleep(0.5)
+                self.plot_window.actualize(position)
+                time.sleep(0.1)
             except Exception as err:
-                time.sleep(0.5)
+                time.sleep(0.1)
                 pass
 
     def change_preview_light_channel(self):
@@ -1731,14 +1729,12 @@ class App(QWidget):
             )
             self.plot_window.plot(
                 self.tree.x_values,
-                self.tree.stim2_values,
-                root,
+                self.tree.stim2_values, root,
                 index=1,
             )
             self.plot_window.plot(
                 self.tree.x_values,
-                self.tree.stim3_values,
-                root,
+                self.tree.stim3_values, root,
                 index=2,
             )
             self.tree.x_values = []
