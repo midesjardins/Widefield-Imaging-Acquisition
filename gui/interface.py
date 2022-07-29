@@ -1283,10 +1283,10 @@ class App(QWidget):
             try:
                 position = time.time() - self.daq.start_time
                 self.plot_window.actualize(position)
-                time.sleep(0.1)
+                time.sleep(1)
             except Exception as err:
                 print(err)
-                time.sleep(0.1)
+                time.sleep(1)
                 pass
 
     def change_preview_light_channel(self):
