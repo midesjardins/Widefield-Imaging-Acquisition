@@ -151,7 +151,6 @@ class Tree(QTreeWidget):
         """
         try:
             if item == self.invisibleRootItem() or current:
-                print("root")
                 self.elapsed_time = 0
                 self.x_values = []
                 self.stim1_values = []
@@ -182,8 +181,6 @@ class Tree(QTreeWidget):
                     self.stim2_values = np.concatenate((self.stim2_values, data))
                     self.stim3_values = np.concatenate((self.stim3_values, ddata))
             else:
-                print(item.text(0))
-                print(item.text(6))
                 duration = float(item.text(6))
                 # PROBLEMATIC
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
@@ -272,8 +269,6 @@ class Tree(QTreeWidget):
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
-            print("graph err")
-            print(err)
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []

@@ -1011,7 +1011,7 @@ class App(QWidget):
                 self.experiment_name_cell.text(),
                 f"{self.experiment_name_cell.text()}-light_signal.npy",
             )
-        ):
+        ) and self.directory_save_files_checkbox.isChecked():
             button = QMessageBox.question(
                 self,
                 "Files already exist",
@@ -1063,6 +1063,7 @@ class App(QWidget):
                             self.camera.baseline_frames = []
                             self.camera.baseline_completed = True
                             self.camera.frames_read_list = []
+                            self.camera.baseline_data = []
                             break
                     except Exception as err:
                         pass
@@ -1116,13 +1117,8 @@ class App(QWidget):
             and self.directory_save_files_checkbox.isChecked()
         ):
             try:
-                print("this is the extent")
-                print(self.roi_extent)
                 self.experiment.save(self.roi_extent)
             except Exception as err:
-                print("err after saving first")
-                print(err)
-                print("err before entering")
                 self.experiment.save()
         self.stop()
 
@@ -1258,6 +1254,7 @@ class App(QWidget):
                             )
 
                     except Exception as err:
+                        print("Live Preview error")
                         print(err)
                         pass
                     time.sleep(0.04)
@@ -1791,7 +1788,6 @@ class App(QWidget):
         self.roi_buttons.setCurrentIndex(0)
         plt.figure(self.image_view.figure.number)
         plt.ion()
-        print(self.roi_extent)
         plt.xlim(self.roi_extent[0], self.roi_extent[1])
         plt.ylim(self.roi_extent[2], self.roi_extent[3])
         self.rect_selector.clear()

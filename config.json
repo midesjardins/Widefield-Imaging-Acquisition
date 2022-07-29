@@ -11,5 +11,5 @@
 "Debug": false,
 "Binning": 1,
 "Extend Signal": true,
-"Widefield Computer": false
+"Widefield Computer": true
 }

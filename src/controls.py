@@ -161,9 +161,7 @@ class Camera(Instrument):
                 self.frames = shrink_array(self.frames, extents)
             if self.is_saving:
                 while self.is_saving:
-                    print("is saving")
                     pass
-            print(len(self.frames))
             np.save(
                 os.path.join(directory, "data", f"{self.file_index}.npy"), self.frames
             )

@@ -151,6 +151,7 @@ def average_baseline(frame_list, light_count=1, start_index=0):
     Returns:
         list: List of averaged baselines"""
     try:
+        print(len(frame_list))
         baselines = []
         for light_index in range(light_count):
             baselines.append(
@@ -179,10 +180,14 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
 
     Returns:
         list of tuples: List of start/end baseline indices in terms of frames acquired"""
-    list_of_indices = []
-    for index in baseline_indices:
-        list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
-    return list_of_indices
+    try:
+        list_of_indices = []
+        for index in baseline_indices:
+            list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
+        return list_of_indices
+    except Exception as err:
+        print("Baseline Frame Index error")
+        print(err)
 
 
 def map_activation(frames, baseline):
@@ -215,5 +220,4 @@ def get_timecourse(frames, start_index, end_index):
         array: Array of the mean of each frame"""
 
     first_mean = np.mean(frames[start_index : end_index + 1], axis=1)
-    print(first_mean.shape)
     return np.mean(first_mean, axis=1)
