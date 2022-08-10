@@ -400,7 +400,6 @@ class Tree(QTreeWidget):
                 }
                 return Stimulation(dictionary)
         except Exception as err:
-            print(err)
             pass
 
     def check_global_validity(self, item=None):

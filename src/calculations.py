@@ -24,6 +24,7 @@ def get_array(directory):
     """Get array from NPY file"""
     return np.array(np.load(directory))
 
+
 def get_dictionary(directory):
     """Get dictionary from json file"""
     with open(directory, "r") as file:
@@ -151,7 +152,6 @@ def average_baseline(frame_list, light_count=1, start_index=0):
     Returns:
         list: List of averaged baselines"""
     try:
-        print(len(frame_list))
         baselines = []
         for light_index in range(light_count):
             baselines.append(
@@ -166,8 +166,7 @@ def average_baseline(frame_list, light_count=1, start_index=0):
                 )
             )
     except Exception as err:
-        print("Baseline Error")
-        print(err)
+        pass
     return baselines
 
 
@@ -183,11 +182,12 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
     try:
         list_of_indices = []
         for index in baseline_indices:
-            list_of_indices.append([frames_acquired[index[0]], frames_acquired[index[1]]])
+            list_of_indices.append(
+                [frames_acquired[index[0]], frames_acquired[index[1]]]
+            )
         return list_of_indices
     except Exception as err:
-        print("Baseline Frame Index error")
-        print(err)
+        pass
 
 
 def map_activation(frames, baseline):

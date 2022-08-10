@@ -155,7 +155,7 @@ class Experiment:
             self.daq = daq
             self.config = config
         except Exception as err:
-            print(err)
+            pass
 
     def save(self, extents=None):
         """Save the experiment object to multiple files
@@ -163,7 +163,6 @@ class Experiment:
         Args:
             extents (list): Positions of the ROI corners used for the experiment
         """
-        print("saving exeperiment")
         with open(f"{self.directory}/experiment-metadata.txt", "w") as file:
             file.write(
                 f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}"
@@ -174,22 +173,17 @@ class Experiment:
                 round(extents[3]) - round(extents[2]),
             ]
         except Exception as err:
-            print(err)
-            print("*slicing failed")
             dimensions = [
                 int(1024 / self.config["Binning"]),
                 int(1024 / self.config["Binning"]),
             ]
-            print(dimensions)
         self.save_config(dimensions)
-        print("just saved config")
         self.daq.camera.save(self.directory, extents)
-        print("just saved camera")
         self.daq.save(self.directory)
 
     def save_config(self, dimensions):
         """Save the configuration of the experiment to a file
-        
+
         Args:
             dimensions (list): Dimensions of the experiment
         """
