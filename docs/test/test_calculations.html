@@ -38,7 +38,7 @@ import scipy.signal as signal
 
 class TestData(unittest.TestCase):
     def test_frames_acquired_from_camera_signal(self):
-        &#34;&#34;&#34; Test that the frames acquired from the camera signal are correctly calculated &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the frames acquired from the camera signal are correctly calculated&#34;&#34;&#34;
         x_values = np.linspace(0, 5, 11)
         y_values = signal.square(2 * np.pi * x_values)
         np.testing.assert_array_equal(
@@ -47,14 +47,14 @@ class TestData(unittest.TestCase):
         )
 
     def test_average_baseline(self):
-        &#34;&#34;&#34; Test that the baselines are correctly averaged &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the baselines are correctly averaged&#34;&#34;&#34;
         frames = [np.array([[1, 2, 3], [4, 5, 6]]), np.array([[7, 8, 9], [10, 11, 12]])]
         np.testing.assert_array_equal(
             [np.array([[4, 5, 6], [7, 8, 9]])], calc.average_baseline(frames)
         )
 
     def test_get_baseline_frame_indices(self):
-        &#34;&#34;&#34; Test that the baseline frame indices are correctly calculated &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the baseline frame indices are correctly calculated&#34;&#34;&#34;
         baseline_indices = [[0, 2], [3, 5], [6, 9]]
         frames_acquired = [0, 0, 0, 0, 0, 1, 1, 2, 3, 3]
         self.assertEqual(
@@ -64,7 +64,7 @@ class TestData(unittest.TestCase):
         pass
 
     def test_map_activation(self):
-        &#34;&#34;&#34; Test that the activation is correctly mapped to the baseline &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the activation is correctly mapped to the baseline&#34;&#34;&#34;
         frames = [np.array([[1, 2, 3], [4, 5, 6]]), np.array([[7, 8, 9], [10, 11, 12]])]
         baseline = np.array([[0, 3, 1], [1, 1, 1]])
         np.testing.assert_array_equal(
@@ -125,7 +125,7 @@ not have a method with the specified name.</p></div>
 </summary>
 <pre><code class="python">class TestData(unittest.TestCase):
     def test_frames_acquired_from_camera_signal(self):
-        &#34;&#34;&#34; Test that the frames acquired from the camera signal are correctly calculated &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the frames acquired from the camera signal are correctly calculated&#34;&#34;&#34;
         x_values = np.linspace(0, 5, 11)
         y_values = signal.square(2 * np.pi * x_values)
         np.testing.assert_array_equal(
@@ -134,14 +134,14 @@ not have a method with the specified name.</p></div>
         )
 
     def test_average_baseline(self):
-        &#34;&#34;&#34; Test that the baselines are correctly averaged &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the baselines are correctly averaged&#34;&#34;&#34;
         frames = [np.array([[1, 2, 3], [4, 5, 6]]), np.array([[7, 8, 9], [10, 11, 12]])]
         np.testing.assert_array_equal(
             [np.array([[4, 5, 6], [7, 8, 9]])], calc.average_baseline(frames)
         )
 
     def test_get_baseline_frame_indices(self):
-        &#34;&#34;&#34; Test that the baseline frame indices are correctly calculated &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the baseline frame indices are correctly calculated&#34;&#34;&#34;
         baseline_indices = [[0, 2], [3, 5], [6, 9]]
         frames_acquired = [0, 0, 0, 0, 0, 1, 1, 2, 3, 3]
         self.assertEqual(
@@ -151,7 +151,7 @@ not have a method with the specified name.</p></div>
         pass
 
     def test_map_activation(self):
-        &#34;&#34;&#34; Test that the activation is correctly mapped to the baseline &#34;&#34;&#34;
+        &#34;&#34;&#34;Test that the activation is correctly mapped to the baseline&#34;&#34;&#34;
         frames = [np.array([[1, 2, 3], [4, 5, 6]]), np.array([[7, 8, 9], [10, 11, 12]])]
         baseline = np.array([[0, 3, 1], [1, 1, 1]])
         np.testing.assert_array_equal(
@@ -175,7 +175,7 @@ not have a method with the specified name.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_average_baseline(self):
-    &#34;&#34;&#34; Test that the baselines are correctly averaged &#34;&#34;&#34;
+    &#34;&#34;&#34;Test that the baselines are correctly averaged&#34;&#34;&#34;
     frames = [np.array([[1, 2, 3], [4, 5, 6]]), np.array([[7, 8, 9], [10, 11, 12]])]
     np.testing.assert_array_equal(
         [np.array([[4, 5, 6], [7, 8, 9]])], calc.average_baseline(frames)
@@ -192,7 +192,7 @@ not have a method with the specified name.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_frames_acquired_from_camera_signal(self):
-    &#34;&#34;&#34; Test that the frames acquired from the camera signal are correctly calculated &#34;&#34;&#34;
+    &#34;&#34;&#34;Test that the frames acquired from the camera signal are correctly calculated&#34;&#34;&#34;
     x_values = np.linspace(0, 5, 11)
     y_values = signal.square(2 * np.pi * x_values)
     np.testing.assert_array_equal(
@@ -211,7 +211,7 @@ not have a method with the specified name.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_get_baseline_frame_indices(self):
-    &#34;&#34;&#34; Test that the baseline frame indices are correctly calculated &#34;&#34;&#34;
+    &#34;&#34;&#34;Test that the baseline frame indices are correctly calculated&#34;&#34;&#34;
     baseline_indices = [[0, 2], [3, 5], [6, 9]]
     frames_acquired = [0, 0, 0, 0, 0, 1, 1, 2, 3, 3]
     self.assertEqual(
@@ -231,7 +231,7 @@ not have a method with the specified name.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def test_map_activation(self):
-    &#34;&#34;&#34; Test that the activation is correctly mapped to the baseline &#34;&#34;&#34;
+    &#34;&#34;&#34;Test that the activation is correctly mapped to the baseline&#34;&#34;&#34;
     frames = [np.array([[1, 2, 3], [4, 5, 6]]), np.array([[7, 8, 9], [10, 11, 12]])]
     baseline = np.array([[0, 3, 1], [1, 1, 1]])
     np.testing.assert_array_equal(

@@ -29,7 +29,7 @@
 <pre><code class="python">import os
 import random
 import numpy as np
-from src.waveforms import make_signal
+from src.waveforms import digital_square, make_signal
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
 from PyQt5.QtGui import QBrush, QColor, QIcon
 from src.blocks import Block, Stimulation
@@ -37,7 +37,7 @@ from src.blocks import Block, Stimulation
 
 class Tree(QTreeWidget):
     def __init__(self):
-        &#34;&#34;&#34; Initialize the tree widget&#34;&#34;&#34;
+        &#34;&#34;&#34;Initialize the tree widget&#34;&#34;&#34;
         super().__init__()
         self.x_values = []
         self.stim1_values = []
@@ -45,27 +45,21 @@ class Tree(QTreeWidget):
         self.baseline_values = []
         pass
 
-    def set_app(self, app):
-        &#34;&#34;&#34; Set the corresponding app instance&#34;&#34;&#34;
-        self.app = app
-
     def first_stimulation(self):
-        &#34;&#34;&#34; Create the first stimulation in the tree &#34;&#34;&#34;
+        &#34;&#34;&#34;Create the first stimulation in the tree&#34;&#34;&#34;
         tree_item = QTreeWidgetItem()
         self.addTopLevelItem(tree_item)
-        self.app.tree_switch_window.setCurrentIndex(0)
         self.set_defaults(tree_item)
 
     def add_brother(self):
-        &#34;&#34;&#34; Add a brother to the current item in the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Add a brother to the current item in the tree&#34;&#34;&#34;
         if self.currentItem():
             tree_item = QTreeWidgetItem()
             parent = self.selectedItems()[0].parent()
-            if parent:
-                index = parent.indexOfChild(self.selectedItems()[0])
-                parent.insertChild(index + 1, tree_item)
-            else:
-                self.addTopLevelItem(tree_item)
+            if not parent:
+                parent = self.invisibleRootItem()
+            index = parent.indexOfChild(self.selectedItems()[0])
+            parent.insertChild(index + 1, tree_item)
             self.set_defaults(tree_item)
 
     def add_child(self):
@@ -83,7 +77,7 @@ class Tree(QTreeWidget):
             self.set_defaults(tree_item)
 
     def set_defaults(self, item):
-        &#34;&#34;&#34; Set the default values for a new item in the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Set the default values for a new item in the tree&#34;&#34;&#34;
         self.setCurrentItem(item)
         item.setIcon(20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;)))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
@@ -95,7 +89,7 @@ class Tree(QTreeWidget):
             item.setText(i, &#34;False&#34;)
 
     def delete_item(self):
-        &#34;&#34;&#34; Delete the current item in the tree and its children&#34;&#34;&#34;
+        &#34;&#34;&#34;Delete the current item in the tree and its children&#34;&#34;&#34;
         try:
             parent = self.currentItem().parent()
             if parent.childCount() == 1:
@@ -129,7 +123,7 @@ class Tree(QTreeWidget):
             self.set_stim_attributes(tree_item, block)
 
     def set_block_attributes(self, tree_item, dictionary):
-        &#34;&#34;&#34; Set the attributes of a block in the tree
+        &#34;&#34;&#34;Set the attributes of a block in the tree
 
         Args:
             tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
@@ -142,8 +136,8 @@ class Tree(QTreeWidget):
         tree_item.setText(3, str(dictionary[&#34;jitter&#34;]))
 
     def set_stim_attributes(self, tree_item, dictionary):
-        &#34;&#34;&#34; Set the attributes of a stimulation in the tree
-        
+        &#34;&#34;&#34;Set the attributes of a stimulation in the tree
+
         Args:
             tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
@@ -169,14 +163,14 @@ class Tree(QTreeWidget):
         tree_item.setText(24, str(dictionary[&#34;pulses3&#34;]))
         tree_item.setText(25, str(dictionary[&#34;jitter3&#34;]))
         tree_item.setText(26, str(dictionary[&#34;width3&#34;]))
-        tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
+        # tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
         tree_item.setText(27, str(dictionary[&#34;freq3&#34;]))
         tree_item.setText(28, str(dictionary[&#34;duty3&#34;]))
         tree_item.setText(18, str(dictionary[&#34;canal1&#34;]))
         tree_item.setText(19, str(dictionary[&#34;canal2&#34;]))
         tree_item.setText(30, str(dictionary[&#34;canal3&#34;]))
 
-    def graph(self, item=None):
+    def graph(self, item=None, current=False):
         &#34;&#34;&#34;
         Generate the x and y values for an item in the tree
 
@@ -184,13 +178,13 @@ class Tree(QTreeWidget):
             item (QTreeWidgetItem): The item to graph. Defaults to current item.
         &#34;&#34;&#34;
         try:
-            if item == self.currentItem() or item == self.invisibleRootItem():
+            if item == self.invisibleRootItem() or current:
+                print(&#34;root&#34;)
                 self.elapsed_time = 0
                 self.x_values = []
                 self.stim1_values = []
                 self.stim2_values = []
-                self.stim3_values = []
-                self.baseline_values = []
+                self.stim3_values = np.empty(0, dtype=bool)
             if item.childCount() &gt; 0:
                 if item == self.invisibleRootItem():
                     jitter, block_delay, iterations = 0, 0, 1
@@ -209,12 +203,17 @@ class Tree(QTreeWidget):
                         int(round(delay * 3000)),
                     )
                     data = np.zeros(len(time_values))
+                    ddata = np.full(len(time_values), False)
                     self.elapsed_time += delay
                     self.x_values = np.concatenate((self.x_values, time_values))
                     self.stim1_values = np.concatenate((self.stim1_values, data))
                     self.stim2_values = np.concatenate((self.stim2_values, data))
+                    self.stim3_values = np.concatenate((self.stim3_values, ddata))
             else:
+                print(item.text(0))
+                print(item.text(6))
                 duration = float(item.text(6))
+                # PROBLEMATIC
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
                 if item.text(18) == &#34;True&#34;:
                     (
@@ -278,20 +277,12 @@ class Tree(QTreeWidget):
                         duty3,
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
-                    data3 = make_signal(
-                        time_values,
-                        sign_type3,
-                        width3,
-                        pulses3,
-                        jitter3,
-                        frequency3,
-                        duty3,
-                        heigth3,
-                    )
+
+                    data3 = digital_square(time_values, frequency3, duty3)
                     self.stim3_values = np.concatenate((self.stim3_values, data3))
                 else:
                     self.stim3_values = np.concatenate(
-                        (self.stim3_values, np.zeros(len(time_values)))
+                        (self.stim3_values, np.full(len(time_values), False))
                     )
 
                 if (
@@ -309,19 +300,20 @@ class Tree(QTreeWidget):
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
+            print(&#34;graph err&#34;)
             print(err)
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []
-            self.stim3_values = []
+            self.stim3_values = np.empty(0, dtype=bool)
             self.elapsed_time = 0
 
     def create_blocks(self, item=None):
-        &#34;&#34;&#34; Recursively create blocks from tree items
-        
+        &#34;&#34;&#34;Recursively create blocks from tree items
+
         Args:
             item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
-        
+
         Returns:
             Block: A master block containing all the children blocks
         &#34;&#34;&#34;
@@ -400,7 +392,7 @@ class Tree(QTreeWidget):
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
                 else:
-                    sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
+                    sign_type3, pulses3, jitter3, width3, frequency3, duty3, heigth3 = (
                         &#34;&#34;,
                         0,
                         0,
@@ -409,7 +401,7 @@ class Tree(QTreeWidget):
                         0,
                         0,
                     )
-                    canal2 = False
+                    canal3 = False
                 dictionary = {
                     &#34;type&#34;: &#34;Stimulation&#34;,
                     &#34;name&#34;: item.text(0),
@@ -441,6 +433,7 @@ class Tree(QTreeWidget):
                 }
                 return Stimulation(dictionary)
         except Exception as err:
+            print(err)
             pass
 
     def check_global_validity(self, item=None):
@@ -453,9 +446,9 @@ class Tree(QTreeWidget):
         if item is None:
             item = self.invisibleRootItem()
             if self.check_block_validity(item):
-                self.app.enable_run()
+                return True
             else:
-                self.app.disable_run()
+                return False
         elif item.childCount() &gt; 0:
             self.set_icon(item, self.check_block_validity(item))
         else:
@@ -516,7 +509,6 @@ class Tree(QTreeWidget):
                 item.text(23) == &#34;square&#34;
                 and item.text(27) != &#34;&#34;
                 and item.text(28) != &#34;&#34;
-                and item.text(29) != &#34;&#34;
             ):
                 pass
             elif (
@@ -528,6 +520,7 @@ class Tree(QTreeWidget):
                 pass
             else:
                 valid = False
+        self.set_icon(item, valid)
         return valid
 
     def check_block_validity(self, item=None):
@@ -550,6 +543,7 @@ class Tree(QTreeWidget):
         for child_index in range(item.childCount()):
             if not self.check_block_validity(item.child(child_index)):
                 valid = False
+        self.set_icon(item, valid)
         return valid
 
     def get_attributes(self, item, canal=1):
@@ -594,19 +588,13 @@ class Tree(QTreeWidget):
 
         elif canal == 3:
             sign_type = item.text(23)
-            try:
-                pulses = int(item.text(23))
-                jitter = float(item.text(25))
-                width = float(item.text(26))
-            except Exception:
-                pulses, jitter, width = 0, 0, 0
+            pulses, jitter, width = 0, 0, 0
             try:
                 frequency = float(item.text(27))
                 duty = float(item.text(28)) / 100
-                heigth = float(item.text(29))
             except Exception:
-                frequency, duty, heigth = 0, 0, 0
-            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+                frequency, duty = 1, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, 5)
 
     def set_icon(self, item, valid):
         &#34;&#34;&#34;
@@ -650,7 +638,7 @@ class Tree(QTreeWidget):
 </summary>
 <pre><code class="python">class Tree(QTreeWidget):
     def __init__(self):
-        &#34;&#34;&#34; Initialize the tree widget&#34;&#34;&#34;
+        &#34;&#34;&#34;Initialize the tree widget&#34;&#34;&#34;
         super().__init__()
         self.x_values = []
         self.stim1_values = []
@@ -658,27 +646,21 @@ class Tree(QTreeWidget):
         self.baseline_values = []
         pass
 
-    def set_app(self, app):
-        &#34;&#34;&#34; Set the corresponding app instance&#34;&#34;&#34;
-        self.app = app
-
     def first_stimulation(self):
-        &#34;&#34;&#34; Create the first stimulation in the tree &#34;&#34;&#34;
+        &#34;&#34;&#34;Create the first stimulation in the tree&#34;&#34;&#34;
         tree_item = QTreeWidgetItem()
         self.addTopLevelItem(tree_item)
-        self.app.tree_switch_window.setCurrentIndex(0)
         self.set_defaults(tree_item)
 
     def add_brother(self):
-        &#34;&#34;&#34; Add a brother to the current item in the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Add a brother to the current item in the tree&#34;&#34;&#34;
         if self.currentItem():
             tree_item = QTreeWidgetItem()
             parent = self.selectedItems()[0].parent()
-            if parent:
-                index = parent.indexOfChild(self.selectedItems()[0])
-                parent.insertChild(index + 1, tree_item)
-            else:
-                self.addTopLevelItem(tree_item)
+            if not parent:
+                parent = self.invisibleRootItem()
+            index = parent.indexOfChild(self.selectedItems()[0])
+            parent.insertChild(index + 1, tree_item)
             self.set_defaults(tree_item)
 
     def add_child(self):
@@ -696,7 +678,7 @@ class Tree(QTreeWidget):
             self.set_defaults(tree_item)
 
     def set_defaults(self, item):
-        &#34;&#34;&#34; Set the default values for a new item in the tree&#34;&#34;&#34;
+        &#34;&#34;&#34;Set the default values for a new item in the tree&#34;&#34;&#34;
         self.setCurrentItem(item)
         item.setIcon(20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;)))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
@@ -708,7 +690,7 @@ class Tree(QTreeWidget):
             item.setText(i, &#34;False&#34;)
 
     def delete_item(self):
-        &#34;&#34;&#34; Delete the current item in the tree and its children&#34;&#34;&#34;
+        &#34;&#34;&#34;Delete the current item in the tree and its children&#34;&#34;&#34;
         try:
             parent = self.currentItem().parent()
             if parent.childCount() == 1:
@@ -742,7 +724,7 @@ class Tree(QTreeWidget):
             self.set_stim_attributes(tree_item, block)
 
     def set_block_attributes(self, tree_item, dictionary):
-        &#34;&#34;&#34; Set the attributes of a block in the tree
+        &#34;&#34;&#34;Set the attributes of a block in the tree
 
         Args:
             tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
@@ -755,8 +737,8 @@ class Tree(QTreeWidget):
         tree_item.setText(3, str(dictionary[&#34;jitter&#34;]))
 
     def set_stim_attributes(self, tree_item, dictionary):
-        &#34;&#34;&#34; Set the attributes of a stimulation in the tree
-        
+        &#34;&#34;&#34;Set the attributes of a stimulation in the tree
+
         Args:
             tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
@@ -782,14 +764,14 @@ class Tree(QTreeWidget):
         tree_item.setText(24, str(dictionary[&#34;pulses3&#34;]))
         tree_item.setText(25, str(dictionary[&#34;jitter3&#34;]))
         tree_item.setText(26, str(dictionary[&#34;width3&#34;]))
-        tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
+        # tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
         tree_item.setText(27, str(dictionary[&#34;freq3&#34;]))
         tree_item.setText(28, str(dictionary[&#34;duty3&#34;]))
         tree_item.setText(18, str(dictionary[&#34;canal1&#34;]))
         tree_item.setText(19, str(dictionary[&#34;canal2&#34;]))
         tree_item.setText(30, str(dictionary[&#34;canal3&#34;]))
 
-    def graph(self, item=None):
+    def graph(self, item=None, current=False):
         &#34;&#34;&#34;
         Generate the x and y values for an item in the tree
 
@@ -797,13 +779,13 @@ class Tree(QTreeWidget):
             item (QTreeWidgetItem): The item to graph. Defaults to current item.
         &#34;&#34;&#34;
         try:
-            if item == self.currentItem() or item == self.invisibleRootItem():
+            if item == self.invisibleRootItem() or current:
+                print(&#34;root&#34;)
                 self.elapsed_time = 0
                 self.x_values = []
                 self.stim1_values = []
                 self.stim2_values = []
-                self.stim3_values = []
-                self.baseline_values = []
+                self.stim3_values = np.empty(0, dtype=bool)
             if item.childCount() &gt; 0:
                 if item == self.invisibleRootItem():
                     jitter, block_delay, iterations = 0, 0, 1
@@ -822,12 +804,17 @@ class Tree(QTreeWidget):
                         int(round(delay * 3000)),
                     )
                     data = np.zeros(len(time_values))
+                    ddata = np.full(len(time_values), False)
                     self.elapsed_time += delay
                     self.x_values = np.concatenate((self.x_values, time_values))
                     self.stim1_values = np.concatenate((self.stim1_values, data))
                     self.stim2_values = np.concatenate((self.stim2_values, data))
+                    self.stim3_values = np.concatenate((self.stim3_values, ddata))
             else:
+                print(item.text(0))
+                print(item.text(6))
                 duration = float(item.text(6))
+                # PROBLEMATIC
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
                 if item.text(18) == &#34;True&#34;:
                     (
@@ -891,20 +878,12 @@ class Tree(QTreeWidget):
                         duty3,
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
-                    data3 = make_signal(
-                        time_values,
-                        sign_type3,
-                        width3,
-                        pulses3,
-                        jitter3,
-                        frequency3,
-                        duty3,
-                        heigth3,
-                    )
+
+                    data3 = digital_square(time_values, frequency3, duty3)
                     self.stim3_values = np.concatenate((self.stim3_values, data3))
                 else:
                     self.stim3_values = np.concatenate(
-                        (self.stim3_values, np.zeros(len(time_values)))
+                        (self.stim3_values, np.full(len(time_values), False))
                     )
 
                 if (
@@ -922,19 +901,20 @@ class Tree(QTreeWidget):
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
+            print(&#34;graph err&#34;)
             print(err)
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []
-            self.stim3_values = []
+            self.stim3_values = np.empty(0, dtype=bool)
             self.elapsed_time = 0
 
     def create_blocks(self, item=None):
-        &#34;&#34;&#34; Recursively create blocks from tree items
-        
+        &#34;&#34;&#34;Recursively create blocks from tree items
+
         Args:
             item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
-        
+
         Returns:
             Block: A master block containing all the children blocks
         &#34;&#34;&#34;
@@ -1013,7 +993,7 @@ class Tree(QTreeWidget):
                         heigth3,
                     ) = self.get_attributes(item, canal=3)
                 else:
-                    sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
+                    sign_type3, pulses3, jitter3, width3, frequency3, duty3, heigth3 = (
                         &#34;&#34;,
                         0,
                         0,
@@ -1022,7 +1002,7 @@ class Tree(QTreeWidget):
                         0,
                         0,
                     )
-                    canal2 = False
+                    canal3 = False
                 dictionary = {
                     &#34;type&#34;: &#34;Stimulation&#34;,
                     &#34;name&#34;: item.text(0),
@@ -1054,6 +1034,7 @@ class Tree(QTreeWidget):
                 }
                 return Stimulation(dictionary)
         except Exception as err:
+            print(err)
             pass
 
     def check_global_validity(self, item=None):
@@ -1066,9 +1047,9 @@ class Tree(QTreeWidget):
         if item is None:
             item = self.invisibleRootItem()
             if self.check_block_validity(item):
-                self.app.enable_run()
+                return True
             else:
-                self.app.disable_run()
+                return False
         elif item.childCount() &gt; 0:
             self.set_icon(item, self.check_block_validity(item))
         else:
@@ -1129,7 +1110,6 @@ class Tree(QTreeWidget):
                 item.text(23) == &#34;square&#34;
                 and item.text(27) != &#34;&#34;
                 and item.text(28) != &#34;&#34;
-                and item.text(29) != &#34;&#34;
             ):
                 pass
             elif (
@@ -1141,6 +1121,7 @@ class Tree(QTreeWidget):
                 pass
             else:
                 valid = False
+        self.set_icon(item, valid)
         return valid
 
     def check_block_validity(self, item=None):
@@ -1163,6 +1144,7 @@ class Tree(QTreeWidget):
         for child_index in range(item.childCount()):
             if not self.check_block_validity(item.child(child_index)):
                 valid = False
+        self.set_icon(item, valid)
         return valid
 
     def get_attributes(self, item, canal=1):
@@ -1207,19 +1189,13 @@ class Tree(QTreeWidget):
 
         elif canal == 3:
             sign_type = item.text(23)
-            try:
-                pulses = int(item.text(23))
-                jitter = float(item.text(25))
-                width = float(item.text(26))
-            except Exception:
-                pulses, jitter, width = 0, 0, 0
+            pulses, jitter, width = 0, 0, 0
             try:
                 frequency = float(item.text(27))
                 duty = float(item.text(28)) / 100
-                heigth = float(item.text(29))
             except Exception:
-                frequency, duty, heigth = 0, 0, 0
-            return (sign_type, pulses, jitter, width, frequency, duty, heigth)
+                frequency, duty = 1, 0
+            return (sign_type, pulses, jitter, width, frequency, duty, 5)
 
     def set_icon(self, item, valid):
         &#34;&#34;&#34;
@@ -1266,15 +1242,14 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_brother(self):
-    &#34;&#34;&#34; Add a brother to the current item in the tree&#34;&#34;&#34;
+    &#34;&#34;&#34;Add a brother to the current item in the tree&#34;&#34;&#34;
     if self.currentItem():
         tree_item = QTreeWidgetItem()
         parent = self.selectedItems()[0].parent()
-        if parent:
-            index = parent.indexOfChild(self.selectedItems()[0])
-            parent.insertChild(index + 1, tree_item)
-        else:
-            self.addTopLevelItem(tree_item)
+        if not parent:
+            parent = self.invisibleRootItem()
+        index = parent.indexOfChild(self.selectedItems()[0])
+        parent.insertChild(index + 1, tree_item)
         self.set_defaults(tree_item)</code></pre>
 </details>
 </dd>
@@ -1336,6 +1311,7 @@ class Tree(QTreeWidget):
     for child_index in range(item.childCount()):
         if not self.check_block_validity(item.child(child_index)):
             valid = False
+    self.set_icon(item, valid)
     return valid</code></pre>
 </details>
 </dd>
@@ -1363,9 +1339,9 @@ class Tree(QTreeWidget):
     if item is None:
         item = self.invisibleRootItem()
         if self.check_block_validity(item):
-            self.app.enable_run()
+            return True
         else:
-            self.app.disable_run()
+            return False
     elif item.childCount() &gt; 0:
         self.set_icon(item, self.check_block_validity(item))
     else:
@@ -1441,7 +1417,6 @@ class Tree(QTreeWidget):
             item.text(23) == &#34;square&#34;
             and item.text(27) != &#34;&#34;
             and item.text(28) != &#34;&#34;
-            and item.text(29) != &#34;&#34;
         ):
             pass
         elif (
@@ -1453,6 +1428,7 @@ class Tree(QTreeWidget):
             pass
         else:
             valid = False
+    self.set_icon(item, valid)
     return valid</code></pre>
 </details>
 </dd>
@@ -1476,11 +1452,11 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_blocks(self, item=None):
-    &#34;&#34;&#34; Recursively create blocks from tree items
-    
+    &#34;&#34;&#34;Recursively create blocks from tree items
+
     Args:
         item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
-    
+
     Returns:
         Block: A master block containing all the children blocks
     &#34;&#34;&#34;
@@ -1559,7 +1535,7 @@ class Tree(QTreeWidget):
                     heigth3,
                 ) = self.get_attributes(item, canal=3)
             else:
-                sign_type3, pulses3, jitter3, width3, frequency3, duty3 = (
+                sign_type3, pulses3, jitter3, width3, frequency3, duty3, heigth3 = (
                     &#34;&#34;,
                     0,
                     0,
@@ -1568,7 +1544,7 @@ class Tree(QTreeWidget):
                     0,
                     0,
                 )
-                canal2 = False
+                canal3 = False
             dictionary = {
                 &#34;type&#34;: &#34;Stimulation&#34;,
                 &#34;name&#34;: item.text(0),
@@ -1600,6 +1576,7 @@ class Tree(QTreeWidget):
             }
             return Stimulation(dictionary)
     except Exception as err:
+        print(err)
         pass</code></pre>
 </details>
 </dd>
@@ -1652,7 +1629,7 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def delete_item(self):
-    &#34;&#34;&#34; Delete the current item in the tree and its children&#34;&#34;&#34;
+    &#34;&#34;&#34;Delete the current item in the tree and its children&#34;&#34;&#34;
     try:
         parent = self.currentItem().parent()
         if parent.childCount() == 1:
@@ -1674,10 +1651,9 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def first_stimulation(self):
-    &#34;&#34;&#34; Create the first stimulation in the tree &#34;&#34;&#34;
+    &#34;&#34;&#34;Create the first stimulation in the tree&#34;&#34;&#34;
     tree_item = QTreeWidgetItem()
     self.addTopLevelItem(tree_item)
-    self.app.tree_switch_window.setCurrentIndex(0)
     self.set_defaults(tree_item)</code></pre>
 </details>
 </dd>
@@ -1739,23 +1715,17 @@ class Tree(QTreeWidget):
 
     elif canal == 3:
         sign_type = item.text(23)
-        try:
-            pulses = int(item.text(23))
-            jitter = float(item.text(25))
-            width = float(item.text(26))
-        except Exception:
-            pulses, jitter, width = 0, 0, 0
+        pulses, jitter, width = 0, 0, 0
         try:
             frequency = float(item.text(27))
             duty = float(item.text(28)) / 100
-            heigth = float(item.text(29))
         except Exception:
-            frequency, duty, heigth = 0, 0, 0
-        return (sign_type, pulses, jitter, width, frequency, duty, heigth)</code></pre>
+            frequency, duty = 1, 0
+        return (sign_type, pulses, jitter, width, frequency, duty, 5)</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.src.tree.Tree.graph"><code class="name flex">
-<span>def <span class="ident">graph</span></span>(<span>self, item=None)</span>
+<span>def <span class="ident">graph</span></span>(<span>self, item=None, current=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Generate the x and y values for an item in the tree</p>
@@ -1768,7 +1738,7 @@ class Tree(QTreeWidget):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def graph(self, item=None):
+<pre><code class="python">def graph(self, item=None, current=False):
     &#34;&#34;&#34;
     Generate the x and y values for an item in the tree
 
@@ -1776,13 +1746,13 @@ class Tree(QTreeWidget):
         item (QTreeWidgetItem): The item to graph. Defaults to current item.
     &#34;&#34;&#34;
     try:
-        if item == self.currentItem() or item == self.invisibleRootItem():
+        if item == self.invisibleRootItem() or current:
+            print(&#34;root&#34;)
             self.elapsed_time = 0
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []
-            self.stim3_values = []
-            self.baseline_values = []
+            self.stim3_values = np.empty(0, dtype=bool)
         if item.childCount() &gt; 0:
             if item == self.invisibleRootItem():
                 jitter, block_delay, iterations = 0, 0, 1
@@ -1801,12 +1771,17 @@ class Tree(QTreeWidget):
                     int(round(delay * 3000)),
                 )
                 data = np.zeros(len(time_values))
+                ddata = np.full(len(time_values), False)
                 self.elapsed_time += delay
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.stim1_values = np.concatenate((self.stim1_values, data))
                 self.stim2_values = np.concatenate((self.stim2_values, data))
+                self.stim3_values = np.concatenate((self.stim3_values, ddata))
         else:
+            print(item.text(0))
+            print(item.text(6))
             duration = float(item.text(6))
+            # PROBLEMATIC
             time_values = np.linspace(0, duration, int(round(duration * 3000)))
             if item.text(18) == &#34;True&#34;:
                 (
@@ -1870,20 +1845,12 @@ class Tree(QTreeWidget):
                     duty3,
                     heigth3,
                 ) = self.get_attributes(item, canal=3)
-                data3 = make_signal(
-                    time_values,
-                    sign_type3,
-                    width3,
-                    pulses3,
-                    jitter3,
-                    frequency3,
-                    duty3,
-                    heigth3,
-                )
+
+                data3 = digital_square(time_values, frequency3, duty3)
                 self.stim3_values = np.concatenate((self.stim3_values, data3))
             else:
                 self.stim3_values = np.concatenate(
-                    (self.stim3_values, np.zeros(len(time_values)))
+                    (self.stim3_values, np.full(len(time_values), False))
                 )
 
             if (
@@ -1901,26 +1868,13 @@ class Tree(QTreeWidget):
             self.x_values = np.concatenate((self.x_values, time_values))
             self.elapsed_time += duration
     except Exception as err:
+        print(&#34;graph err&#34;)
         print(err)
         self.x_values = []
         self.stim1_values = []
         self.stim2_values = []
-        self.stim3_values = []
+        self.stim3_values = np.empty(0, dtype=bool)
         self.elapsed_time = 0</code></pre>
-</details>
-</dd>
-<dt id="Widefield-Imaging-Acquisition.src.tree.Tree.set_app"><code class="name flex">
-<span>def <span class="ident">set_app</span></span>(<span>self, app)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Set the corresponding app instance</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def set_app(self, app):
-    &#34;&#34;&#34; Set the corresponding app instance&#34;&#34;&#34;
-    self.app = app</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.src.tree.Tree.set_block_attributes"><code class="name flex">
@@ -1940,7 +1894,7 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_block_attributes(self, tree_item, dictionary):
-    &#34;&#34;&#34; Set the attributes of a block in the tree
+    &#34;&#34;&#34;Set the attributes of a block in the tree
 
     Args:
         tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
@@ -1963,7 +1917,7 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_defaults(self, item):
-    &#34;&#34;&#34; Set the default values for a new item in the tree&#34;&#34;&#34;
+    &#34;&#34;&#34;Set the default values for a new item in the tree&#34;&#34;&#34;
     self.setCurrentItem(item)
     item.setIcon(20, QIcon(os.path.join(&#34;gui&#34;, &#34;icons&#34;, &#34;alert-triangle.png&#34;)))
     item.setForeground(0, QBrush(QColor(211, 211, 211)))
@@ -2029,8 +1983,8 @@ class Tree(QTreeWidget):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_stim_attributes(self, tree_item, dictionary):
-    &#34;&#34;&#34; Set the attributes of a stimulation in the tree
-    
+    &#34;&#34;&#34;Set the attributes of a stimulation in the tree
+
     Args:
         tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
         dictionary (dict): The dictionary containing the attributes
@@ -2056,7 +2010,7 @@ class Tree(QTreeWidget):
     tree_item.setText(24, str(dictionary[&#34;pulses3&#34;]))
     tree_item.setText(25, str(dictionary[&#34;jitter3&#34;]))
     tree_item.setText(26, str(dictionary[&#34;width3&#34;]))
-    tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
+    # tree_item.setText(29, str(dictionary[&#34;heigth3&#34;]))
     tree_item.setText(27, str(dictionary[&#34;freq3&#34;]))
     tree_item.setText(28, str(dictionary[&#34;duty3&#34;]))
     tree_item.setText(18, str(dictionary[&#34;canal1&#34;]))
@@ -2096,7 +2050,6 @@ class Tree(QTreeWidget):
 <li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.first_stimulation" href="#Widefield-Imaging-Acquisition.src.tree.Tree.first_stimulation">first_stimulation</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.get_attributes" href="#Widefield-Imaging-Acquisition.src.tree.Tree.get_attributes">get_attributes</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.graph" href="#Widefield-Imaging-Acquisition.src.tree.Tree.graph">graph</a></code></li>
-<li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.set_app" href="#Widefield-Imaging-Acquisition.src.tree.Tree.set_app">set_app</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.set_block_attributes" href="#Widefield-Imaging-Acquisition.src.tree.Tree.set_block_attributes">set_block_attributes</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.set_defaults" href="#Widefield-Imaging-Acquisition.src.tree.Tree.set_defaults">set_defaults</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.tree.Tree.set_icon" href="#Widefield-Imaging-Acquisition.src.tree.Tree.set_icon">set_icon</a></code></li>

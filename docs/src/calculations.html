@@ -27,7 +27,6 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import numpy as np
-import matplotlib.pyplot as plt
 import os
 import json
 import time
@@ -35,39 +34,39 @@ import time
 
 def shrink_array(array, extents):
     &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames
-    
+
     Args:
         array (array): Array of frames
         extents (list): List of extents to shrink the array to
-        
+
     Returns:
         array: Reduced array of frames
     &#34;&#34;&#34;
+
     return np.array(array)[
         :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
     ]
 
 
 def get_array(directory):
-    &#34;&#34;&#34; Get array from NPY file &#34;&#34;&#34;
+    &#34;&#34;&#34;Get array from NPY file&#34;&#34;&#34;
     return np.array(np.load(directory))
 
-
 def get_dictionary(directory):
-    &#34;&#34;&#34; Get dictionary from json file &#34;&#34;&#34;
+    &#34;&#34;&#34;Get dictionary from json file&#34;&#34;&#34;
     with open(directory, &#34;r&#34;) as file:
         dictionary = json.load(file)
     return dictionary
 
 
 def find_rising_indices(array):
-    &#34;&#34;&#34; Find indices of rising edges in an array &#34;&#34;&#34;
+    &#34;&#34;&#34;Find indices of rising edges in an array&#34;&#34;&#34;
     dy = np.diff(array)
     return np.concatenate(([0], np.where(dy == 1)[0][1::2] + 1))
 
 
 def create_complete_stack(first_stack, second_stack):
-    &#34;&#34;&#34; Create a stack with the first stack as the first half and the second stack as the second half &#34;&#34;&#34;
+    &#34;&#34;&#34;Create a stack with the first stack as the first half and the second stack as the second half&#34;&#34;&#34;
     array = []
     for new_array in first_stack:
         array.append(new_array)
@@ -77,17 +76,17 @@ def create_complete_stack(first_stack, second_stack):
 
 
 def reduce_stack(stack, indices):
-    &#34;&#34;&#34; Reduce the stack to only include the frames at the given indices &#34;&#34;&#34;
+    &#34;&#34;&#34;Reduce the stack to only include the frames at the given indices&#34;&#34;&#34;
     return stack[:, indices]
 
 
 def separate_images(lights, frames):
-    &#34;&#34;&#34; Separate images into different light channels 
-    
+    &#34;&#34;&#34;Separate images into different light channels
+
     Args:
         lights (list): List of lights
         frames (array): Array of frames
-        
+
     Returns:
         list: List of separated images&#34;&#34;&#34;
     separated_images = []
@@ -97,12 +96,12 @@ def separate_images(lights, frames):
 
 
 def separate_vectors(lights, vector):
-    &#34;&#34;&#34; Separate vectors into different light channels
-    
+    &#34;&#34;&#34;Separate vectors into different light channels
+
     Args:
         lights (list): List of lights
         vector (array): Vector containing the stimulation data
-    
+
     Returns:
         list: List of separated vectors&#34;&#34;&#34;
     separated_vectors = []
@@ -112,11 +111,11 @@ def separate_vectors(lights, vector):
 
 
 def extract_from_path(path):
-    &#34;&#34;&#34; Extract lights, frames and vector files from a given path 
-    
+    &#34;&#34;&#34;Extract lights, frames and vector files from a given path
+
     Args:
         path (str): Path to the directory containing the files
-        
+
     Returns:
         tuple: Tuple containing the lights, frames and vector files
     &#34;&#34;&#34;
@@ -132,12 +131,12 @@ def extract_from_path(path):
 
 
 def extend_light_signal(lights, camera):
-    &#34;&#34;&#34; Extend the light signal to be wider the camera signal 
-    
+    &#34;&#34;&#34;Extend the light signal to be wider the camera signal
+
     Args:
         lights (array): Array of light signals
         camera (array): Array of camera frames
-        
+
     Returns:
         array: Array of extended light signals
     &#34;&#34;&#34;
@@ -157,7 +156,7 @@ def extend_light_signal(lights, camera):
 
 
 def frames_acquired_from_camera_signal(camera_signal):
-    &#34;&#34;&#34; Generate an array of frames acquired from the camera signal at each timepoint &#34;&#34;&#34;
+    &#34;&#34;&#34;Generate an array of frames acquired from the camera signal at each timepoint&#34;&#34;&#34;
     dy = np.diff(camera_signal)
     indices = np.where(abs(dy) &gt; 0)[0][1::2]
     y_values = np.zeros(len(camera_signal))
@@ -170,13 +169,13 @@ def frames_acquired_from_camera_signal(camera_signal):
 
 
 def average_baseline(frame_list, light_count=1, start_index=0):
-    &#34;&#34;&#34; Average the baselines of a list of frames 
-    
+    &#34;&#34;&#34;Average the baselines of a list of frames
+
     Args:
         frame_list (list): List of frames
         light_count (int): Number of lights
         start_index (int): Light index of the first frame in list
-        
+
     Returns:
         list: List of averaged baselines&#34;&#34;&#34;
     try:
@@ -200,12 +199,12 @@ def average_baseline(frame_list, light_count=1, start_index=0):
 
 
 def get_baseline_frame_indices(baseline_indices, frames_acquired):
-    &#34;&#34;&#34; Get the start/end baseline indices in terms of frames acquired 
-    
+    &#34;&#34;&#34;Get the start/end baseline indices in terms of frames acquired
+
     Args:
         baseline_indices (list of tuples): List of baseline indices tuples
         frames_acquired (list): List of frames acquired
-        
+
     Returns:
         list of tuples: List of start/end baseline indices in terms of frames acquired&#34;&#34;&#34;
     list_of_indices = []
@@ -215,12 +214,12 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
 
 
 def map_activation(frames, baseline):
-    &#34;&#34;&#34; Map the activation of each frame to the baseline&#34;&#34;&#34;
+    &#34;&#34;&#34;Map the activation of each frame to the baseline&#34;&#34;&#34;
     return np.array(frames) - np.array([baseline])
 
 
 def timeit(method):
-    &#34;&#34;&#34; Time the execution of a method &#34;&#34;&#34;
+    &#34;&#34;&#34;Time the execution of a method&#34;&#34;&#34;
 
     def timed(*args, **kw):
         ts = time.time()
@@ -229,7 +228,23 @@ def timeit(method):
         print(&#34;%r  %2.2f ms&#34; % (method.__name__, (te - ts) * 1000))
         return result
 
-    return timed</code></pre>
+    return timed
+
+
+def get_timecourse(frames, start_index, end_index):
+    &#34;&#34;&#34;Get an array of the mean of each frame
+
+    Args:
+        frames (array): Array of frames
+        start_index (int): Start index of the timecourse
+        end_index (int): End index of the timecourse
+
+    Returns:
+        array: Array of the mean of each frame&#34;&#34;&#34;
+
+    first_mean = np.mean(frames[start_index : end_index + 1], axis=1)
+    print(first_mean.shape)
+    return np.mean(first_mean, axis=1)</code></pre>
 </details>
 </section>
 <section>
@@ -243,7 +258,7 @@ def timeit(method):
 <span>def <span class="ident">average_baseline</span></span>(<span>frame_list, light_count=1, start_index=0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Average the baselines of a list of frames </p>
+<div class="desc"><p>Average the baselines of a list of frames</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>frame_list</code></strong> :&ensp;<code>list</code></dt>
@@ -263,13 +278,13 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def average_baseline(frame_list, light_count=1, start_index=0):
-    &#34;&#34;&#34; Average the baselines of a list of frames 
-    
+    &#34;&#34;&#34;Average the baselines of a list of frames
+
     Args:
         frame_list (list): List of frames
         light_count (int): Number of lights
         start_index (int): Light index of the first frame in list
-        
+
     Returns:
         list: List of averaged baselines&#34;&#34;&#34;
     try:
@@ -302,7 +317,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def create_complete_stack(first_stack, second_stack):
-    &#34;&#34;&#34; Create a stack with the first stack as the first half and the second stack as the second half &#34;&#34;&#34;
+    &#34;&#34;&#34;Create a stack with the first stack as the first half and the second stack as the second half&#34;&#34;&#34;
     array = []
     for new_array in first_stack:
         array.append(new_array)
@@ -315,7 +330,7 @@ def timeit(method):
 <span>def <span class="ident">extend_light_signal</span></span>(<span>lights, camera)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Extend the light signal to be wider the camera signal </p>
+<div class="desc"><p>Extend the light signal to be wider the camera signal</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>lights</code></strong> :&ensp;<code>array</code></dt>
@@ -333,12 +348,12 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def extend_light_signal(lights, camera):
-    &#34;&#34;&#34; Extend the light signal to be wider the camera signal 
-    
+    &#34;&#34;&#34;Extend the light signal to be wider the camera signal
+
     Args:
         lights (array): Array of light signals
         camera (array): Array of camera frames
-        
+
     Returns:
         array: Array of extended light signals
     &#34;&#34;&#34;
@@ -361,7 +376,7 @@ def timeit(method):
 <span>def <span class="ident">extract_from_path</span></span>(<span>path)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Extract lights, frames and vector files from a given path </p>
+<div class="desc"><p>Extract lights, frames and vector files from a given path</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>path</code></strong> :&ensp;<code>str</code></dt>
@@ -377,11 +392,11 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def extract_from_path(path):
-    &#34;&#34;&#34; Extract lights, frames and vector files from a given path 
-    
+    &#34;&#34;&#34;Extract lights, frames and vector files from a given path
+
     Args:
         path (str): Path to the directory containing the files
-        
+
     Returns:
         tuple: Tuple containing the lights, frames and vector files
     &#34;&#34;&#34;
@@ -406,7 +421,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def find_rising_indices(array):
-    &#34;&#34;&#34; Find indices of rising edges in an array &#34;&#34;&#34;
+    &#34;&#34;&#34;Find indices of rising edges in an array&#34;&#34;&#34;
     dy = np.diff(array)
     return np.concatenate(([0], np.where(dy == 1)[0][1::2] + 1))</code></pre>
 </details>
@@ -421,7 +436,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def frames_acquired_from_camera_signal(camera_signal):
-    &#34;&#34;&#34; Generate an array of frames acquired from the camera signal at each timepoint &#34;&#34;&#34;
+    &#34;&#34;&#34;Generate an array of frames acquired from the camera signal at each timepoint&#34;&#34;&#34;
     dy = np.diff(camera_signal)
     indices = np.where(abs(dy) &gt; 0)[0][1::2]
     y_values = np.zeros(len(camera_signal))
@@ -443,7 +458,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_array(directory):
-    &#34;&#34;&#34; Get array from NPY file &#34;&#34;&#34;
+    &#34;&#34;&#34;Get array from NPY file&#34;&#34;&#34;
     return np.array(np.load(directory))</code></pre>
 </details>
 </dd>
@@ -451,7 +466,7 @@ def timeit(method):
 <span>def <span class="ident">get_baseline_frame_indices</span></span>(<span>baseline_indices, frames_acquired)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get the start/end baseline indices in terms of frames acquired </p>
+<div class="desc"><p>Get the start/end baseline indices in terms of frames acquired</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>baseline_indices</code></strong> :&ensp;<code>list</code> of <code>tuples</code></dt>
@@ -469,12 +484,12 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_baseline_frame_indices(baseline_indices, frames_acquired):
-    &#34;&#34;&#34; Get the start/end baseline indices in terms of frames acquired 
-    
+    &#34;&#34;&#34;Get the start/end baseline indices in terms of frames acquired
+
     Args:
         baseline_indices (list of tuples): List of baseline indices tuples
         frames_acquired (list): List of frames acquired
-        
+
     Returns:
         list of tuples: List of start/end baseline indices in terms of frames acquired&#34;&#34;&#34;
     list_of_indices = []
@@ -493,10 +508,49 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_dictionary(directory):
-    &#34;&#34;&#34; Get dictionary from json file &#34;&#34;&#34;
+    &#34;&#34;&#34;Get dictionary from json file&#34;&#34;&#34;
     with open(directory, &#34;r&#34;) as file:
         dictionary = json.load(file)
     return dictionary</code></pre>
+</details>
+</dd>
+<dt id="Widefield-Imaging-Acquisition.src.calculations.get_timecourse"><code class="name flex">
+<span>def <span class="ident">get_timecourse</span></span>(<span>frames, start_index, end_index)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get an array of the mean of each frame</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>frames</code></strong> :&ensp;<code>array</code></dt>
+<dd>Array of frames</dd>
+<dt><strong><code>start_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>Start index of the timecourse</dd>
+<dt><strong><code>end_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>End index of the timecourse</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>array</code></dt>
+<dd>Array of the mean of each frame</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_timecourse(frames, start_index, end_index):
+    &#34;&#34;&#34;Get an array of the mean of each frame
+
+    Args:
+        frames (array): Array of frames
+        start_index (int): Start index of the timecourse
+        end_index (int): End index of the timecourse
+
+    Returns:
+        array: Array of the mean of each frame&#34;&#34;&#34;
+
+    first_mean = np.mean(frames[start_index : end_index + 1], axis=1)
+    print(first_mean.shape)
+    return np.mean(first_mean, axis=1)</code></pre>
 </details>
 </dd>
 <dt id="Widefield-Imaging-Acquisition.src.calculations.map_activation"><code class="name flex">
@@ -509,7 +563,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def map_activation(frames, baseline):
-    &#34;&#34;&#34; Map the activation of each frame to the baseline&#34;&#34;&#34;
+    &#34;&#34;&#34;Map the activation of each frame to the baseline&#34;&#34;&#34;
     return np.array(frames) - np.array([baseline])</code></pre>
 </details>
 </dd>
@@ -523,7 +577,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reduce_stack(stack, indices):
-    &#34;&#34;&#34; Reduce the stack to only include the frames at the given indices &#34;&#34;&#34;
+    &#34;&#34;&#34;Reduce the stack to only include the frames at the given indices&#34;&#34;&#34;
     return stack[:, indices]</code></pre>
 </details>
 </dd>
@@ -531,7 +585,7 @@ def timeit(method):
 <span>def <span class="ident">separate_images</span></span>(<span>lights, frames)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Separate images into different light channels </p>
+<div class="desc"><p>Separate images into different light channels</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>lights</code></strong> :&ensp;<code>list</code></dt>
@@ -549,12 +603,12 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def separate_images(lights, frames):
-    &#34;&#34;&#34; Separate images into different light channels 
-    
+    &#34;&#34;&#34;Separate images into different light channels
+
     Args:
         lights (list): List of lights
         frames (array): Array of frames
-        
+
     Returns:
         list: List of separated images&#34;&#34;&#34;
     separated_images = []
@@ -585,12 +639,12 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def separate_vectors(lights, vector):
-    &#34;&#34;&#34; Separate vectors into different light channels
-    
+    &#34;&#34;&#34;Separate vectors into different light channels
+
     Args:
         lights (list): List of lights
         vector (array): Vector containing the stimulation data
-    
+
     Returns:
         list: List of separated vectors&#34;&#34;&#34;
     separated_vectors = []
@@ -622,14 +676,15 @@ def timeit(method):
 </summary>
 <pre><code class="python">def shrink_array(array, extents):
     &#34;&#34;&#34;Reduce the dimensions of frames to match ROI and return a list of frames
-    
+
     Args:
         array (array): Array of frames
         extents (list): List of extents to shrink the array to
-        
+
     Returns:
         array: Reduced array of frames
     &#34;&#34;&#34;
+
     return np.array(array)[
         :, round(extents[2]) : round(extents[3]), round(extents[0]) : round(extents[1])
     ]</code></pre>
@@ -645,7 +700,7 @@ def timeit(method):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def timeit(method):
-    &#34;&#34;&#34; Time the execution of a method &#34;&#34;&#34;
+    &#34;&#34;&#34;Time the execution of a method&#34;&#34;&#34;
 
     def timed(*args, **kw):
         ts = time.time()
@@ -684,6 +739,7 @@ def timeit(method):
 <li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_array" href="#Widefield-Imaging-Acquisition.src.calculations.get_array">get_array</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_baseline_frame_indices" href="#Widefield-Imaging-Acquisition.src.calculations.get_baseline_frame_indices">get_baseline_frame_indices</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_dictionary" href="#Widefield-Imaging-Acquisition.src.calculations.get_dictionary">get_dictionary</a></code></li>
+<li><code><a title="Widefield-Imaging-Acquisition.src.calculations.get_timecourse" href="#Widefield-Imaging-Acquisition.src.calculations.get_timecourse">get_timecourse</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.calculations.map_activation" href="#Widefield-Imaging-Acquisition.src.calculations.map_activation">map_activation</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.calculations.reduce_stack" href="#Widefield-Imaging-Acquisition.src.calculations.reduce_stack">reduce_stack</a></code></li>
 <li><code><a title="Widefield-Imaging-Acquisition.src.calculations.separate_images" href="#Widefield-Imaging-Acquisition.src.calculations.separate_images">separate_images</a></code></li>

@@ -36,14 +36,13 @@ from src.calculations import (
     get_baseline_frame_indices,
     average_baseline,
     get_timecourse,
-    get_dask_array,
-    separate_images
+    separate_images,
 )
 
 
 class App(QWidget):
     def __init__(self):
-        """ Initialize the application """
+        """Initialize the application"""
         super().__init__()
         self.cwd = os.path.dirname(os.path.dirname(__file__))
         self.roi_extent = None
@@ -55,17 +54,17 @@ class App(QWidget):
         self.initUI()
 
     def closeEvent(self, *args, **kwargs):
-        """ Stop all processes when closing the application """
+        """Stop all processes when closing the application"""
         self.files_to_read = False
 
     def initUI(self):
-        """ Initialize the user interface """
+        """Initialize the user interface"""
         self.setWindowTitle("Brain Scout")
         self.setGeometry(10, 10, 640, 480)
         self.grid_layout = QGridLayout()
         self.grid_layout.setAlignment(Qt.AlignLeft)
         self.grid_layout.setAlignment(Qt.AlignTop)
-        #self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        # self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.grid_layout)
 
         self.settings_window = QVBoxLayout()
@@ -78,7 +77,7 @@ class App(QWidget):
         self.settings_window2.setAlignment(Qt.AlignTop)
         self.grid_layout.addLayout(self.settings_window2, 0, 1)
 
-# ----
+        # ----
         self.directory_window = QHBoxLayout()
         self.directory_window.setAlignment(Qt.AlignLeft)
         self.directory_window.setAlignment(Qt.AlignTop)
@@ -94,8 +93,7 @@ class App(QWidget):
 
         self.settings_window.addLayout(self.directory_window)
 
-
-# ---- 
+        # ----
         self.light_channel_layout = QHBoxLayout()
         self.preview_light_label = QLabel("Light Channel Preview")
         self.light_channel_layout.addWidget(self.preview_light_label)
@@ -107,15 +105,15 @@ class App(QWidget):
         self.light_channel_layout.addWidget(self.preview_light_combo)
         self.settings_window.addLayout(self.light_channel_layout)
 
-        #self.import_window = QHBoxLayout()
-        #self.import_progress = QLabel("0% Imported")
-        #self.import_window.addWidget(self.import_progress)
-        #self.settings_window.addLayout(self.import_window)
+        # self.import_window = QHBoxLayout()
+        # self.import_progress = QLabel("0% Imported")
+        # self.import_window.addWidget(self.import_progress)
+        # self.settings_window.addLayout(self.import_window)
 
-# --
+        # --
 
         # -------------
-        
+
         self.index_window = QVBoxLayout()
         self.current_index_window = QHBoxLayout()
         self.current_index_label = QLabel("Current Index:")
@@ -137,7 +135,7 @@ class App(QWidget):
         self.end_index_window.addWidget(self.end_index)
         self.index_window.addLayout(self.end_index_window)
         self.settings_window2.addLayout(self.index_window)
-        #self.settings_window.addStretch()
+        # self.settings_window.addStretch()
 
         self.make_time_course_button = QPushButton("Generate Time Course")
         self.make_time_course_button.setIcon(
@@ -150,13 +148,13 @@ class App(QWidget):
         self.make_time_course_layout.addWidget(self.make_time_course_button)
         self.make_time_course_container = QWidget()
         self.make_time_course_container.setLayout(self.make_time_course_layout)
-        self.grid_layout.addWidget(self.make_time_course_container, 2 ,1)
+        self.grid_layout.addWidget(self.make_time_course_container, 2, 1)
 
-   # -------
+        # -------
         self.slider_layout = QHBoxLayout()
         self.slider_layout.setAlignment(Qt.AlignLeft)
         self.slider_layout.setAlignment(Qt.AlignTop)
-        #self.slider_layout.setContentsMargins(0, 0, 0, 0)
+        # self.slider_layout.setContentsMargins(0, 0, 0, 0)
         self.slider_layout.addWidget(QLabel("Start"))
 
         self.time_slider = QSlider(Qt.Horizontal, self)
@@ -168,28 +166,28 @@ class App(QWidget):
 
         self.settings_window.addLayout(self.slider_layout)
 
-    # -------------
-        #self.graphics_layout =QHBoxLayout()
+        # -------------
+        # self.graphics_layout =QHBoxLayout()
 
-        #self.graphics_layout.addWidget(self.image_view)
+        # self.graphics_layout.addWidget(self.image_view)
 
         self.time_course = PlotWindow(subplots=False)
-        self.time_course.plot([1,2,3], [1,2,3], root=False)
+        self.time_course.plot([1, 2, 3], [1, 2, 3], root=False)
         self.grid_layout.addWidget(self.time_course, 1, 1)
-        #self.grid_layout.addLayout(self.graphics_layout, 1, 0)
+        # self.grid_layout.addLayout(self.graphics_layout, 1, 0)
 
-    # -------------
+        # -------------
         self.show()
 
     def initialize_roi(self):
         self.roi_buttons = QStackedLayout()
         self.roi_buttons.setAlignment(Qt.AlignLeft)
         self.roi_buttons.setAlignment(Qt.AlignTop)
-        #self.roi_buttons.setContentsMargins(0, 0, 0, 0)
+        # self.roi_buttons.setContentsMargins(0, 0, 0, 0)
         self.roi_layout1 = QHBoxLayout()
         self.roi_layout1.setAlignment(Qt.AlignLeft)
         self.roi_layout1.setAlignment(Qt.AlignTop)
-        #self.roi_layout1.setContentsMargins(0, 0, 0, 0)
+        # self.roi_layout1.setContentsMargins(0, 0, 0, 0)
         self.reset_roi_button = QPushButton("Reset ROI")
         self.reset_roi_button.setIcon(
             QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-out-area.png"))
@@ -211,7 +209,7 @@ class App(QWidget):
         self.roi_layout2 = QHBoxLayout()
         self.roi_layout2.setAlignment(Qt.AlignLeft)
         self.roi_layout2.setAlignment(Qt.AlignTop)
-        #self.roi_layout2.setContentsMargins(0, 0, 0, 0)
+        # self.roi_layout2.setContentsMargins(0, 0, 0, 0)
         self.cancel_roi_button = QPushButton("Cancel")
         self.cancel_roi_button.setIcon(
             QIcon(os.path.join(self.cwd, "gui", "icons", "zoom-cancel.png"))
@@ -234,12 +232,12 @@ class App(QWidget):
         self.grid_layout.addLayout(self.roi_buttons, 2, 0)
 
     def change_preview_light_channel(self):
-        """ Change the light channel for the live preview"""
+        """Change the light channel for the live preview"""
         self.live_preview_light_index = self.preview_light_combo.currentIndex()
         self.adjust_time()
 
     def actualize_lights(self):
-        """ Update the lights list in the combo box"""
+        """Update the lights list in the combo box"""
         self.preview_light_combo.clear()
         if len(self.dictionary["Lights"]) == 0:
             self.preview_light_combo.setEnabled(False)
@@ -250,7 +248,7 @@ class App(QWidget):
         self.preview_light_combo.setCurrentIndex(0)
 
     def choose_directory(self):
-        """ Choose the directory where to save the files"""
+        """Choose the directory where to save the files"""
         self.directory = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         self.directory_cell.setText(self.directory)
         self.frames = []
@@ -269,15 +267,21 @@ class App(QWidget):
         except Exception:
             self.image_view = PlotWindow()
             self.grid_layout.addWidget(self.image_view, 1, 0)
-        self.plot_image = plt.imshow(np.zeros((self.dimensions[1], self.dimensions[0])), cmap="binary_r", vmin=0, vmax=4096, origin="lower")
+        self.plot_image = plt.imshow(
+            np.zeros((self.dimensions[1], self.dimensions[0])),
+            cmap="binary_r",
+            vmin=0,
+            vmax=4096,
+            origin="lower",
+        )
         self.plot_image.axes.get_xaxis().set_visible(False)
         self.plot_image.axes.axes.get_yaxis().set_visible(False)
 
     def open_import_thread(self):
-        """ Open the thread that will import the frames"""
+        """Open the thread that will import the frames"""
         self.import_thread = Thread(target=self.import_frames)
         self.import_thread.start()
-    
+
     def import_frames(self):
         try:
             self.frames = []
@@ -289,27 +293,30 @@ class App(QWidget):
             self.frame_number = self.frames.shape[0]
             self.split_frames = separate_images(self.dictionary["Lights"], self.frames)
             self.end_index.setText(f"{self.frame_number-1}")
-            self.time_slider.setRange(0, self.frame_number-1)
+            self.time_slider.setRange(0, self.frame_number - 1)
             self.time_slider.setEnabled(True)
             self.actualize_lights()
         except Exception as err:
             print(err)
             pass
-    def concatenate_frames(self, file): 
-        """ Concatenate the frames in the directory"""
+
+    def concatenate_frames(self, file):
+        """Concatenate the frames in the directory"""
         if len(self.frames) == 0:
             self.frames = np.load(os.path.join(self.directory, "data", file))
         else:
-            self.frames = np.concatenate((self.frames, np.load(os.path.join(self.directory, "data", file))))
+            self.frames = np.concatenate(
+                (self.frames, np.load(os.path.join(self.directory, "data", file)))
+            )
 
     def set_roi(self):
-        """ Set the ROI"""
+        """Set the ROI"""
         self.roi_buttons.setCurrentIndex(1)
         self.cancel_roi_button.setEnabled(True)
         self.save_roi_button.setEnabled(False)
 
         def onselect_function(eclick, erelease):
-            """ Save the ROI dimensions as attributes"""
+            """Save the ROI dimensions as attributes"""
             self.roi_extent = self.rect_selector.extents
             self.save_roi_button.setEnabled(True)
 
@@ -326,7 +333,7 @@ class App(QWidget):
         )
 
     def reset_roi(self):
-        """ Reset the ROI"""
+        """Reset the ROI"""
         plt.figure(self.image_view.figure.number)
         plt.ion()
         plt.xlim(0, self.dimensions[0])
@@ -337,15 +344,15 @@ class App(QWidget):
         self.reset_roi_button.setEnabled(False)
 
     def cancel_roi(self):
-        """ Cancel the ROI selection"""
-        #self.activate_buttons(buttons=self.enabled_buttons)
+        """Cancel the ROI selection"""
+        # self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         self.rect_selector.clear()
         self.rect_selector = None
 
     def save_roi(self):
-        """ Save the ROI"""
-        #self.activate_buttons(buttons=self.enabled_buttons)
+        """Save the ROI"""
+        # self.activate_buttons(buttons=self.enabled_buttons)
         self.roi_buttons.setCurrentIndex(0)
         plt.figure(self.image_view.figure.number)
         plt.ion()
@@ -357,7 +364,7 @@ class App(QWidget):
         self.set_roi_button.setEnabled(True)
 
     def adjust_index(self):
-        """ Adjust the index"""
+        """Adjust the index"""
         try:
             self.time_slider.setValue(int(self.current_index.text()))
         except Exception:
@@ -374,21 +381,40 @@ class App(QWidget):
             pass
 
     def open_live_preview_thread(self):
-        """ Open the thread that will show the live preview"""
+        """Open the thread that will show the live preview"""
         self.live_preview_thread = Thread(target=self.live_preview)
         self.live_preview_thread.start()
 
     def live_preview(self):
-        self.plot_image.set(array=self.split_frames[self.live_preview_light_index][self.image_index//len(self.dictionary["Lights"])])
-
+        self.plot_image.set(
+            array=self.split_frames[self.live_preview_light_index][
+                self.image_index // len(self.dictionary["Lights"])
+            ]
+        )
 
     def make_time_course(self):
         try:
             if self.roi_extent:
-                print(shrink_array(self.split_frames[self.live_preview_light_index], self.roi_extent))
-                y_values = get_timecourse(shrink_array(self.split_frames[self.live_preview_light_index], self.roi_extent), int(self.start_index.text())//len(self.dictionary["Lights"]), int(self.end_index.text())//len(self.dictionary["Lights"]))
+                print(
+                    shrink_array(
+                        self.split_frames[self.live_preview_light_index],
+                        self.roi_extent,
+                    )
+                )
+                y_values = get_timecourse(
+                    shrink_array(
+                        self.split_frames[self.live_preview_light_index],
+                        self.roi_extent,
+                    ),
+                    int(self.start_index.text()) // len(self.dictionary["Lights"]),
+                    int(self.end_index.text()) // len(self.dictionary["Lights"]),
+                )
             else:
-                y_values = get_timecourse(self.split_frames[self.live_preview_light_index], int(self.start_index.text())//len(self.dictionary["Lights"]), int(self.end_index.text())//len(self.dictionary["Lights"]))
+                y_values = get_timecourse(
+                    self.split_frames[self.live_preview_light_index],
+                    int(self.start_index.text()) // len(self.dictionary["Lights"]),
+                    int(self.end_index.text()) // len(self.dictionary["Lights"]),
+                )
             plt.figure(self.time_course.figure.number)
             plt.ion()
             plt.clf()
@@ -398,14 +424,15 @@ class App(QWidget):
             pass
 
     def activate_buttons(self, buttons):
-        """ Activate the buttons in a list"""
+        """Activate the buttons in a list"""
         for button in buttons:
             button.setEnabled(True)
 
     def deactivate_buttons(self, buttons):
-        """ Deactivate the buttons in a list"""
+        """Deactivate the buttons in a list"""
         for button in buttons:
             button.setDisabled(True)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

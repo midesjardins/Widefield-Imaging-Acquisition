@@ -9,7 +9,7 @@ from src.blocks import Block, Stimulation
 
 class Tree(QTreeWidget):
     def __init__(self):
-        """ Initialize the tree widget"""
+        """Initialize the tree widget"""
         super().__init__()
         self.x_values = []
         self.stim1_values = []
@@ -18,13 +18,13 @@ class Tree(QTreeWidget):
         pass
 
     def first_stimulation(self):
-        """ Create the first stimulation in the tree """
+        """Create the first stimulation in the tree"""
         tree_item = QTreeWidgetItem()
         self.addTopLevelItem(tree_item)
         self.set_defaults(tree_item)
 
     def add_brother(self):
-        """ Add a brother to the current item in the tree"""
+        """Add a brother to the current item in the tree"""
         if self.currentItem():
             tree_item = QTreeWidgetItem()
             parent = self.selectedItems()[0].parent()
@@ -49,7 +49,7 @@ class Tree(QTreeWidget):
             self.set_defaults(tree_item)
 
     def set_defaults(self, item):
-        """ Set the default values for a new item in the tree"""
+        """Set the default values for a new item in the tree"""
         self.setCurrentItem(item)
         item.setIcon(20, QIcon(os.path.join("gui", "icons", "alert-triangle.png")))
         item.setForeground(0, QBrush(QColor(211, 211, 211)))
@@ -61,7 +61,7 @@ class Tree(QTreeWidget):
             item.setText(i, "False")
 
     def delete_item(self):
-        """ Delete the current item in the tree and its children"""
+        """Delete the current item in the tree and its children"""
         try:
             parent = self.currentItem().parent()
             if parent.childCount() == 1:
@@ -95,7 +95,7 @@ class Tree(QTreeWidget):
             self.set_stim_attributes(tree_item, block)
 
     def set_block_attributes(self, tree_item, dictionary):
-        """ Set the attributes of a block in the tree
+        """Set the attributes of a block in the tree
 
         Args:
             tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
@@ -108,8 +108,8 @@ class Tree(QTreeWidget):
         tree_item.setText(3, str(dictionary["jitter"]))
 
     def set_stim_attributes(self, tree_item, dictionary):
-        """ Set the attributes of a stimulation in the tree
-        
+        """Set the attributes of a stimulation in the tree
+
         Args:
             tree_item (QTreeWidgetItem): The tree item on which to apply the attributes
             dictionary (dict): The dictionary containing the attributes
@@ -151,7 +151,6 @@ class Tree(QTreeWidget):
         """
         try:
             if item == self.invisibleRootItem() or current:
-                print("root")
                 self.elapsed_time = 0
                 self.x_values = []
                 self.stim1_values = []
@@ -182,8 +181,6 @@ class Tree(QTreeWidget):
                     self.stim2_values = np.concatenate((self.stim2_values, data))
                     self.stim3_values = np.concatenate((self.stim3_values, ddata))
             else:
-                print(item.text(0))
-                print(item.text(6))
                 duration = float(item.text(6))
                 # PROBLEMATIC
                 time_values = np.linspace(0, duration, int(round(duration * 3000)))
@@ -257,7 +254,6 @@ class Tree(QTreeWidget):
                         (self.stim3_values, np.full(len(time_values), False))
                     )
 
-
                 if (
                     item.text(18) == "False"
                     and item.text(19) == "False"
@@ -273,8 +269,6 @@ class Tree(QTreeWidget):
                 self.x_values = np.concatenate((self.x_values, time_values))
                 self.elapsed_time += duration
         except Exception as err:
-            print("graph err")
-            print(err)
             self.x_values = []
             self.stim1_values = []
             self.stim2_values = []
@@ -282,11 +276,11 @@ class Tree(QTreeWidget):
             self.elapsed_time = 0
 
     def create_blocks(self, item=None):
-        """ Recursively create blocks from tree items
-        
+        """Recursively create blocks from tree items
+
         Args:
             item (QTreeWidgetItem): The item to create blocks from. Defaults to current item.
-        
+
         Returns:
             Block: A master block containing all the children blocks
         """
