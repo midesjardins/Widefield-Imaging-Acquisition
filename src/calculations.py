@@ -187,6 +187,7 @@ def get_baseline_frame_indices(baseline_indices, frames_acquired):
             )
         return list_of_indices
     except Exception as err:
+        print(err)
         pass
 
 

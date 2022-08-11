@@ -984,7 +984,7 @@ class App(QWidget):
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.tree.create_blocks()
-            self.tree.baseline_values = []
+            #self.tree.baseline_values = []
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.x_values,
@@ -999,7 +999,6 @@ class App(QWidget):
                 self.actualize_daq()
                 self.open_live_saving_thread()
                 self.open_live_preview_thread()
-                self.open_baseline_check_thread()
             else:
                 self.daq.stop_signal = False
             self.open_signal_preview_thread()
@@ -1112,6 +1111,9 @@ class App(QWidget):
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+        if self.acquisition_mode:
+            self.open_baseline_check_thread()
+        self.daq.run()
         # if (
         #    not self.daq.stop_signal
         #    and self.save_files_after_stop
