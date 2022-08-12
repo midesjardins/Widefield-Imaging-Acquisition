@@ -398,6 +398,7 @@ class DAQ:
         Returns:
             list: List of lights used in the experiment"""
         lights = []
+        print(self.lights)
         for light in self.lights:
             lights.append(light.name)
         return lights

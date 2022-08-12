@@ -969,15 +969,10 @@ class App(QWidget):
 
     def set_lights(self, lights):
         """Set the lights"""
-        for light in lights:
-            if light == "infrared":
-                self.ir_checkbox.setChecked(True)
-            elif light == "red":
-                self.red_checkbox.setChecked(True)
-            elif light == "green":
-                self.green_checkbox.setChecked(True)
-            elif light == "blue":
-                self.fluorescence_checkbox.setChecked(True)
+        self.ir_checkbox.setChecked("ir" in lights)
+        self.red_checkbox.setChecked("red" in lights)
+        self.green_checkbox.setChecked("green" in lights)
+        self.fluorescence_checkbox.setChecked("blue" in lights)
 
     def run(self):
         """Run the experiment"""
@@ -1084,6 +1079,7 @@ class App(QWidget):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         if folder != "":
             self.master_block = self.tree.create_blocks()
+            self.actualize_daq()
             self.experiment = Experiment(
                 self.master_block,
                 int(self.framerate_cell.text()),
