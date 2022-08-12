@@ -254,6 +254,8 @@ class DAQ:
             self.generate_camera_wave()
             if config["Extend Signal"]:
                 self.extend_light_wave()
+        
+    def run(self):
         self.write_waveforms()
 
     def set_trigger(self, port):
