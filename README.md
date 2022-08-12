@@ -161,6 +161,10 @@ Specified ports must exist on DAQ and be of the same type than those specified i
 - Digital Outputs: `"infrared"`, `"red"`, `"green"`, `"blue"`, `"camera"`, `"co2` 
 - Digital Input: `"trigger"`
 
+### Modifying the Binning
+1. Open the ```config.json``` file using any text editor.
+2. Replace the `Binning` variable with either `1`, `2`, `4` or `8`
+
 _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
