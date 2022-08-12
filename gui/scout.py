@@ -297,7 +297,6 @@ class App(QWidget):
             self.time_slider.setEnabled(True)
             self.actualize_lights()
         except Exception as err:
-            print(err)
             pass
 
     def concatenate_frames(self, file):
@@ -377,7 +376,6 @@ class App(QWidget):
             self.current_index.setText(str(self.image_index))
             self.open_live_preview_thread()
         except Exception as err:
-            print(err)
             pass
 
     def open_live_preview_thread(self):
@@ -395,12 +393,6 @@ class App(QWidget):
     def make_time_course(self):
         try:
             if self.roi_extent:
-                print(
-                    shrink_array(
-                        self.split_frames[self.live_preview_light_index],
-                        self.roi_extent,
-                    )
-                )
                 y_values = get_timecourse(
                     shrink_array(
                         self.split_frames[self.live_preview_light_index],
@@ -420,7 +412,6 @@ class App(QWidget):
             plt.clf()
             plt.plot(y_values)
         except Exception as err:
-            print(err)
             pass
 
     def activate_buttons(self, buttons):

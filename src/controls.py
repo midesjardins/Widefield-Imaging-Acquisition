@@ -142,8 +142,6 @@ class Camera(Instrument):
                     self.baseline_read_list.append(self.frames_read)
                 self.frames_read += len(new_frames)
             except Exception as err:
-                print("cam err")
-                print(err)
                 pass
         self.frames += self.cam.read_multiple_images()
         self.video_running = False
@@ -166,8 +164,6 @@ class Camera(Instrument):
                 os.path.join(directory, "data", f"{self.file_index}.npy"), self.frames
             )
         except Exception as err:
-            print("cam save err")
-            print(err)
             pass
 
 
@@ -258,6 +254,8 @@ class DAQ:
             self.generate_camera_wave()
             if config["Extend Signal"]:
                 self.extend_light_wave()
+        
+    def run(self):
         self.write_waveforms()
 
     def set_trigger(self, port):
@@ -389,16 +387,20 @@ class DAQ:
 
         else:
             self.start_time = time.time()
-            while time.time() - self.start_time < len(self.stim_signal[0]) / 3000 and not self.stop_signal:
+            while (
+                time.time() - self.start_time < len(self.stim_signal[0]) / 3000
+                and not self.stop_signal
+            ):
                 time.sleep(0.01)
                 pass
 
     def return_lights(self):
         """Return the lights used in the experiment
-        
+
         Returns:
             list: List of lights used in the experiment"""
         lights = []
+        print(self.lights)
         for light in self.lights:
             lights.append(light.name)
         return lights
@@ -414,7 +416,7 @@ class DAQ:
             reduced_stack = reduce_stack(self.all_signals, indices)
             np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
         except Exception as err:
-            print(err)
+            pass
         np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
 
     def reset_daq(self):

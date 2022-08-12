@@ -145,7 +145,6 @@ class App(QWidget):
             print("Program Closed")
         except Exception as err:
             pass
-        self.check_if_thread_is_alive()
 
     def handler(*args, **kwargs):
         """Ignore Qt messages"""
@@ -939,7 +938,7 @@ class App(QWidget):
         try:
             self.max_exposure = self.exposure_slider.value()
             self.slider_values[self.preview_light_combo.currentText()][
-            self.activation_map_combo.currentText()
+                self.activation_map_combo.currentText()
             ] = self.max_exposure
         except Exception:
             pass
@@ -966,26 +965,21 @@ class App(QWidget):
             self.tree.graph(self.tree.invisibleRootItem())
             self.draw()
         except Exception as err:
-            print(err)
+            pass
 
     def set_lights(self, lights):
         """Set the lights"""
-        for light in lights:
-            if light == "infrared":
-                self.ir_checkbox.setChecked(True)
-            elif light == "red":
-                self.red_checkbox.setChecked(True)
-            elif light == "green":
-                self.green_checkbox.setChecked(True)
-            elif light == "blue":
-                self.fluorescence_checkbox.setChecked(True)
+        self.ir_checkbox.setChecked("ir" in lights)
+        self.red_checkbox.setChecked("red" in lights)
+        self.green_checkbox.setChecked("green" in lights)
+        self.fluorescence_checkbox.setChecked("blue" in lights)
 
     def run(self):
         """Run the experiment"""
         if self.check_override():
             self.deactivate_buttons(buttons=self.enabled_buttons)
             self.master_block = self.tree.create_blocks()
-            self.tree.baseline_values = []
+            #self.tree.baseline_values = []
             self.tree.graph(item=self.tree.invisibleRootItem())
             self.root_time, self.root_signal = (
                 self.tree.x_values,
@@ -1000,7 +994,6 @@ class App(QWidget):
                 self.actualize_daq()
                 self.open_live_saving_thread()
                 self.open_live_preview_thread()
-                self.open_baseline_check_thread()
             else:
                 self.daq.stop_signal = False
             self.open_signal_preview_thread()
@@ -1008,13 +1001,16 @@ class App(QWidget):
 
     def check_override(self):
         """Check if experiment with the same name already exists"""
-        if os.path.isfile(
-            os.path.join(
-                self.directory_cell.text(),
-                self.experiment_name_cell.text(),
-                f"{self.experiment_name_cell.text()}-light_signal.npy",
+        if (
+            os.path.isfile(
+                os.path.join(
+                    self.directory_cell.text(),
+                    self.experiment_name_cell.text(),
+                    f"{self.experiment_name_cell.text()}-light_signal.npy",
+                )
             )
-        ) and self.directory_save_files_checkbox.isChecked():
+            and self.directory_save_files_checkbox.isChecked()
+        ):
             button = QMessageBox.question(
                 self,
                 "Files already exist",
@@ -1082,6 +1078,7 @@ class App(QWidget):
         folder = str(QFileDialog.getExistingDirectory(self, "Select Directory"))
         if folder != "":
             self.master_block = self.tree.create_blocks()
+            self.actualize_daq()
             self.experiment = Experiment(
                 self.master_block,
                 int(self.framerate_cell.text()),
@@ -1110,6 +1107,9 @@ class App(QWidget):
         )
         self.save_files_after_stop = True
         self.daq.launch(self.experiment.name, self.root_time, self.root_signal)
+        if self.acquisition_mode:
+            self.open_baseline_check_thread()
+        self.daq.run()
         # if (
         #    not self.daq.stop_signal
         #    and self.save_files_after_stop
@@ -1257,8 +1257,6 @@ class App(QWidget):
                             )
 
                     except Exception as err:
-                        print("Live Preview error")
-                        print(err)
                         pass
                     time.sleep(0.04)
             except Exception as err:
@@ -1285,7 +1283,6 @@ class App(QWidget):
                 self.plot_window.actualize(position)
                 time.sleep(1)
             except Exception as err:
-                print(err)
                 time.sleep(1)
                 pass
 
@@ -1354,7 +1351,6 @@ class App(QWidget):
     def stop(self):
         """Stop the experiment and reactivate the interface"""
 
-        print("Things have stopped")
         self.stop_live()
         self.activate_buttons(buttons=self.enabled_buttons)
         self.tree.setCurrentItem(self.tree.topLevelItem(0))
@@ -1719,7 +1715,7 @@ class App(QWidget):
 
     def draw(self, root=False):
         """Draw the sitmulation channels graph
-        
+
         Args:
             root (bool, optional): If True, the graph includes a progress bar"""
         try:
@@ -1729,12 +1725,14 @@ class App(QWidget):
             )
             self.plot_window.plot(
                 self.tree.x_values,
-                self.tree.stim2_values, root,
+                self.tree.stim2_values,
+                root,
                 index=1,
             )
             self.plot_window.plot(
                 self.tree.x_values,
-                self.tree.stim3_values, root,
+                self.tree.stim3_values,
+                root,
                 index=2,
             )
             self.tree.x_values = []

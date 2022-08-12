@@ -152,6 +152,7 @@ class Tree(QTreeWidget):
         try:
             if item == self.invisibleRootItem() or current:
                 self.elapsed_time = 0
+                self.baseline_values = []
                 self.x_values = []
                 self.stim1_values = []
                 self.stim2_values = []
@@ -400,7 +401,6 @@ class Tree(QTreeWidget):
                 }
                 return Stimulation(dictionary)
         except Exception as err:
-            print(err)
             pass
 
     def check_global_validity(self, item=None):
