@@ -129,7 +129,7 @@ Physical devices used for testing:
 2. Go to the directory where the program is saved using the `cd` command.
 2. Run the following command: ```pip install -r requirements.txt```
 
-### Using Anaconda
+#### Using Anaconda
 1. Open a terminal window
 2. Run the following two commands:
 ```
