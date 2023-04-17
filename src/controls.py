@@ -34,7 +34,7 @@ config = get_dictionary(
 
 class Instrument:
     def __init__(self, port, name):
-        """A class used to represent a analog or digital instrument controlled by a DAQ
+        """A class used to represent an analog or digital instrument controlled by a DAQ
 
         Args:
             port (str): The associated physical port
@@ -414,10 +414,10 @@ class DAQ:
         try:
             indices = find_rising_indices(self.all_signals[-1])
             reduced_stack = reduce_stack(self.all_signals, indices)
-            np.save(f"{directory}/{self.experiment_name}-light_signal", reduced_stack)
+            np.save(f"{directory}/light_signal", reduced_stack)
         except Exception as err:
             pass
-        np.save(f"{directory}/{self.experiment_name}-stim_signal", self.stim_signal)
+        np.save(f"{directory}/stim_signal", self.stim_signal)
 
     def reset_daq(self):
         """Reset the DAQ parameters"""
