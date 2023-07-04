@@ -163,7 +163,7 @@ class Experiment:
         Args:
             extents (list): Positions of the ROI corners used for the experiment
         """
-        with open(f"{self.directory}/experiment-metadata.txt", "w") as file:
+        with open(f"{self.directory}/metadata.txt", "w") as file:
             file.write(
                 f"Blocks\n{self.blocks.__str__()}\n\nFramerate\n{self.framerate}\n\nExposition\n{self.exposition}\n\nMouse ID\n{self.mouse_id}"
             )
@@ -185,7 +185,7 @@ class Experiment:
         """Save the configuration of the experiment to a file
 
         Args:
-            dimensions (list): Dimensions of the experiment
+            dimensions (list): Pixel dimensions of the images 
         """
         try:
             os.mkdir(self.directory)
@@ -199,5 +199,5 @@ class Experiment:
             "Mouse ID": self.mouse_id,
             "Dimensions": dimensions,
         }
-        with open(f"{self.directory}/experiment-metadata.json", "w") as file:
+        with open(f"{self.directory}/metadata.json", "w") as file:
             json.dump(dictionary, file)

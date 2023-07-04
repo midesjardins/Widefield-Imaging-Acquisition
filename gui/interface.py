@@ -884,7 +884,7 @@ class App(QWidget):
         self.signal_adjust_superposed.setCurrentIndex(2)
         self.grid_layout.addLayout(self.signal_adjust_superposed, 3, 1)
 
-        self.signal_preview_label = QLabel("Signal Preview")
+        self.signal_preview_label = QLabel("Stim Preview")
         self.signal_preview_label.setFont(QFont("IBM Plex Sans", 17))
         if self.acquisition_mode:
             self.grid_layout.addWidget(self.signal_preview_label, 2, 2)
@@ -1006,7 +1006,7 @@ class App(QWidget):
                 os.path.join(
                     self.directory_cell.text(),
                     self.experiment_name_cell.text(),
-                    f"{self.experiment_name_cell.text()}-light_signal.npy",
+                    "light_signal.npy",
                 )
             )
             and self.directory_save_files_checkbox.isChecked()
@@ -1714,7 +1714,7 @@ class App(QWidget):
         return False
 
     def draw(self, root=False):
-        """Draw the sitmulation channels graph
+        """Draw the stimulation signals
 
         Args:
             root (bool, optional): If True, the graph includes a progress bar"""
